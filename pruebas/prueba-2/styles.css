@@ -412,3 +412,144 @@ button { font: inherit; border: 0; background: none; cursor: pointer; color: inh
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .step { opacity: 1; transform: none; }
 }
+
+/* =====================================================================
+   PRUEBA 2
+   ===================================================================== */
+
+/* Sin el arco, el título necesita más aire bajo el logo */
+.hero-title { margin-top: 64px; }
+
+/* ----- Cinta de palabras en movimiento (sustituye al arco) ----- */
+.ticker {
+  width: 100vw;
+  margin-top: 34px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker 55s linear infinite;
+}
+.ticker:hover .ticker-track { animation-play-state: paused; }
+.tk-group { display: flex; }
+.tk-item {
+  position: relative;
+  padding: 0 30px;
+  font-size: 17px;
+  color: #7c7c7c;
+  white-space: nowrap;
+  letter-spacing: 0.005em;
+}
+.tk-item::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #b8b8b8;
+  transform: translateY(-50%);
+}
+.tk-item b { color: var(--ink); font-weight: 600; }
+@keyframes ticker { to { transform: translateX(-50%); } }
+
+/* ----- Fase 2: índice fijo + tarjetas que se apilan ----- */
+.phases {
+  width: min(1100px, 100% - 32px);
+  margin: 40px auto 0;
+  padding: 80px 0 140px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 64px;
+}
+
+.ph-index {
+  position: sticky;
+  top: 130px;
+  align-self: start;
+  display: flex;
+  gap: 20px;
+}
+.ph-track { position: relative; width: 2px; border-radius: 2px; background: #dadada; overflow: hidden; }
+.ph-fill { position: absolute; inset: 0; background: var(--ink); transform-origin: top; transform: scaleY(0); }
+.ph-index ol { list-style: none; display: grid; gap: 4px; }
+.ph-index button {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  text-align: left;
+  padding: 10px 0;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #a3a3a3;
+  transition: color .3s;
+}
+.ph-index button span { font-family: var(--sans); font-size: 12px; font-variant-numeric: tabular-nums; color: #b8b8b8; transition: color .3s; }
+.ph-index button:hover { color: #555; }
+.ph-index button.done { color: #6b6b6b; }
+.ph-index button.on { color: var(--ink); font-weight: 600; }
+.ph-index button.on span { color: var(--ink); }
+
+.ph-cards { display: flex; flex-direction: column; gap: 30vh; }
+.ph-card {
+  --cover: 0;
+  position: sticky;
+  top: calc(110px + var(--i) * 18px);
+  min-height: 360px;
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  align-items: center;
+  gap: 36px;
+  padding: 44px;
+  border-radius: 26px;
+  background: #fafafa;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .04), 0 30px 60px -28px rgba(0, 0, 0, .28);
+  transform-origin: 50% 0;
+  transform: scale(calc(1 - var(--cover) * .05));
+  filter: brightness(calc(1 - var(--cover) * .05));
+  opacity: 0;
+  translate: 0 50px;
+  transition: opacity .8s ease, translate .8s cubic-bezier(.22,.8,.24,1);
+}
+.ph-card.in { opacity: 1; translate: 0 0; }
+
+.ph-num { font-size: 13px; letter-spacing: .06em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ph-num em { font-style: normal; color: #bdbdbd; }
+.ph-card h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(30px, 3.4vw, 46px);
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  margin: 14px 0 16px;
+}
+.ph-card p { font-size: 16px; line-height: 1.6; color: #5a5a5a; max-width: 42ch; }
+
+.ph-art {
+  aspect-ratio: 4 / 3;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f3f3f3 0%, #e2e2e2 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .04);
+  display: grid;
+  place-items: center;
+}
+.ph-ico { width: 64%; fill: #111; }
+
+@media (max-width: 860px) {
+  .phases { grid-template-columns: 1fr; gap: 0; padding-top: 40px; }
+  .ph-index { display: none; }
+  .ph-cards { gap: 22vh; }
+  .ph-card { grid-template-columns: 1fr; padding: 28px; top: calc(70px + var(--i) * 12px); min-height: 0; gap: 22px; }
+  .ph-art { aspect-ratio: 16 / 7; }
+  .ph-ico { width: 44%; }
+  .tk-item { font-size: 15px; padding: 0 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ph-card { opacity: 1; translate: 0 0; }
+}
