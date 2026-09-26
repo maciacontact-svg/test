@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Biblioteca de Recursos · Tu Marca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="recursos.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-in">
+    <!-- LOGO + NOMBRE PROVISIONALES -->
+    <a href="index.html" class="brand">
+      <svg viewBox="0 0 48 48" width="26" height="26" aria-hidden="true">
+        <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="7"/>
+        <circle cx="24" cy="24" r="5" fill="currentColor"/>
+      </svg>
+      <span>Tu Marca</span>
+    </a>
+    <!-- Enlace del botón: pendiente -->
+    <a href="#" class="pill">Quiero escalar mi negocio <span aria-hidden="true">→</span></a>
+  </div>
+</header>
+
+<main class="container">
+  <!-- Cabecera de la biblioteca -->
+  <section class="intro">
+    <span class="tag" id="countTag">Biblioteca · 23 recursos</span>
+    <h1>Biblioteca de Recursos de <em>Tu Nombre</em></h1>
+  </section>
+
+  <!-- Visor del recurso seleccionado -->
+  <section class="viewer" id="viewer">
+    <div class="viewer-top">
+      <div class="viewer-meta">
+        <span class="counter" id="counter">01 / 23</span>
+        <span class="type" id="typeBadge">Vídeo</span>
+      </div>
+      <div class="arrows">
+        <button type="button" class="arrow" id="prevBtn" aria-label="Recurso anterior">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="arrow" id="nextBtn" aria-label="Recurso siguiente">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <h2 class="viewer-title" id="title"></h2>
+    <div class="media" id="media"></div>
+  </section>
+
+  <!-- Llamada a la acción -->
+  <section class="promo">
+    <div>
+      <h3>¿Quieres añadir entre 10.000 y 100.000 € extra al mes con un <em>embudo orgánico</em>?</h3>
+      <p>Aplica para ver si cumples los requisitos para que implementemos nuestros sistemas, estrategias y acompañamiento en tu negocio para escalarlo.</p>
+    </div>
+    <!-- Enlace del botón: pendiente -->
+    <a href="#" class="pill light">Agendar llamada gratuita <span aria-hidden="true">→</span></a>
+  </section>
+
+  <!-- Todos los recursos -->
+  <section class="catalog">
+    <div class="catalog-bar">
+      <div class="filters" role="tablist">
+        <button type="button" class="on" data-f="todos">Todos</button>
+        <button type="button" data-f="video">Vídeos</button>
+        <button type="button" data-f="enlace">Plantillas</button>
+      </div>
+      <label class="search">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="search" id="search" placeholder="Buscar recurso">
+      </label>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty" hidden>No hay recursos que coincidan con la búsqueda.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="disclaimer">Los resultados individuales pueden variar y dependen del esfuerzo, experiencia y dedicación de cada persona. Este contenido es solo para fines educativos y no garantiza resultados específicos.</p>
+    <div class="foot-row">
+      <span>© 2026 Tu Marca. Todos los derechos reservados.</span>
+      <span class="legal"><a href="#">Privacidad</a> · <a href="#">Términos</a> · <a href="#">Cookies</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="recursos.js"></script>
+</body>
+</html>
