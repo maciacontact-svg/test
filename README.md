@@ -1,6 +1,7 @@
 # Landing – plantilla
 
-Página de inicio (antes de "Acceder a la plataforma"): `index.html` + `styles.css` + `script.js`.
+1. **Landing** – `index.html` + `styles.css` + `script.js`.
+2. **Formulario** (al pulsar "Acceder a la plataforma") – `empezar.html` + `form.css` + `form.js`.
 Ábrela directamente en el navegador; no necesita instalación.
 
 ## Qué hay que sustituir por contenido propio
@@ -9,4 +10,6 @@ Página de inicio (antes de "Acceder a la plataforma"): `index.html` + `styles.c
 - **Cifras del arco**: el array `items` al principio de `script.js`.
 - **Textos**: título, pasos del roadmap y cifras de "Deja de improvisar" en `index.html`.
 - **Avatares**: clases `.a1`–`.a4` en `styles.css` (poner `background-image: url(...)`).
-- **Enlace del botón**: `href="#acceder"` de los botones `.cta`.
+- **Preguntas del formulario**: el array `STEPS` al principio de `form.js`.
+- **Envío de respuestas**: función `finish()` en `form.js` (ahora solo las muestra en la consola).
+- **Logo y nombre del formulario**: cabecera y pie de `empezar.html`.
