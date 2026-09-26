@@ -56,6 +56,7 @@ const STEPS = [
 
 const OTHER_LABEL = 'Otro (cuéntamelo)';
 const AUTO_ADVANCE_MS = 380;
+const NEXT_PAGE = 'recursos.html'; // paso 3
 
 // ===== Estado =====
 const answers = {};
@@ -210,11 +211,11 @@ function finish() {
       <div class="done">
         <div class="check"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h1>¡Listo, ${esc((answers.contacto?.nombre || '').split(' ')[0] || 'ya está')}!</h1>
-        <p class="sub">Estamos preparando tu roadmap. Aquí irá la pantalla siguiente con tu código de acceso.</p>
+        <p class="sub">Te llevamos a tu biblioteca de recursos…</p>
       </div>`;
     inner.classList.remove('out');
     inner.classList.add('in');
-    busy = false;
+    setTimeout(() => { location.href = NEXT_PAGE; }, 1600);
   }, 280);
 }
 
