@@ -19,7 +19,11 @@ Parte de la prueba 2 (mantiene la cinta de palabras) y cambia:
 1. **Fase 2 sin bloquear el scroll**: pestañas a la izquierda (01-04) y un panel grande a la derecha.
    Cambian solas cada 6 s con una barra de progreso en la pestaña activa; se pausan con el ratón
    encima o cuando la sección no está en pantalla, y se pueden pulsar. Duración: `DURATION` en `script.js`.
-2. **Biblioteca (página 3) reestructurada** con el estilo de la landing, mismo contenido:
-   título centrado con etiqueta "Biblioteca · 23 recursos" → visor grande del recurso (contador,
-   tipo, flechas anterior/siguiente) → banda negra de llamada → catálogo en tarjetas con filtros
-   (Todos / Vídeos / Plantillas) y buscador. La lista `RECURSOS` de `recursos.js` tiene el mismo formato.
+2. **Biblioteca (página 3) en formato "plataforma"**, con el estilo de la landing, mismo contenido:
+   - Pantalla completa en dos columnas: índice siempre visible a la izquierda (con su propio scroll)
+     y el recurso abierto a la derecha. En móvil: recurso arriba y el índice justo debajo.
+   - Recursos agrupados por las 4 fases del roadmap (plegables, con "vistos/total" por fase).
+   - Buscador y filtros (Todos / Vídeos / Plantillas / Sin ver) siempre a mano.
+   - Progreso "X de 23 vistos" arriba; cada recurso abierto se marca como visto (se guarda en el navegador).
+   - Bajo el recurso: "Marcar como visto", "← Anterior" y "Siguiente: <título> →". Flechas del teclado también.
+   - En `recursos.js`: `FASES` (nombres de los grupos) y `RECURSOS` (cada uno con `fase`, `titulo`, `tipo`, `loom`/`url`).
