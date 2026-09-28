@@ -129,7 +129,7 @@ function show(i, fromUser) {
   $('crumbNum').textContent = `Recurso ${pad(i + 1)} de ${pad(total)}`;
   titleEl.textContent = r.titulo;
   mediaEl.innerHTML = mediaHTML(r);
-  document.title = `${r.titulo} · Tu Marca`;
+  document.title = `${r.titulo} · System Academy`;
 
   prevBtn.disabled = i === 0;
   nextBtn.disabled = i === total - 1;

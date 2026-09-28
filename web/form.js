@@ -15,18 +15,17 @@ const STEPS = [
   },
   {
     id: 'inversion',
-    title: '¿Cuánto puedes invertir para montar tus canales?',
-    sub: 'Herramientas de IA, voz, miniaturas… Con esto te recomendamos la ruta que encaja con tu presupuesto.',
+    title: '¿Cuánto podrías dedicar al mes a hacer crecer tus canales?',
+    sub: 'Herramientas, IA, formación… Así te recomendamos la ruta que encaja con tu ritmo.',
     type: 'choice',
-    // Cualificación: la academia parte de 237 €/mes → a partir de "Entre 250 y 500 €" encaja.
+    // Cualificación: la academia parte de 237 €/mes → encaja a partir de "Entre 200 y 400 € al mes".
     options: [
-      'Ahora mismo no tengo nada para invertir',
-      'Menos de 150 €',
-      'Entre 150 y 250 €',
-      'Entre 250 y 500 €',
-      'Entre 500 y 1.000 €',
-      'Entre 1.000 y 3.000 €',
-      'Más de 3.000 €',
+      'Ahora mismo, nada',
+      'Menos de 100 € al mes',
+      'Entre 100 y 200 € al mes',
+      'Entre 200 y 400 € al mes',
+      'Entre 400 y 800 € al mes',
+      'Más de 800 € al mes',
     ],
   },
   {
@@ -135,30 +134,28 @@ function render(animate = true) {
   const s = STEPS[step];
   if (!animate) {
     inner.innerHTML = stepHTML(s);
-    inner.className = 'card-inner in';
+    inner.className = 'card-inner';
     updateHeader();
     focusFirst();
     return;
   }
   busy = true;
   const from = card.offsetHeight;
-  inner.classList.remove('in');
-  inner.classList.add('out');
+  inner.classList.add('out');            // 1) el contenido se desvanece
   setTimeout(() => {
-    inner.innerHTML = stepHTML(s);
-    inner.classList.remove('out');
+    inner.innerHTML = stepHTML(s);       // 2) se cambia mientras está invisible
     card.style.height = 'auto';
     const to = card.offsetHeight;
     card.style.height = from + 'px';
     card.offsetHeight; // fuerza reflow
-    card.style.height = to + 'px';
+    card.style.height = to + 'px';       //    la tarjeta ajusta su altura
     updateHeader();
-    setTimeout(() => {
-      inner.classList.add('in');
+    requestAnimationFrame(() => {
+      inner.classList.remove('out');     // 3) aparece todo a la vez con un único fundido
       focusFirst();
-    }, 120);
-    setTimeout(() => { card.style.height = 'auto'; busy = false; }, 470);
-  }, 280);
+    });
+    setTimeout(() => { card.style.height = 'auto'; busy = false; }, 460);
+  }, 180);
 }
 
 function focusFirst() {
@@ -226,7 +223,6 @@ function finish() {
   // Aquí se enviarán las respuestas (email, Google Sheets, CRM...). De momento solo se muestran en consola.
   console.log('Respuestas del formulario:', answers);
   busy = true;
-  inner.classList.remove('in');
   inner.classList.add('out');
   setTimeout(() => {
     inner.innerHTML = `
@@ -235,8 +231,7 @@ function finish() {
         <h1>¡Listo, ${esc((answers.contacto?.nombre || '').split(' ')[0] || 'ya está')}!</h1>
         <p class="sub">Preparando tu acceso…</p>
       </div>`;
-    inner.classList.remove('out');
-    inner.classList.add('in');
+    requestAnimationFrame(() => inner.classList.remove('out'));
     setTimeout(() => { location.href = NEXT_PAGE; }, 1600);
   }, 280);
 }
