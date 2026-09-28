@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu Marca</title>
+<meta name="description" content="Accede a tu plataforma y roadmap personal para llegar a 3.000-4.000 €/mes con YouTube faceless.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<header class="top">
+  <!-- LOGO PROVISIONAL: sustituir por el vuestro -->
+  <a href="#" class="logo" aria-label="Inicio">
+    <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true">
+      <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="7"/>
+      <circle cx="24" cy="24" r="5" fill="currentColor"/>
+    </svg>
+  </a>
+</header>
+
+<section class="hero">
+  <h1 class="hero-title">
+    <span class="l">Accede a tu <em>Plataforma y Roadmap</em></span>
+    <span class="l">personal para llegar a <em class="nb">3.000-4.000&nbsp;€/mes</em></span>
+    <span class="l">con YouTube faceless</span>
+  </h1>
+  <p class="hero-sub">en menos de 30 segundos</p>
+
+  <!-- Cinta de palabras en movimiento (se rellena en script.js) -->
+  <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+
+  <!-- Carrusel 3D -->
+  <div class="carousel" id="carousel">
+    <button class="nav-btn prev" aria-label="Anterior">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="stage">
+      <!-- SLIDE: Recursos -->
+      <article class="slide" data-i="0">
+        <div class="screen">
+          <div class="tabs"><span>Inicio</span><span>Tu roadmap</span><span>Clases</span><span class="on">Extras</span></div>
+          <div class="res">
+            <div class="res-calc">
+              <div class="calc-row"><div><small>Precio medio</small><b>2.000€</b></div><div><small>Leads/mes</small><b>120</b></div><div><small>Cierre</small><b>8%</b></div></div>
+              <div class="calc-btn">Calcular</div>
+              <p class="res-cap">Calculadora de embudo</p>
+            </div>
+            <div class="res-card">
+              <div class="thumb dark"><span class="play"></span></div>
+              <div class="thumb dark"><span class="play"></span></div>
+              <p class="res-cap">Plantilla de lead magnet</p>
+            </div>
+            <div class="res-card">
+              <div class="thumb dark wide"><span class="play"></span></div>
+              <p class="res-cap">Guion de VSL</p>
+            </div>
+          </div>
+        </div>
+        <h3 class="slide-title">Recursos</h3>
+      </article>
+
+      <!-- SLIDE: Roadmap -->
+      <article class="slide" data-i="1">
+        <div class="screen">
+          <div class="tabs"><span>Inicio</span><span class="on">Tu roadmap</span><span>Clases</span><span>Extras</span></div>
+          <svg class="mini-line" viewBox="0 0 400 520" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M240 40 C 230 70, 170 80, 170 100 M170 200 C 200 205, 230 210, 250 215 M240 320 C 220 330, 180 340, 175 345 M200 440 C 250 450, 270 470, 270 480 M240 560 C 235 580, 230 590, 225 600" fill="none" stroke="#222" stroke-width="1.2"/>
+          </svg>
+          <div class="mini-card" style="--x:8%;--y:16%">
+            <b>Nicho y<br>validación</b>
+            <svg viewBox="0 0 60 40" class="ico"><circle cx="26" cy="18" r="13" fill="none" stroke="#111" stroke-width="1.6"/><path d="M36 28l12 10" stroke="#111" stroke-width="2.6" stroke-linecap="round"/><rect x="18" y="20" width="3.5" height="5" rx="1"/><rect x="24" y="15" width="3.5" height="10" rx="1"/><rect x="30" y="10" width="3.5" height="15" rx="1"/></svg>
+            <i class="arrow">→</i>
+          </div>
+          <div class="mini-card" style="--x:49%;--y:38%">
+            <b>Producción<br>con IA</b>
+            <svg viewBox="0 0 60 40" class="ico"><rect x="10" y="4" width="22" height="32" rx="2" fill="#fff" stroke="#111" stroke-width="1.2"/><path d="M14 10h14M14 14h14M14 18h14M14 22h10" stroke="#111" stroke-width=".9"/><rect x="14" y="28" width="8" height="3" rx="1.5"/><rect x="30" y="2" width="20" height="28" rx="2" transform="rotate(8 40 16)" fill="#fff" stroke="#999" stroke-width=".9"/></svg>
+            <i class="arrow">→</i>
+          </div>
+          <div class="mini-card dim" style="--x:8%;--y:60%">
+            <b>Retención y<br>crecimiento</b>
+            <svg viewBox="0 0 60 40" class="ico"><path d="M4 34 L4 6 M4 34 L56 34" fill="none" stroke="#999" stroke-width=".9"/><path d="M8 30 C 18 29, 24 24, 30 20 S 44 12, 52 8" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round"/><path d="M46 7 L53 7.5 L50.5 13.5" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="27" r="1.6"/><circle cx="30" cy="20" r="1.8"/><circle cx="41" cy="13.5" r="2"/></svg>
+            <i class="arrow">→</i>
+          </div>
+          <div class="mini-card dim" style="--x:49%;--y:82%">
+            <b>Monetización<br>y escala</b>
+            <svg viewBox="0 0 60 40" class="ico"><rect x="18" y="2" width="30" height="19" rx="3" fill="#fff" stroke="#999" stroke-width=".9"/><rect x="12" y="7" width="30" height="19" rx="3" fill="#fff" stroke="#555" stroke-width="1"/><rect x="6" y="12" width="30" height="19" rx="3" fill="#fff" stroke="#111" stroke-width="1.4"/><path d="M18 17 L26 21.5 L18 26 Z"/><path d="M14 35h14" stroke="#111" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <i class="arrow">→</i>
+          </div>
+        </div>
+        <h3 class="slide-title">Roadmap</h3>
+      </article>
+
+      <!-- SLIDE: Clases -->
+      <article class="slide" data-i="2">
+        <div class="screen">
+          <div class="tabs"><span>Inicio</span><span>Tu roadmap</span><span class="on">Clases</span><span>Extras</span></div>
+          <div class="classes">
+            <div class="class"><div class="thumb dark"><span class="play"></span></div><div class="meta"><span class="tag">INCLUIDA</span><span class="cat">NICHO</span></div><b>Cómo validar un nicho</b></div>
+            <div class="class"><div class="thumb dark alt"><span class="play"></span><span class="dur">10 min</span></div><div class="meta"><span class="tag">INCLUIDA</span><span class="cat">PRODUCCIÓN</span></div><b>Un vídeo en 2 h con IA</b></div>
+            <div class="class"><div class="thumb dark"><span class="play"></span></div><div class="meta"><span class="tag">INCLUIDA</span><span class="cat">RETENCIÓN</span></div><b>Método outlier</b></div>
+            <div class="class"><div class="thumb dark grid"><span class="play"></span></div><div class="meta"><span class="tag">INCLUIDA</span><span class="cat">MONETIZACIÓN</span></div><b>AdSense por capas</b></div>
+            <div class="class"><div class="thumb dark"></div></div>
+            <div class="class"><div class="thumb dark alt"></div></div>
+          </div>
+        </div>
+        <h3 class="slide-title">Clases</h3>
+      </article>
+    </div>
+
+    <button class="nav-btn next" aria-label="Siguiente">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <div class="dots" id="dots"><button aria-label="Recursos"></button><button aria-label="Roadmap"></button><button aria-label="Clases"></button></div>
+
+  <a href="empezar.html" class="cta">Acceder a la plataforma</a>
+
+  <div class="mouse" aria-hidden="true"><span></span></div>
+</section>
+
+<!-- ============ ROADMAP (fase 2): pestañas con avance automático, scroll normal ============ -->
+<section class="phases" id="roadmap">
+  <div class="pz">
+    <div class="pz-tabs" role="tablist">
+      <button type="button" class="pz-tab on" data-i="0" role="tab" aria-selected="true">
+        <span class="pz-n">01</span>
+        <span class="pz-t">Nicho y validación</span>
+        <span class="pz-bar"><i></i></span>
+      </button>
+      <button type="button" class="pz-tab" data-i="1" role="tab" aria-selected="false">
+        <span class="pz-n">02</span>
+        <span class="pz-t">Producción con IA</span>
+        <span class="pz-bar"><i></i></span>
+      </button>
+      <button type="button" class="pz-tab" data-i="2" role="tab" aria-selected="false">
+        <span class="pz-n">03</span>
+        <span class="pz-t">Retención y crecimiento</span>
+        <span class="pz-bar"><i></i></span>
+      </button>
+      <button type="button" class="pz-tab" data-i="3" role="tab" aria-selected="false">
+        <span class="pz-n">04</span>
+        <span class="pz-t">Monetización y escala</span>
+        <span class="pz-bar"><i></i></span>
+      </button>
+    </div>
+    <div class="pz-stage">
+      <article class="pz-pane on" data-i="0" role="tabpanel">
+        <div class="pz-text">
+          <span class="pz-num">01 <em>/ 04</em></span>
+          <h3>Nicho y validación</h3>
+          <p>Elige un nicho con RPM alto y hueco real para entrar, validado con datos antes de grabar un solo vídeo.</p>
+        </div>
+        <div class="pz-art"><svg viewBox="0 0 60 40" class="pz-ico"><circle cx="26" cy="18" r="13" fill="none" stroke="#111" stroke-width="1.6"/><path d="M36 28l12 10" stroke="#111" stroke-width="2.6" stroke-linecap="round"/><rect x="18" y="20" width="3.5" height="5" rx="1"/><rect x="24" y="15" width="3.5" height="10" rx="1"/><rect x="30" y="10" width="3.5" height="15" rx="1"/></svg></div>
+      </article>
+      <article class="pz-pane" data-i="1" role="tabpanel">
+        <div class="pz-text">
+          <span class="pz-num">02 <em>/ 04</em></span>
+          <h3>Producción con IA</h3>
+          <p>Monta el sistema para sacar un vídeo en menos de 2 horas: guion, voz, montaje y miniatura sin ponerte delante de la cámara.</p>
+        </div>
+        <div class="pz-art"><svg viewBox="0 0 60 40" class="pz-ico"><rect x="10" y="4" width="22" height="32" rx="2" fill="#fff" stroke="#111" stroke-width="1.2"/><path d="M14 10h14M14 14h14M14 18h14M14 22h10" stroke="#111" stroke-width=".9"/><rect x="14" y="28" width="8" height="3" rx="1.5"/><rect x="30" y="2" width="20" height="28" rx="2" transform="rotate(8 40 16)" fill="#fff" stroke="#999" stroke-width=".9"/></svg></div>
+      </article>
+      <article class="pz-pane" data-i="2" role="tabpanel">
+        <div class="pz-text">
+          <span class="pz-num">03 <em>/ 04</em></span>
+          <h3>Retención y crecimiento</h3>
+          <p>Títulos, miniaturas y guiones construidos para que la gente se quede, con el método outlier para copiar lo que ya está reventando.</p>
+        </div>
+        <div class="pz-art"><svg viewBox="0 0 60 40" class="pz-ico"><path d="M4 34 L4 6 M4 34 L56 34" fill="none" stroke="#999" stroke-width=".9"/><path d="M8 30 C 18 29, 24 24, 30 20 S 44 12, 52 8" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round"/><path d="M46 7 L53 7.5 L50.5 13.5" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="27" r="1.6"/><circle cx="30" cy="20" r="1.8"/><circle cx="41" cy="13.5" r="2"/></svg></div>
+      </article>
+      <article class="pz-pane" data-i="3" role="tabpanel">
+        <div class="pz-text">
+          <span class="pz-num">04 <em>/ 04</em></span>
+          <h3>Monetización y escala</h3>
+          <p>Pasa de un canal a un portfolio: AdSense, afiliados y patrocinios en capas, pensado para crecer tanto a corto como a largo plazo.</p>
+        </div>
+        <div class="pz-art"><svg viewBox="0 0 60 40" class="pz-ico"><rect x="18" y="2" width="30" height="19" rx="3" fill="#fff" stroke="#999" stroke-width=".9"/><rect x="12" y="7" width="30" height="19" rx="3" fill="#fff" stroke="#555" stroke-width="1"/><rect x="6" y="12" width="30" height="19" rx="3" fill="#fff" stroke="#111" stroke-width="1.4"/><path d="M18 17 L26 21.5 L18 26 Z"/><path d="M14 35h14" stroke="#111" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESULTADOS ============ -->
+<section class="results">
+  <h2>Deja de improvisar<br>y cambia el juego.</h2>
+
+  <div class="chips">
+    <div class="chip" style="--x:14%;--y:14%;--r:-2deg;--d:0s">
+      <span class="avatar a1" style="--ax:62%;--ay:-26px"></span>
+      <b>+176</b><small>canales monetizados</small>
+    </div>
+    <div class="chip far" style="--x:62%;--y:2%;--r:1.5deg;--d:1.2s">
+      <b>+488M</b><small>visitas generadas</small>
+    </div>
+    <div class="chip" style="--x:22%;--y:40%;--r:2deg;--d:.6s">
+      <b>+370</b><small>personas con roadmap</small>
+    </div>
+    <div class="chip far" style="--x:66%;--y:28%;--r:-1deg;--d:1.8s">
+      <span class="avatar a2" style="--ax:-40px;--ay:12px"></span>
+      <b>15 €</b><small>de RPM medio en nuestros nichos</small>
+    </div>
+    <div class="chip mid" style="--x:55%;--y:50%;--r:-1.5deg;--d:.9s">
+      <span class="avatar a3" style="--ax:78%;--ay:-18px"></span>
+      <b>&lt; 2 h</b><small>por vídeo con IA</small>
+    </div>
+    <div class="chip big" style="--x:19%;--y:66%;--r:0deg;--d:1.5s">
+      <span class="avatar a4" style="--ax:14px;--ay:40px"></span>
+      <b>4.9</b><small>valoración media</small>
+    </div>
+  </div>
+
+  <a href="empezar.html" class="cta">Acceder a la plataforma</a>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>

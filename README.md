@@ -1,5 +1,10 @@
 # Landing – plantilla
 
+## Carpetas
+- **Raíz** (`index.html`, `empezar.html`, `recursos.html`…): copia fiel de las referencias. No se toca.
+- **`web/`**: versión de trabajo (parte de la prueba 3). Aquí van los cambios de contenido y mejoras.
+- **`pruebas/`**: variantes de estilo/estructura para comparar.
+
 1. **Landing** – `index.html` + `styles.css` + `script.js`.
 2. **Formulario** (al pulsar "Acceder a la plataforma") – `empezar.html` + `form.css` + `form.js`.
 3. **Biblioteca de recursos** (al terminar el formulario) – `recursos.html` + `recursos.css` + `recursos.js`.
