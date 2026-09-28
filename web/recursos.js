@@ -21,7 +21,7 @@ const RECURSOS = [
   // ---------- 1 · Empieza aquí ----------
   { fase: 1, tipo: 'enlace', titulo: 'Guía completa: YouTube Faceless desde 0 (PDF)',
     desc: 'Si partes de cero: cómo funciona el negocio y qué se hace en cada paso, de principio a fin.',
-    url: '' /* ← enlace de Drive del PDF */ },
+    url: 'https://drive.google.com/file/d/1mz1sTLMKH-FU9dsooVAbk-m93zzREIZU/view?usp=sharing', boton: 'Abrir guía' },
   { fase: 1, tipo: 'video', titulo: 'Qué es YouTube Faceless y por qué funciona en 2026',
     desc: 'El modelo en 3 pasos (nicho, ideas ganadoras y producción con IA), para quién encaja y cómo se escala a una red de canales.',
     video: YT('VdA3kkwUS9s') },
@@ -109,7 +109,7 @@ const RECURSOS = [
     desc: 'Locución natural. Mejor voz masculina y sin subir la exageración.',
     herramientas: [
       { nombre: 'ElevenLabs', para: 'La referencia en calidad de voz con IA.', url: 'https://elevenlabs.io' },
-      { nombre: 'Gen Pro', para: 'Las mismas voces que ElevenLabs por mucho menos (lo verás en el vídeo "De cero a monetizado en 5 días").', url: '' },
+      { nombre: 'GenAI Pro', para: 'Las mismas voces que ElevenLabs por mucho menos (lo verás en el vídeo "De cero a monetizado en 5 días").', url: 'https://genaipro.io/' },
     ] },
   { fase: 7, tipo: 'herramientas', titulo: 'IAs para miniaturas e imágenes',
     desc: 'Miniaturas e imágenes para acompañar la narración.',
@@ -122,7 +122,7 @@ const RECURSOS = [
   { fase: 7, tipo: 'herramientas', titulo: 'IAs para crear y editar vídeos',
     desc: 'Montaje del vídeo. Mezcla siempre IA con vídeos e imágenes de stock para evitar desmonetizaciones.',
     herramientas: [
-      { nombre: 'EasyTubers', para: 'Genera el vídeo entero (guion, voz, imágenes y música) y puede subirlo a tu canal.', url: '' },
+      { nombre: 'EasyTubers', para: 'Genera el vídeo entero (guion, voz, imágenes y música) y puede subirlo a tu canal.', url: 'https://easytubers.com/' },
       { nombre: 'CapCut', para: 'Edición manual del vídeo con la locución y las imágenes.', url: 'https://www.capcut.com' },
       { nombre: 'Pixabay', para: 'Vídeos e imágenes de stock gratis y sin copyright.', url: 'https://pixabay.com' },
     ] },
@@ -270,6 +270,8 @@ function fromHash() {
 const go = i => { location.hash = `r${pad(i + 1)}`; };
 
 // ===== Eventos =====
+// Navegación libre: cualquier recurso se puede abrir en cualquier momento desde el índice.
+// "Visto" solo sirve para que cada persona vea su progreso; nunca bloquea nada.
 prevBtn.addEventListener('click', () => current > 0 && go(current - 1));
 nextBtn.addEventListener('click', () => current < total - 1 && go(current + 1));
 seenBtn.addEventListener('click', () => {
