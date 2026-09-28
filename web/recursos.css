@@ -7,9 +7,9 @@
   --muted: #707070;
   --hair: #e3e3e3;
   --nav-h: 64px;
-  --sans: "Inter", system-ui, -apple-system, sans-serif;
-  --display: "Inter Tight", "Inter", system-ui, sans-serif;
-  --serif: "Newsreader", Georgia, serif;
+  --sans: "Poppins", system-ui, -apple-system, sans-serif;
+  --display: "Poppins", system-ui, -apple-system, sans-serif;
+  --serif: "Poppins", system-ui, -apple-system, sans-serif;
   --ease: cubic-bezier(.22,.8,.24,1);
 }
 
@@ -18,7 +18,7 @@ body { font-family: var(--sans); color: var(--ink); background: var(--bg); -webk
 a { color: inherit; text-decoration: none; }
 button, input { font: inherit; color: inherit; border: 0; background: none; }
 button { cursor: pointer; }
-em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -0.01em; }
+em { font-family: var(--serif); font-style: italic; font-weight: 500; letter-spacing: -0.01em; }
 
 /* ----- Barra superior ----- */
 .nav {
@@ -63,7 +63,7 @@ em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spa
   background: #f7f7f7;
 }
 .side-head { padding: 22px 20px 14px; border-bottom: 1px solid var(--hair); }
-.side h1 { font-family: var(--display); font-weight: 600; font-size: 24px; letter-spacing: -0.035em; line-height: 1.1; }
+.side h1 { font-family: var(--display); font-weight: 600; font-size: 21px; letter-spacing: -0.02em; line-height: 1.15; }
 .search {
   display: flex; align-items: center; gap: 8px;
   margin-top: 16px; padding: 10px 14px;
@@ -121,7 +121,7 @@ em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spa
 
 .crumbs { display: flex; gap: 8px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .crumbs .sep { color: #c4c4c4; }
-.title { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -0.035em; line-height: 1.1; margin: 6px 0 16px; }
+.title { font-family: var(--display); font-weight: 600; font-size: clamp(22px, 2.3vw, 30px); letter-spacing: -0.02em; line-height: 1.1; margin: 6px 0 16px; }
 .title.swap, .media.swap { animation: fadeUp .45s var(--ease) both; }
 .media.swap { animation-delay: .05s; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
