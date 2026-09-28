@@ -9,7 +9,7 @@
     { t: 'Retención y crecimiento' },
     { n: '+370', t: 'personas con roadmap' },
     { t: 'Monetización por capas' },
-    { n: '15 €/mes', t: 'de RPM medio en nuestros nichos' },
+    { n: '15 €', t: 'de RPM medio en nuestros nichos' },
   ];
   const track = document.getElementById('ticker');
   if (!track) return;
