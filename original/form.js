@@ -1,68 +1,47 @@
 // ===== Preguntas del formulario (editar aquí) =====
 const STEPS = [
   {
-    id: 'punto',
-    title: '¿En qué punto estás ahora mismo?',
-    sub: 'Así ordenamos tu biblioteca para que empieces justo por lo que te toca.',
+    id: 'vende',
+    title: '¿Qué vendes ahora mismo?',
+    sub: 'Con esto sabemos qué parte del roadmap te sirve y cuál te sobra.',
     type: 'choice',
-    options: [
-      'Empiezo desde cero y quiero aprender',
-      'Tengo conocimientos básicos, pero ningún canal con resultados',
-      'Ya he empezado y tengo canales funcionando',
-      'Tengo canales, pero se han estancado',
-    ],
+    options: ['Un infoproducto, curso o mentoría', 'Consultoría o servicios high ticket', 'Aún no he lanzado nada'],
     other: true,
   },
   {
-    id: 'inversion',
-    title: '¿Cuánto podrías dedicar al mes a hacer crecer tus canales?',
-    sub: 'Herramientas, IA, formación… Así te recomendamos la ruta que encaja con tu ritmo.',
+    id: 'facturacion',
+    title: '¿Cuánto te está entrando al mes con esto?',
+    sub: 'Es el dato que más cambia tu roadmap. Sé honesto contigo, esto no lo ve nadie más.',
     type: 'choice',
-    // Cualificación: la academia parte de 237 €/mes → encaja a partir de "Entre 200 y 400 € al mes".
-    options: [
-      'Ahora mismo, nada',
-      'Menos de 100 € al mes',
-      'Entre 100 y 200 € al mes',
-      'Entre 200 y 400 € al mes',
-      'Entre 400 y 800 € al mes',
-      'Más de 800 € al mes',
-    ],
+    options: ['Aún no estoy vendiendo esto de forma constante', 'Entre 3.000 y 10.000 €', 'Entre 10.000 y 30.000 €', 'Entre 30.000 y 100.000 €', 'Entre 100.000 y 250.000 €', 'Más de 250.000 €'],
+  },
+  {
+    id: 'prioridad',
+    title: 'Si pudieras arreglar una sola cosa este mes, ¿cuál sería?',
+    sub: 'El roadmap se reordena según esto, así que elige la que más te movería el negocio.',
+    type: 'choice',
+    options: ['Que entren más leads cualificados', 'Cerrar más de los que ya hablan conmigo', 'Que esto no dependa de mí para funcionar', 'Que mi contenido atraiga al cliente que quiero', 'Saber qué toca ahora y dónde se me escapa el dinero'],
+    other: true,
   },
   {
     id: 'objetivo',
-    title: '¿Qué quieres conseguir con YouTube faceless?',
-    sub: 'No hay respuesta mala: cambia el orden y el ritmo de tu roadmap.',
-    type: 'choice',
-    options: [
-      'Dejar mi empleo y dedicarme a ello por completo',
-      'Un ingreso extra que no me quite mucho tiempo',
-      'Empezar como extra y pasar a tiempo completo',
-      'Construir un activo que me genere ingresos a largo plazo',
-    ],
-    other: true,
-  },
-  {
-    id: 'meta',
-    title: '¿Dónde quieres estar en 3 y 6 meses?',
-    sub: 'Con tus palabras, sin mínimo. Cuanto más concreto, mejor te lo preparamos.',
+    title: '¿Dónde quieres estar en 12 meses?',
+    sub: 'Una línea basta. Cuanto más concreto, más útil es lo que te preparamos.',
     type: 'text',
-    placeholder: 'Ej: generando un ingreso extra para poder permitirme mis caprichos.',
+    placeholder: 'Ejemplo: llegar a 50.000 al mes sin depender de mí para vender',
   },
   {
-    id: 'cuando',
-    title: 'Con tu biblioteca lista, ¿cuándo te pones en marcha?',
-    sub: 'Para saber qué ritmo marcarte desde el primer día.',
+    id: 'canal',
+    title: '¿De dónde te llegan los clientes ahora?',
+    sub: 'Marca lo principal. Si es una mezcla, elige lo que más te trae.',
     type: 'choice',
-    options: [
-      'Lo antes posible',
-      'En las próximas semanas',
-      'Por ahora solo tengo curiosidad',
-    ],
+    options: ['Mi contenido en redes (IG, YouTube, TikTok)', 'Mensajes y DMs que mando yo', 'Publicidad de pago', 'Referidos y mi red de contactos', 'Todavía no tengo un canal que funcione'],
+    other: true,
   },
   {
     id: 'contacto',
     title: '¿A dónde te mandamos el acceso?',
-    sub: 'Tu acceso a la biblioteca se abre al instante en la pantalla siguiente. Por WhatsApp confirmamos que has entrado bien y te enviamos recursos adaptados a ti.',
+    sub: 'Te damos el código al instante en la pantalla siguiente. El WhatsApp es para entregártelo y resolverte dudas.',
     type: 'contact',
     fields: [
       { name: 'nombre', label: 'Tu nombre', placeholder: 'Nombre y apellido', type: 'text', required: true, autocomplete: 'name' },
@@ -70,14 +49,14 @@ const STEPS = [
       { name: 'email', label: 'Email', placeholder: 'tu@email.com', type: 'email', required: true, autocomplete: 'email' },
       { name: 'instagram', label: 'Instagram', placeholder: '@tucuenta', type: 'text', required: false },
     ],
-    hint: 'Opcional. Si ya tienes canal o cuenta, lo revisamos para que lo que te enviemos encaje con lo que ya haces.',
+    hint: 'Para ver tu negocio antes de hablar contigo y no hacerte repetir lo que ya está ahí.',
     cta: 'Conseguir mi roadmap',
   },
 ];
 
 const OTHER_LABEL = 'Otro (cuéntamelo)';
 const AUTO_ADVANCE_MS = 380;
-const NEXT_PAGE = 'acceso.html'; // paso 3 (después, la biblioteca)
+const NEXT_PAGE = 'recursos.html'; // paso 3
 
 // ===== Estado =====
 const answers = {};
@@ -134,28 +113,30 @@ function render(animate = true) {
   const s = STEPS[step];
   if (!animate) {
     inner.innerHTML = stepHTML(s);
-    inner.className = 'card-inner';
+    inner.className = 'card-inner in';
     updateHeader();
     focusFirst();
     return;
   }
   busy = true;
   const from = card.offsetHeight;
-  inner.classList.add('out');            // 1) el contenido se desvanece
+  inner.classList.remove('in');
+  inner.classList.add('out');
   setTimeout(() => {
-    inner.innerHTML = stepHTML(s);       // 2) se cambia mientras está invisible
+    inner.innerHTML = stepHTML(s);
+    inner.classList.remove('out');
     card.style.height = 'auto';
     const to = card.offsetHeight;
     card.style.height = from + 'px';
     card.offsetHeight; // fuerza reflow
-    card.style.height = to + 'px';       //    la tarjeta ajusta su altura
+    card.style.height = to + 'px';
     updateHeader();
-    requestAnimationFrame(() => {
-      inner.classList.remove('out');     // 3) aparece todo a la vez con un único fundido
+    setTimeout(() => {
+      inner.classList.add('in');
       focusFirst();
-    });
-    setTimeout(() => { card.style.height = 'auto'; busy = false; }, 460);
-  }, 180);
+    }, 120);
+    setTimeout(() => { card.style.height = 'auto'; busy = false; }, 470);
+  }, 280);
 }
 
 function focusFirst() {
@@ -223,15 +204,17 @@ function finish() {
   // Aquí se enviarán las respuestas (email, Google Sheets, CRM...). De momento solo se muestran en consola.
   console.log('Respuestas del formulario:', answers);
   busy = true;
+  inner.classList.remove('in');
   inner.classList.add('out');
   setTimeout(() => {
     inner.innerHTML = `
       <div class="done">
         <div class="check"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h1>¡Listo, ${esc((answers.contacto?.nombre || '').split(' ')[0] || 'ya está')}!</h1>
-        <p class="sub">Preparando tu acceso…</p>
+        <p class="sub">Te llevamos a tu biblioteca de recursos…</p>
       </div>`;
-    requestAnimationFrame(() => inner.classList.remove('out'));
+    inner.classList.remove('out');
+    inner.classList.add('in');
     setTimeout(() => { location.href = NEXT_PAGE; }, 1600);
   }, 280);
 }

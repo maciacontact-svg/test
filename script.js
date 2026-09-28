@@ -1,34 +1,22 @@
-// ===== Cifras en arco =====
-(function arcMarquee() {
-  const tp = document.getElementById('arcTextPath');
-  if (!tp) return;
+// ===== Cinta de palabras en movimiento =====
+// Cada elemento: { n: 'número destacado (opcional)', t: 'texto' }
+(function ticker() {
   const items = [
-    'Escalamos infoproductos a +1M/año',
-    "9'7 de satisfacción media",
-    "+2'5M€ generados para clientes",
-    '+12 ofertas +100k',
+    { t: 'Nicho y validación' },
+    { n: '+176', t: 'canales monetizados' },
+    { t: 'Producción con IA' },
+    { n: '+488 M', t: 'visitas generadas' },
+    { t: 'Retención y crecimiento' },
+    { n: '+370', t: 'personas con roadmap' },
+    { t: 'Monetización por capas' },
+    { n: '15 €', t: 'de RPM medio en nuestros nichos' },
   ];
-  const segment = items.map(t => t + '   ✦   ').join('');
-  tp.textContent = segment.repeat(4);
-
-  // Longitud de un segmento para que el bucle sea continuo
-  const probe = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  probe.setAttribute('class', 'arc-text');
-  probe.textContent = segment;
-  tp.ownerSVGElement.appendChild(probe);
-  const segLen = probe.getComputedTextLength() || 900;
-  probe.remove();
-
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let offset = 0;
-  const speed = 0.35; // px por frame
-  function tick() {
-    offset -= speed;
-    if (offset <= -segLen) offset += segLen;
-    tp.setAttribute('startOffset', offset);
-    if (!reduce) requestAnimationFrame(tick);
-  }
-  tick();
+  const track = document.getElementById('ticker');
+  if (!track) return;
+  const html = items.map(i =>
+    `<span class="tk-item">${i.n ? `<b>${i.n}</b> ` : ''}${i.t}</span>`).join('');
+  // Dos copias seguidas para que el bucle no tenga saltos
+  track.innerHTML = `<div class="tk-group">${html}</div><div class="tk-group">${html}</div>`;
 })();
 
 // ===== Carrusel 3D =====
@@ -70,64 +58,53 @@
   restart();
 })();
 
-// ===== Roadmap: línea que se dibuja con el scroll =====
-(function roadmap() {
-  const section = document.getElementById('roadmap');
-  const svg = section.querySelector('.road-svg');
-  const bg = svg.querySelector('.road-bg');
-  const fg = svg.querySelector('.road-fg');
-  const steps = [...section.querySelectorAll('.step')];
-  let len = 0;
+// ===== Fases del roadmap: pestañas que avanzan solas (el scroll no se bloquea) =====
+(function phases() {
+  const wrap = document.querySelector('.pz');
+  if (!wrap) return;
+  const tabs = [...wrap.querySelectorAll('.pz-tab')];
+  const panes = [...wrap.querySelectorAll('.pz-pane')];
+  const DURATION = 6000; // ms que se queda cada fase
+  wrap.style.setProperty('--pz-dur', DURATION + 'ms');
+  let current = 0, timer = null, visible = false, hover = false;
 
-  function buildPath() {
-    const w = section.clientWidth;
-    const h = section.clientHeight;
-    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-    const sRect = section.getBoundingClientRect();
-
-    const pts = [[w * 0.5, 0]];
-    steps.forEach((el, i) => {
-      const r = el.getBoundingClientRect();
-      const left = r.left - sRect.left;
-      const top = r.top - sRect.top - (el.classList.contains('in') ? 0 : 40);
-      const x = left + r.width * (i % 2 ? 0.38 : 0.72);
-      pts.push([x, top + r.height * 0.5]);
+  function show(i) {
+    current = (i + tabs.length) % tabs.length;
+    tabs.forEach((t, k) => {
+      const on = k === current;
+      t.classList.toggle('on', on);
+      t.setAttribute('aria-selected', on);
+      // reinicia la barra de progreso
+      const bar = t.querySelector('.pz-bar i');
+      bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
     });
-    pts.push([w * 0.5, h]);
-
-    // Catmull-Rom → curvas Bézier suaves
-    let d = `M ${pts[0][0]} ${pts[0][1]}`;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[i - 1] || pts[i];
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const p3 = pts[i + 2] || p2;
-      const t = 0.5;
-      const c1 = [p1[0] + (p2[0] - p0[0]) * t / 3, p1[1] + (p2[1] - p0[1]) * t / 3];
-      const c2 = [p2[0] - (p3[0] - p1[0]) * t / 3, p2[1] - (p3[1] - p1[1]) * t / 3];
-      d += ` C ${c1[0]} ${c1[1]}, ${c2[0]} ${c2[1]}, ${p2[0]} ${p2[1]}`;
-    }
-    bg.setAttribute('d', d);
-    fg.setAttribute('d', d);
-    len = fg.getTotalLength();
-    fg.style.strokeDasharray = len;
-    update();
+    panes.forEach((p, k) => p.classList.toggle('on', k === current));
+    schedule();
   }
-
-  function update() {
-    const r = section.getBoundingClientRect();
-    const vh = window.innerHeight;
-    const progress = Math.min(1, Math.max(0, (vh * 0.6 - r.top) / r.height));
-    fg.style.strokeDashoffset = len * (1 - progress);
+  function schedule() {
+    clearTimeout(timer);
+    const running = visible && !hover;
+    wrap.classList.toggle('paused', !running);
+    if (running) timer = setTimeout(() => show(current + 1), remaining());
   }
+  // tiempo que le queda a la barra actual (para respetar pausas)
+  let started = Date.now(), elapsed = 0;
+  function remaining() { started = Date.now(); return Math.max(0, DURATION - elapsed); }
+  function pause() { elapsed += Date.now() - started; }
 
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, { threshold: 0.3 });
-  steps.forEach(s => io.observe(s));
+  tabs.forEach((t, i) => t.addEventListener('click', () => { elapsed = 0; show(i); }));
+  wrap.addEventListener('mouseenter', () => { if (!hover) { pause(); hover = true; schedule(); } });
+  wrap.addEventListener('mouseleave', () => { hover = false; schedule(); });
 
-  window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', buildPath);
-  document.fonts ? document.fonts.ready.then(buildPath) : window.addEventListener('load', buildPath);
-  buildPath();
+  // cuando cambia de fase sola, el contador vuelve a 0
+  const origShow = show;
+  show = i => { elapsed = 0; origShow(i); };
+
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting) wrap.classList.add('in');
+    const was = visible;
+    visible = e.isIntersecting;
+    if (was && !visible) pause();
+    schedule();
+  }, { threshold: 0.35 }).observe(wrap);
 })();

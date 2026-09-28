@@ -3,65 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Biblioteca de Recursos · Tu Marca</title>
+<title>Biblioteca de Recursos · System Academy</title>
+<link rel="icon" href="img/logo/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="recursos.css">
 </head>
 <body>
 
 <header class="nav">
-  <div class="container nav-in">
-    <!-- LOGO + NOMBRE PROVISIONALES -->
-    <a href="index.html" class="brand">
-      <svg viewBox="0 0 48 48" width="24" height="24" aria-hidden="true">
-        <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="7"/>
-        <circle cx="24" cy="24" r="5" fill="currentColor"/>
-      </svg>
-      <span>Tu Marca</span>
-    </a>
-    <!-- Enlace del botón: pendiente -->
-    <a href="#" class="nav-cta">Quiero escalar mi negocio <span aria-hidden="true">→</span></a>
+  <!-- Logo System Academy  -->
+  <a href="index.html" class="brand">
+    <svg viewBox="0 0 100 100" width="24" height="24" aria-hidden="true">
+      <defs><mask id="saCut"><rect width="100" height="100" fill="#fff"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#000" stroke-width="5.5" stroke-linecap="round"/></mask></defs>
+      <rect width="100" height="100" rx="26" fill="#111"/>
+      <path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round" mask="url(#saCut)"/>
+    </svg>
+    <span>System Academy</span>
+  </a>
+  <div class="nav-right">
+    <div class="progress" title="Recursos vistos">
+      <span class="progress-bar"><i id="progFill"></i></span>
+      <span id="progText">0 de 23 vistos</span>
+    </div>
+    <a href="https://calendly.com/maciacontact/proceso-de-admision-system-academy?month=2026-09&amp;date=2026-09-28" class="pill" target="_blank" rel="noopener">Quiero crear o escalar mis canales <span aria-hidden="true">→</span></a>
   </div>
 </header>
 
-<main class="container">
-  <h1 class="page-title">Biblioteca de Recursos de Tu Nombre</h1>
+<div class="app">
+  <!-- ===== Columna izquierda: índice siempre visible ===== -->
+  <aside class="side">
+    <div class="side-head">
+      <h1>Biblioteca de Recursos de <em>System Academy</em></h1>
+      <label class="search">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="search" id="search" placeholder="Buscar entre 23 recursos">
+      </label>
+      <div class="filters">
+        <button type="button" class="on" data-f="todos">Todos</button>
+        <button type="button" data-f="video">Vídeos</button>
+        <button type="button" data-f="enlace">Documentos</button>
+        <button type="button" data-f="pendientes">Sin ver</button>
+      </div>
+    </div>
+    <nav class="list" id="list" aria-label="Recursos"></nav>
+  </aside>
 
-  <div class="layout">
-    <aside class="side">
-      <p class="side-label">Recursos</p>
-      <ol class="list" id="list"><!-- lo pinta recursos.js --></ol>
-    </aside>
+  <!-- ===== Columna derecha: recurso abierto ===== -->
+  <main class="main" id="main">
+    <div class="main-in">
+      <div class="crumbs">
+        <span id="crumbPhase"></span>
+        <span class="sep">/</span>
+        <span id="crumbNum">Recurso 01 de 23</span>
+      </div>
+      <h2 class="title" id="title"></h2>
+      <p class="desc" id="desc"></p>
 
-    <section class="main" id="main">
-      <p class="kicker" id="kicker">Recurso 01 de 23</p>
-      <h2 class="res-title" id="title"></h2>
+      <div class="media" id="media"></div>
 
-      <div class="media" id="media"><!-- vídeo de Loom o caja de enlace --></div>
-
-      <div class="promo">
-        <h3>¿Quieres añadir entre 10.000 y 100.000 € extra al mes con un embudo orgánico?</h3>
-        <p>Aplica para ver si cumples los requisitos para que implementemos nuestros sistemas, estrategias y acompañamiento en tu negocio para escalarlo.</p>
-        <!-- Enlace del botón: pendiente -->
-        <a href="#" class="promo-btn">Agendar llamada gratuita <span aria-hidden="true">→</span></a>
+      <div class="actions">
+        <button type="button" class="seen" id="seenBtn" aria-pressed="false">
+          <span class="box"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span id="seenText">Marcar como visto</span>
+        </button>
+        <div class="nav-btns">
+          <button type="button" class="ghost" id="prevBtn">← Anterior</button>
+          <button type="button" class="next" id="nextBtn">
+            <small>Siguiente</small>
+            <span id="nextTitle"></span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
       </div>
 
-      <nav class="pager" id="pager"></nav>
-    </section>
-  </div>
-</main>
+      <section class="promo">
+        <div>
+          <h3>¿Quieres crear, escalar o revivir tus canales hasta <em>3.000-4.000 €/mes</em>?</h3>
+          <p>Aplica para ver si cumples los requisitos para que implementemos nuestros sistemas, estrategias y acompañamiento en tus canales de YouTube.</p>
+        </div>
+        <a href="https://calendly.com/maciacontact/proceso-de-admision-system-academy?month=2026-09&amp;date=2026-09-28" class="pill light" target="_blank" rel="noopener">Agendar llamada gratuita <span aria-hidden="true">→</span></a>
+      </section>
 
-<footer class="foot">
-  <div class="container">
-    <p class="disclaimer">Los resultados individuales pueden variar y dependen del esfuerzo, experiencia y dedicación de cada persona. Este contenido es solo para fines educativos y no garantiza resultados específicos.</p>
-    <div class="foot-row">
-      <span>© 2026 Tu Marca. Todos los derechos reservados.</span>
-      <span class="legal"><a href="#">Privacidad</a> · <a href="#">Términos</a> · <a href="#">Cookies</a></span>
+      <footer class="foot">
+        <p>Los resultados individuales pueden variar y dependen del esfuerzo, experiencia y dedicación de cada persona. Este contenido es solo para fines educativos y no garantiza resultados específicos.</p>
+        <div class="foot-row">
+          <span>© 2026 System Academy. Todos los derechos reservados.</span>
+          <span class="legal"><a href="#">Privacidad</a> · <a href="#">Términos</a> · <a href="#">Cookies</a></span>
+        </div>
+      </footer>
     </div>
-  </div>
-</footer>
+  </main>
+</div>
 
 <script src="recursos.js"></script>
 </body>

@@ -1,62 +1,164 @@
 // ===== Preguntas del formulario (editar aquí) =====
 const STEPS = [
   {
-    id: 'vende',
-    title: '¿Qué vendes ahora mismo?',
-    sub: 'Con esto sabemos qué parte del roadmap te sirve y cuál te sobra.',
+    id: 'punto',
+    title: '¿En qué punto estás ahora mismo?',
+    sub: 'Así ordenamos tu biblioteca para que empieces justo por lo que te toca.',
     type: 'choice',
-    options: ['Un infoproducto, curso o mentoría', 'Consultoría o servicios high ticket', 'Aún no he lanzado nada'],
+    options: [
+      'Empiezo desde cero y quiero aprender',
+      'Tengo conocimientos básicos, pero ningún canal con resultados',
+      'Ya he empezado y tengo canales funcionando',
+      'Tengo canales, pero se han estancado',
+    ],
     other: true,
   },
   {
-    id: 'facturacion',
-    title: '¿Cuánto te está entrando al mes con esto?',
-    sub: 'Es el dato que más cambia tu roadmap. Sé honesto contigo, esto no lo ve nadie más.',
+    id: 'inversion',
+    title: '¿Cuánto podrías dedicar al mes a hacer crecer tus canales?',
+    sub: 'Herramientas, IA, formación… Así te recomendamos la ruta que encaja con tu ritmo.',
     type: 'choice',
-    options: ['Aún no estoy vendiendo esto de forma constante', 'Entre 3.000 y 10.000 €', 'Entre 10.000 y 30.000 €', 'Entre 30.000 y 100.000 €', 'Entre 100.000 y 250.000 €', 'Más de 250.000 €'],
-  },
-  {
-    id: 'prioridad',
-    title: 'Si pudieras arreglar una sola cosa este mes, ¿cuál sería?',
-    sub: 'El roadmap se reordena según esto, así que elige la que más te movería el negocio.',
-    type: 'choice',
-    options: ['Que entren más leads cualificados', 'Cerrar más de los que ya hablan conmigo', 'Que esto no dependa de mí para funcionar', 'Que mi contenido atraiga al cliente que quiero', 'Saber qué toca ahora y dónde se me escapa el dinero'],
-    other: true,
+    // Cualificación: la academia parte de 237 €/mes → encaja a partir de "Entre 200 y 400 € al mes".
+    options: [
+      'Ahora mismo, nada',
+      'Menos de 100 € al mes',
+      'Entre 100 y 200 € al mes',
+      'Entre 200 y 400 € al mes',
+      'Entre 400 y 800 € al mes',
+      'Más de 800 € al mes',
+    ],
   },
   {
     id: 'objetivo',
-    title: '¿Dónde quieres estar en 12 meses?',
-    sub: 'Una línea basta. Cuanto más concreto, más útil es lo que te preparamos.',
-    type: 'text',
-    placeholder: 'Ejemplo: llegar a 50.000 al mes sin depender de mí para vender',
+    title: '¿Qué quieres conseguir con YouTube faceless?',
+    sub: 'No hay respuesta mala: cambia el orden y el ritmo de tu roadmap.',
+    type: 'choice',
+    options: [
+      'Dejar mi empleo y dedicarme a ello por completo',
+      'Un ingreso extra que no me quite mucho tiempo',
+      'Empezar como extra y pasar a tiempo completo',
+      'Construir un activo que me genere ingresos a largo plazo',
+    ],
+    other: true,
   },
   {
-    id: 'canal',
-    title: '¿De dónde te llegan los clientes ahora?',
-    sub: 'Marca lo principal. Si es una mezcla, elige lo que más te trae.',
+    id: 'meta',
+    title: '¿Dónde quieres estar en 3 y 6 meses?',
+    sub: 'Con tus palabras, sin mínimo. Cuanto más concreto, mejor te lo preparamos.',
+    type: 'text',
+    placeholder: 'Ej: generando un ingreso extra para poder permitirme mis caprichos.',
+  },
+  {
+    id: 'cuando',
+    title: 'Con tu biblioteca lista, ¿cuándo te pones en marcha?',
+    sub: 'Para saber qué ritmo marcarte desde el primer día.',
     type: 'choice',
-    options: ['Mi contenido en redes (IG, YouTube, TikTok)', 'Mensajes y DMs que mando yo', 'Publicidad de pago', 'Referidos y mi red de contactos', 'Todavía no tengo un canal que funcione'],
-    other: true,
+    options: [
+      'Lo antes posible',
+      'En las próximas semanas',
+      'Por ahora solo tengo curiosidad',
+    ],
   },
   {
     id: 'contacto',
     title: '¿A dónde te mandamos el acceso?',
-    sub: 'Te damos el código al instante en la pantalla siguiente. El WhatsApp es para entregártelo y resolverte dudas.',
+    sub: 'Tu acceso a la biblioteca se abre al instante en la pantalla siguiente. Por WhatsApp confirmamos que has entrado bien y te enviamos recursos adaptados a ti.',
     type: 'contact',
     fields: [
       { name: 'nombre', label: 'Tu nombre', placeholder: 'Nombre y apellido', type: 'text', required: true, autocomplete: 'name' },
-      { name: 'whatsapp', label: 'WhatsApp', placeholder: '+34 600 00 00 00', type: 'tel', required: true, autocomplete: 'tel' },
+      { name: 'whatsapp', label: 'WhatsApp', placeholder: '+34 654 32 19 87', type: 'tel', required: true, autocomplete: 'tel' },
       { name: 'email', label: 'Email', placeholder: 'tu@email.com', type: 'email', required: true, autocomplete: 'email' },
       { name: 'instagram', label: 'Instagram', placeholder: '@tucuenta', type: 'text', required: false },
     ],
-    hint: 'Para ver tu negocio antes de hablar contigo y no hacerte repetir lo que ya está ahí.',
+    hint: 'Opcional. Si ya tienes canal o cuenta, lo revisamos para que lo que te enviemos encaje con lo que ya haces.',
     cta: 'Conseguir mi roadmap',
   },
 ];
 
 const OTHER_LABEL = 'Otro (cuéntamelo)';
 const AUTO_ADVANCE_MS = 380;
-const NEXT_PAGE = 'recursos.html'; // paso 3
+const NEXT_PAGE = 'acceso.html'; // paso 3 (después, la biblioteca)
+
+// ===== Validación de datos de contacto (evita datos inventados) =====
+const JUNK = ['asdf', 'qwer', 'qwerty', 'test', 'prueba', 'nombre', 'apellido', 'xxx', 'aaa', 'hola', 'fake', 'nadie', 'no tengo'];
+const DISPOSABLE = ['mailinator.com', 'yopmail.com', 'tempmail.com', 'temp-mail.org', '10minutemail.com', 'guerrillamail.com', 'trashmail.com', 'sharklasers.com', 'getnada.com', 'dispostable.com', 'maildrop.cc', 'fakeinbox.com'];
+const TYPOS = {
+  'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gmail.co': 'gmail.com',
+  'gmail.es': 'gmail.com', 'gnail.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gmail.con': 'gmail.com', 'gmail.cmo': 'gmail.com',
+  'hotmial.com': 'hotmail.com', 'hotmal.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmail.con': 'hotmail.com', 'hotmil.com': 'hotmail.com',
+  'outlok.com': 'outlook.com', 'outlook.con': 'outlook.com', 'yaho.com': 'yahoo.com', 'yahoo.con': 'yahoo.com', 'icloud.con': 'icloud.com',
+};
+const onlyDigits = s => s.replace(/\D/g, '');
+const allSame = s => s.length > 1 && /^(.)\1+$/.test(s);
+const isSequence = d => '01234567890123456789'.includes(d) || '98765432109876543210'.includes(d);
+
+function validateName(v) {
+  const words = v.trim().replace(/\s+/g, ' ').split(' ').filter(Boolean);
+  if (words.length < 2) return 'Escribe tu nombre y tu apellido.';
+  for (const w of words) {
+    if (!/^[A-Za-zÀ-ÖØ-öø-ÿÑñ'’-]{2,}$/.test(w)) return 'Usa solo letras, con al menos 2 por palabra.';
+    const low = w.toLowerCase();
+    if (allSame(low) || !/[aeiouáéíóúüy]/i.test(low)) return 'Ese nombre no parece real. Escribe tu nombre y apellido.';
+  }
+  const all = words.join(' ').toLowerCase();
+  if (JUNK.some(x => all.includes(x))) return 'Ese nombre no parece real. Escribe tu nombre y apellido.';
+  return '';
+}
+
+function validateEmail(v) {
+  const e = v.trim().toLowerCase();
+  if (!e) return 'Escribe tu email.';
+  const m = e.match(/^([a-z0-9._%+-]+)@([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})$/);
+  if (!m) return 'Revisa el email: debe tener el formato nombre@gmail.com.';
+  const [, local, domain] = m;
+  if (TYPOS[domain]) return `¿Quisiste decir ${local}@${TYPOS[domain]}?`;
+  if (DISPOSABLE.includes(domain)) return 'Usa tu email personal (los emails temporales no sirven).';
+  if (local.length < 3 || allSame(onlyDigits(local) || local.replace(/[._-]/g, '')) || JUNK.some(x => local.startsWith(x)))
+    return 'Ese email no parece real. Usa el que revisas a diario.';
+  return '';
+}
+
+function validatePhone(v) {
+  const raw = v.trim();
+  let d = onlyDigits(raw);
+  if (!d) return 'Escribe tu número de WhatsApp.';
+  const intl = raw.startsWith('+') || raw.startsWith('00');
+  if (raw.startsWith('00')) d = d.slice(2);
+  // España: 9 dígitos que empiezan por 6 o 7 (con o sin +34)
+  let national = d;
+  if (d.startsWith('34') && d.length === 11) national = d.slice(2);
+  if (!intl || d.startsWith('34')) {
+    if (national.length !== 9) return 'El número debe tener 9 cifras (o añade el prefijo, p. ej. +52…).';
+    if (!/^[67]/.test(national)) return 'Pon un móvil con WhatsApp (empieza por 6 o 7).';
+  } else if (d.length < 8 || d.length > 15) {
+    return 'Revisa el número: con el prefijo del país, entre 8 y 15 cifras.';
+  }
+  const body = national.slice(1);
+  if (allSame(national) || allSame(body) || isSequence(national) || isSequence(body) || /(\d)\1{5,}/.test(national))
+    return 'Ese número no parece real. Lo usaremos para enviarte el acceso.';
+  return '';
+}
+
+function validateInstagram(v) {
+  const s = v.trim();
+  if (!s) return '';
+  if (!/^@?(?!.*\.\.)(?!\.)[A-Za-z0-9._]{2,30}$/.test(s) || /^@?[._]+$/.test(s)) return 'Revisa tu usuario de Instagram (p. ej. @tucuenta).';
+  return '';
+}
+
+function validateField(f, v) {
+  if (f.name === 'nombre') return validateName(v);
+  if (f.name === 'email') return validateEmail(v);
+  if (f.name === 'whatsapp') return validatePhone(v);
+  if (f.name === 'instagram') return validateInstagram(v);
+  return f.required && !v.trim() ? 'Este campo es obligatorio.' : '';
+}
+
+function showFieldError(inp, msg) {
+  inp.classList.toggle('err', !!msg);
+  const p = document.getElementById('e-' + inp.name);
+  if (p) p.textContent = msg || '';
+}
 
 // ===== Estado =====
 const answers = {};
@@ -91,6 +193,7 @@ function stepHTML(s) {
         <label class="lbl" for="f-${f.name}">${esc(f.label)}</label>
         <input class="input" id="f-${f.name}" name="${f.name}" type="${f.type}" placeholder="${esc(f.placeholder)}"
           ${f.autocomplete ? `autocomplete="${f.autocomplete}"` : ''} ${f.required ? 'required' : ''} value="${esc(saved[f.name] || '')}">
+        <p class="field-err" id="e-${f.name}" aria-live="polite"></p>
       </div>`).join('') + `<p class="hint">${esc(s.hint)}</p>`;
   }
   return `
@@ -113,30 +216,28 @@ function render(animate = true) {
   const s = STEPS[step];
   if (!animate) {
     inner.innerHTML = stepHTML(s);
-    inner.className = 'card-inner in';
+    inner.className = 'card-inner';
     updateHeader();
     focusFirst();
     return;
   }
   busy = true;
   const from = card.offsetHeight;
-  inner.classList.remove('in');
-  inner.classList.add('out');
+  inner.classList.add('out');            // 1) el contenido se desvanece
   setTimeout(() => {
-    inner.innerHTML = stepHTML(s);
-    inner.classList.remove('out');
+    inner.innerHTML = stepHTML(s);       // 2) se cambia mientras está invisible
     card.style.height = 'auto';
     const to = card.offsetHeight;
     card.style.height = from + 'px';
     card.offsetHeight; // fuerza reflow
-    card.style.height = to + 'px';
+    card.style.height = to + 'px';       //    la tarjeta ajusta su altura
     updateHeader();
-    setTimeout(() => {
-      inner.classList.add('in');
+    requestAnimationFrame(() => {
+      inner.classList.remove('out');     // 3) aparece todo a la vez con un único fundido
       focusFirst();
-    }, 120);
-    setTimeout(() => { card.style.height = 'auto'; busy = false; }, 470);
-  }, 280);
+    });
+    setTimeout(() => { card.style.height = 'auto'; busy = false; }, 460);
+  }, 180);
 }
 
 function focusFirst() {
@@ -176,11 +277,10 @@ function collect() {
     let ok = true;
     s.fields.forEach(f => {
       const inp = inner.querySelector(`[name="${f.name}"]`);
-      const v = inp.value.trim();
-      const bad = (f.required && !v) || (f.type === 'email' && v && !/^\S+@\S+\.\S+$/.test(v));
-      inp.classList.toggle('err', bad);
-      if (bad && ok) { shake(inp); inp.focus(); ok = false; }
-      data[f.name] = v;
+      const msg = validateField(f, inp.value);
+      showFieldError(inp, msg);
+      if (msg && ok) { shake(inp); inp.focus(); ok = false; }
+      data[f.name] = inp.value.trim();
     });
     if (ok) answers[s.id] = data;
     return ok;
@@ -204,17 +304,15 @@ function finish() {
   // Aquí se enviarán las respuestas (email, Google Sheets, CRM...). De momento solo se muestran en consola.
   console.log('Respuestas del formulario:', answers);
   busy = true;
-  inner.classList.remove('in');
   inner.classList.add('out');
   setTimeout(() => {
     inner.innerHTML = `
       <div class="done">
         <div class="check"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h1>¡Listo, ${esc((answers.contacto?.nombre || '').split(' ')[0] || 'ya está')}!</h1>
-        <p class="sub">Te llevamos a tu biblioteca de recursos…</p>
+        <p class="sub">Preparando tu acceso…</p>
       </div>`;
-    inner.classList.remove('out');
-    inner.classList.add('in');
+    requestAnimationFrame(() => inner.classList.remove('out'));
     setTimeout(() => { location.href = NEXT_PAGE; }, 1600);
   }, 280);
 }
@@ -237,7 +335,13 @@ inner.addEventListener('click', e => {
   if (e.target.closest('.back')) back();
 });
 
-inner.addEventListener('input', e => e.target.classList.remove('err'));
+inner.addEventListener('input', e => { if (e.target.name) showFieldError(e.target, ''); else e.target.classList.remove('err'); });
+inner.addEventListener('focusout', e => {
+  const s = STEPS[step];
+  if (s.type !== 'contact' || !e.target.name) return;
+  const f = s.fields.find(x => x.name === e.target.name);
+  if (f && e.target.value.trim()) showFieldError(e.target, validateField(f, e.target.value));
+});
 
 card.addEventListener('submit', e => { e.preventDefault(); next(); });
 

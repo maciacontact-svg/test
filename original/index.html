@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu Marca</title>
+<meta name="description" content="Accede a tu plataforma y roadmap personal.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<header class="top">
+  <!-- LOGO PROVISIONAL: sustituir por el vuestro -->
+  <a href="#" class="logo" aria-label="Inicio">
+    <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true">
+      <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="7"/>
+      <circle cx="24" cy="24" r="5" fill="currentColor"/>
+    </svg>
+  </a>
+</header>
+
+<section class="hero">
+  <!-- Cifras girando en arco -->
+  <div class="arc" aria-hidden="true">
+    <svg viewBox="0 0 1100 170" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <path id="arcPath" d="M -60 200 Q 550 -60 1160 200"/>
+      </defs>
+      <text class="arc-text"><textPath id="arcTextPath" href="#arcPath" startOffset="0"></textPath></text>
+    </svg>
+  </div>
+
+  <h1 class="hero-title">
+    <span class="l">Accede a tu <em>Plataforma y</em></span>
+    <span class="l"><em>Roadmap</em> personal para</span>
+    <span class="l">llegar a <em>1M€/anual</em> en info</span>
+  </h1>
+  <p class="hero-sub">en menos de 30 segundos</p>
+
+  <!-- Carrusel 3D -->
+  <div class="carousel" id="carousel">
+    <button class="nav-btn prev" aria-label="Anterior">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="stage">
+      <!-- SLIDE: Recursos -->
+      <article class="slide" data-i="0">
+        <div class="screen">
+          <div class="tabs"><span>Inicio</span><span>Tu roadmap</span><span>Clases</span><span class="on">Extras</span></div>
+          <div class="res">
+            <div class="res-calc">
+              <div class="calc-row"><div><small>Precio medio</small><b>2.000€</b></div><div><small>Leads/mes</small><b>120</b></div><div><small>Cierre</small><b>8%</b></div></div>
+              <div class="calc-btn">Calcular</div>
+              <p class="res-cap">Calculadora de embudo</p>
+            </div>
+            <div class="res-card">
+              <div class="thumb dark"><span class="play"></span></div>
+              <div class="thumb dark"><span class="play"></span></div>
+              <p class="res-cap">Plantilla de lead magnet</p>
+            </div>
+            <div class="res-card">
+              <div class="thumb dark wide"><span class="play"></span></div>
+              <p class="res-cap">Guion de VSL</p>
+            </div>
+          </div>
+        </div>
+        <h3 class="slide-title">Recursos</h3>
+      </article>
+
+      <!-- SLIDE: Roadmap -->
+      <article class="slide" data-i="1">
+        <div class="screen">
+          <div class="tabs"><span>Inicio</span><span class="on">Tu roadmap</span><span>Clases</span><span>Extras</span></div>
+          <svg class="mini-line" viewBox="0 0 400 520" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M240 40 C 230 70, 170 80, 170 100 M170 200 C 200 205, 230 210, 250 215 M240 320 C 220 330, 180 340, 175 345 M200 440 C 250 450, 270 470, 270 480 M240 560 C 235 580, 230 590, 225 600" fill="none" stroke="#222" stroke-width="1.2"/>
+          </svg>
+          <div class="mini-card" style="--x:8%;--y:16%">
+            <b>Posicionamiento<br>y mensaje</b>
+            <svg viewBox="0 0 60 40" class="ico"><circle cx="30" cy="6" r="4"/><path d="M24 16h12v-3a6 6 0 0 0-12 0z"/><g opacity=".55"><circle cx="8" cy="24" r="2"/><circle cx="19" cy="27" r="2"/><circle cx="30" cy="24" r="2"/><circle cx="41" cy="27" r="2"/><circle cx="52" cy="24" r="2"/><circle cx="14" cy="36" r="1.6"/><circle cx="36" cy="36" r="1.6"/><circle cx="47" cy="36" r="1.6"/></g></svg>
+            <i class="arrow">→</i>
+          </div>
+          <div class="mini-card" style="--x:49%;--y:38%">
+            <b>Oferta</b>
+            <svg viewBox="0 0 60 40" class="ico"><rect x="10" y="4" width="22" height="32" rx="2" fill="#fff" stroke="#111" stroke-width="1.6"/><path d="M14 10h14M14 14h14M14 18h14M14 22h10" stroke="#111" stroke-width="1.2"/><rect x="14" y="28" width="8" height="3" rx="1.5"/><rect x="30" y="2" width="20" height="28" rx="2" transform="rotate(8 40 16)" fill="#fff" stroke="#999" stroke-width="1.2"/></svg>
+            <i class="arrow">→</i>
+          </div>
+          <div class="mini-card dim" style="--x:8%;--y:60%">
+            <b>Conversión</b>
+            <svg viewBox="0 0 60 40" class="ico"><path d="M2 8 C 30 12, 45 18, 58 20 M2 32 C 30 28, 45 22, 58 20" fill="none" stroke="#111" stroke-width="1.2"/><circle cx="20" cy="20" r="1"/><circle cx="30" cy="20" r="1.4"/><circle cx="40" cy="20" r="1.8"/><circle cx="49" cy="20" r="2.2"/><circle cx="56" cy="20" r="2.4"/></svg>
+            <i class="arrow">→</i>
+          </div>
+          <div class="mini-card dim" style="--x:49%;--y:82%">
+            <b>Producto</b>
+            <svg viewBox="0 0 60 40" class="ico"><rect x="4" y="8" width="26" height="20" rx="3" fill="none" stroke="#111" stroke-width="1.6"/><circle cx="17" cy="16" r="4"/><path d="M8 32h14" stroke="#111" stroke-width="1.6"/><g><circle cx="38" cy="10" r="2"/><path d="M42 10h14" stroke="#111" stroke-width="1.6"/><circle cx="38" cy="20" r="2"/><path d="M42 20h12" stroke="#111" stroke-width="1.6"/><circle cx="38" cy="30" r="2"/><path d="M42 30h14" stroke="#111" stroke-width="1.6"/></g></svg>
+            <i class="arrow">→</i>
+          </div>
+        </div>
+        <h3 class="slide-title">Roadmap</h3>
+      </article>
+
+      <!-- SLIDE: Clases -->
+      <article class="slide" data-i="2">
+        <div class="screen">
+          <div class="tabs"><span>Inicio</span><span>Tu roadmap</span><span class="on">Clases</span><span>Extras</span></div>
+          <div class="classes">
+            <div class="class"><div class="thumb dark"><span class="play"></span></div><div class="meta"><span class="tag">INCLUIDA</span><span class="cat">OFERTA</span></div><b>Posicionamiento</b></div>
+            <div class="class"><div class="thumb dark alt"><span class="play"></span><span class="dur">10 min</span></div><div class="meta"><span class="tag">INCLUIDA</span><span class="cat">SETTING Y VENTAS</span></div><b>Mejora tu CAC con tu oferta</b></div>
+            <div class="class"><div class="thumb dark"><span class="play"></span></div><div class="meta"><span class="tag">INCLUIDA</span><span class="cat">OFERTA</span></div><b>Producto sin techo de clientes</b></div>
+            <div class="class"><div class="thumb dark grid"><span class="play"></span></div><div class="meta"><span class="tag">INCLUIDA</span><span class="cat">OFERTA</span></div><b>Percepción</b></div>
+            <div class="class"><div class="thumb dark"></div></div>
+            <div class="class"><div class="thumb dark alt"></div></div>
+          </div>
+        </div>
+        <h3 class="slide-title">Clases</h3>
+      </article>
+    </div>
+
+    <button class="nav-btn next" aria-label="Siguiente">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <div class="dots" id="dots"><button aria-label="Recursos"></button><button aria-label="Roadmap"></button><button aria-label="Clases"></button></div>
+
+  <a href="empezar.html" class="cta">Acceder a la plataforma</a>
+
+  <div class="mouse" aria-hidden="true"><span></span></div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section class="roadmap" id="roadmap">
+  <svg class="road-svg" aria-hidden="true">
+    <path class="road-bg"/>
+    <path class="road-fg"/>
+  </svg>
+
+  <div class="step left">
+    <span class="num">01</span>
+    <h3>Posicionamiento y mensaje</h3>
+    <p>Atrae clientes sin parar posicionándote en el punto adecuado, con claridad absoluta de qué hacer y cómo hacerlo.</p>
+  </div>
+  <div class="step right">
+    <span class="num">02</span>
+    <h3>Oferta</h3>
+    <p>Reconstruye una oferta capaz de escalar a +1M€, pensada para crecer tanto a corto como al largo plazo.</p>
+  </div>
+  <div class="step left">
+    <span class="num">03</span>
+    <h3>Conversión</h3>
+    <p>Construye el sistema que convertirá los leads en clientes de +4-5 cifras, sin que te pongan objeciones ni tener que estar detrás de cada persona ni de tu equipo.</p>
+  </div>
+  <div class="step right">
+    <span class="num">04</span>
+    <h3>Producto</h3>
+    <p>Consigue casos de éxito mucho más impresionantes de los que ya tienes sin tener que dedicarle ni un 15% del tiempo.</p>
+  </div>
+</section>
+
+<!-- ============ RESULTADOS ============ -->
+<section class="results">
+  <h2>Deja de improvisar<br>y cambia el juego.</h2>
+
+  <div class="chips">
+    <div class="chip" style="--x:14%;--y:14%;--r:-2deg;--d:0s">
+      <span class="avatar a1" style="--ax:62%;--ay:-26px"></span>
+      <b>+1'7M €</b><small>info B2C</small>
+    </div>
+    <div class="chip far" style="--x:62%;--y:2%;--r:1.5deg;--d:1.2s">
+      <b>+2'5</b><small>millones generados en 1 año</small>
+    </div>
+    <div class="chip" style="--x:22%;--y:40%;--r:2deg;--d:.6s">
+      <b>+150</b><small>personas escaladas con el roadmap</small>
+    </div>
+    <div class="chip far" style="--x:66%;--y:28%;--r:-1deg;--d:1.8s">
+      <span class="avatar a2" style="--ax:-40px;--ay:12px"></span>
+      <b>+12</b><small>infoproductos +100k</small>
+    </div>
+    <div class="chip mid" style="--x:55%;--y:50%;--r:-1.5deg;--d:.9s">
+      <span class="avatar a3" style="--ax:78%;--ay:-18px"></span>
+      <b>57%</b><small>de recompras</small>
+    </div>
+    <div class="chip big" style="--x:19%;--y:66%;--r:0deg;--d:1.5s">
+      <span class="avatar a4" style="--ax:14px;--ay:40px"></span>
+      <b>4.9</b><small>valoración media</small>
+    </div>
+  </div>
+
+  <a href="empezar.html" class="cta">Acceder a la plataforma</a>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>
