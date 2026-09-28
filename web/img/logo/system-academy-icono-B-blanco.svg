@@ -1,4 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
-<defs><mask id="mBblanco"><rect width="48" height="48" fill="#fff"/><path d="M20 17.2 L31.8 24 L20 30.8 Z" fill="#000" stroke="#000" stroke-width="2.4" stroke-linejoin="round"/></mask></defs>
-<rect x="2" y="8" width="44" height="32" rx="10.5" fill="#ffffff" mask="url(#mBblanco)"/>
-</svg>

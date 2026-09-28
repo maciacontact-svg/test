@@ -201,6 +201,7 @@ em { font-family: var(--serif); font-style: italic; font-weight: 500; letter-spa
   .app > .side { order: 5; }
   .crumbs { order: 1; padding: 18px 16px 0; }
   .title { order: 2; padding: 0 16px; }
+  .desc { order: 2; padding: 0 16px; margin-top: -4px; }
   .media { order: 3; padding: 0 16px; }
   .actions { order: 4; padding: 0 16px 22px; }
   .promo { order: 6; margin: 22px 16px 0; }
@@ -219,4 +220,27 @@ em { font-family: var(--serif); font-style: italic; font-weight: 500; letter-spa
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* Descripción bajo el título */
+.desc { font-size: 15px; line-height: 1.55; color: var(--ink-2); margin: -6px 0 18px; max-width: 70ch; }
+.desc:empty { display: none; }
+
+/* Lista de IAs por tarea */
+.tools { display: grid; gap: 10px; }
+.tool {
+  display: grid; grid-template-columns: 190px 1fr 20px; gap: 16px; align-items: center;
+  padding: 18px 20px; border-radius: 16px;
+  background: var(--card);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 12px 28px -22px rgba(0,0,0,.35);
+  transition: transform .2s var(--ease), box-shadow .2s;
+}
+a.tool:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 18px 34px -22px rgba(0,0,0,.4); }
+.tool-name { font-weight: 600; font-size: 16px; letter-spacing: -0.01em; }
+.tool-for { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+.tool-go { font-size: 16px; color: var(--muted); text-align: right; }
+.tool.nolink .tool-name::after { content: " · enlace pendiente"; font-weight: 400; font-size: 12px; color: var(--muted); }
+@media (max-width: 640px) {
+  .tool { grid-template-columns: 1fr 20px; }
+  .tool-for { grid-column: 1 / -1; grid-row: 2; }
 }

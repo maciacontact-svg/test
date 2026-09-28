@@ -21,5 +21,5 @@
 - **Preguntas del formulario**: el array `STEPS` al principio de `form.js`.
 - **Envío de respuestas**: función `finish()` en `form.js` (ahora solo las muestra en la consola).
 - **Logo y nombre del formulario**: cabecera y pie de `empezar.html`.
-- **Recursos**: el array `RECURSOS` al principio de `recursos.js`. Cada uno es `tipo: 'video'` (pegar el enlace de Loom en `loom`) o `tipo: 'enlace'` (pegar el enlace de Drive en `url`).
+- **Recursos (web/)**: `FASES` y `RECURSOS` al principio de `web/recursos.js`. Tipos: `video` (enlace de YouTube o Loom en `video`), `enlace` (Drive/Notion/Docs en `url`) y `herramientas` (lista de IAs). Cada recurso lleva `desc` con lo que se aprende.
 - **Botones "Quiero escalar mi negocio" y "Agendar llamada gratuita"**: `href="#"` en `recursos.html`.
