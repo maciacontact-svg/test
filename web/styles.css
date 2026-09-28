@@ -355,8 +355,8 @@ button { font: inherit; border: 0; background: none; cursor: pointer; color: inh
 }
 .chips {
   position: relative;
-  width: min(820px, 100%);
-  height: 420px;
+  width: min(880px, 100%);
+  height: 500px;
   margin-top: 60px;
 }
 .chip {
@@ -389,7 +389,12 @@ button { font: inherit; border: 0; background: none; cursor: pointer; color: inh
   border: 2px solid #fff;
   box-shadow: 0 4px 12px rgba(0,0,0,.15);
 }
-/* Avatares provisionales: sustituir por fotos (background-image) */
+/* Casos reales: avatar dentro de la tarjeta, a la izquierda */
+.chip.case { align-items: center; padding-left: 12px; }
+.chip.case .avatar { position: static; flex: none; width: 36px; height: 36px; margin-right: 4px; border-width: 2px; }
+.results h2 em { font-style: italic; font-weight: 500; }
+.results h2 { text-wrap: balance; }
+/* Avatares provisionales: sustituir por fotos, p. ej. .a1 { background: url(img/caso-1.jpg) center/cover; } */
 .a1 { background: linear-gradient(135deg, #d9c2a8, #8a6a4f); }
 .a2 { background: linear-gradient(135deg, #e0a3a3, #9c4b4b); }
 .a3 { background: linear-gradient(135deg, #cfcfcf, #7a7a7a); }
