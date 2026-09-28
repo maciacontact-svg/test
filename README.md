@@ -4,7 +4,7 @@
 - **Raíz** (`index.html`, `empezar.html`, `recursos.html`…): copia fiel de las referencias. No se toca.
 - **`web/`**: versión de trabajo (parte de la prueba 3). Aquí van los cambios de contenido y mejoras.
   Flujo: `index.html` (landing) → `empezar.html` (formulario) → `acceso.html` (vídeo de 1 min) → `recursos.html` (biblioteca).
-  En `acceso.js`: `LOOM_URL` (vídeo) y `UNLOCK_SECONDS` (segundos hasta activar el botón de la biblioteca).
+  En `acceso.js`: `LOOM_URL` (enlace del vídeo). El botón de la biblioteca está siempre activo.
 - **`pruebas/`**: variantes de estilo/estructura para comparar.
 
 1. **Landing** – `index.html` + `styles.css` + `script.js`.

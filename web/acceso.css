@@ -70,7 +70,7 @@ em { font-style: italic; font-weight: 500; }
 /* Título */
 h1 {
   margin-top: 30px;
-  font-size: clamp(30px, 5vw, 50px);
+  font-size: clamp(28px, 4.4vw, 46px);
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.12;
@@ -106,40 +106,24 @@ h1 em { color: var(--ink-2); }
 .step.done .num { background: var(--green); color: #fff; }
 .step.done .state { background: #e6f4ea; color: var(--green); }
 
-.step.locked { margin-top: 14px; border: 1.5px dashed #d2d2d2; background: rgba(255,255,255,.35); }
-.step.locked .num { background: #e7e7e7; color: #8a8a8a; }
-.step.locked h2 { color: #6a6a6a; }
-.step.open { border: 1.5px solid transparent; background: #fff; box-shadow: 0 0 0 1px var(--hair), 0 18px 40px -26px rgba(0,0,0,.35); }
-.step.open .num { background: var(--ink); color: #fff; }
-.step.open h2 { color: var(--ink); }
+/* Paso 2: siempre disponible, pero visualmente secundario al vídeo (borde punteado) */
+.step.next { margin-top: 14px; border: 1.5px dashed #d2d2d2; background: rgba(255,255,255,.45); }
+.step.next .num { background: #e7e7e7; color: var(--ink-2); }
+.step.next.ready { border-style: solid; border-color: transparent; background: #fff; box-shadow: 0 0 0 1px var(--hair), 0 18px 40px -26px rgba(0,0,0,.35); }
+.step.next.ready .num { background: var(--ink); color: #fff; }
 
-/* Botón Entrar con cuenta atrás */
 .enter {
-  position: relative;
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 124px; height: 52px; padding: 0 22px;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 50px; padding: 0 24px;
   border-radius: 999px;
-  background: #ececec; color: #8a8a8a;
+  background: var(--ink); color: #fff;
   font-weight: 600; font-size: 15px;
-  pointer-events: none;
-  transition: background .35s, color .35s, box-shadow .35s, transform .2s;
+  box-shadow: 0 14px 30px -16px rgba(0,0,0,.55);
+  transition: transform .2s, box-shadow .2s;
 }
-.enter .ring { position: absolute; left: 10px; width: 30px; height: 30px; transform: rotate(-90deg); }
-.enter .ring circle { fill: none; stroke: #d6d6d6; stroke-width: 3; }
-.enter .ring .ring-fill { stroke: #111; stroke-linecap: round; stroke-dasharray: 100.53; stroke-dashoffset: 100.53; transition: stroke-dashoffset 1s linear; }
-.enter-label { padding-left: 30px; font-variant-numeric: tabular-nums; }
-.enter-go { display: none; }
-.enter.ready { background: var(--ink); color: #fff; pointer-events: auto; box-shadow: 0 14px 30px -14px rgba(0,0,0,.55); animation: nudge 2.4s ease-in-out 1s infinite; }
-.enter.ready:hover { transform: translateY(-1px); }
-.enter.ready .ring, .enter.ready .enter-label { display: none; }
-.enter.ready .enter-go { display: inline; }
-.enter.ready .enter-go span { display: inline-block; transition: transform .25s; }
-.enter.ready:hover .enter-go span { transform: translateX(4px); }
-@keyframes nudge { 0%, 100% { box-shadow: 0 14px 30px -14px rgba(0,0,0,.55), 0 0 0 0 rgba(17,17,17,.25); } 50% { box-shadow: 0 14px 30px -14px rgba(0,0,0,.55), 0 0 0 10px rgba(17,17,17,0); } }
-
-.skip { margin-top: 14px; font-size: 13px; color: #9a9a9a; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #cfcfcf; transition: color .2s; }
-.skip:hover { color: var(--ink-2); }
-.skip.hide { visibility: hidden; }
+.enter:hover { transform: translateY(-1px); box-shadow: 0 18px 34px -16px rgba(0,0,0,.6); }
+.enter span { transition: transform .25s; }
+.enter:hover span { transform: translateX(4px); }
 
 /* Ventana del vídeo */
 .window {

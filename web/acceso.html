@@ -31,7 +31,7 @@
     <div class="meter-bar"><i id="bar"></i></div>
   </div>
 
-  <h1>Te falta un último paso.<br><em>Es un vídeo de un minuto.</em></h1>
+  <h1>Te falta un último paso.<br><em>Es un vídeo de menos de 1&nbsp;minuto.</em></h1>
   <p class="lead">Tu biblioteca ya está lista. Antes de entrar, mira <b>este vídeo</b>: te explico cómo sacarle partido y qué pasa ahora.</p>
 
   <!-- PASO 1 -->
@@ -39,7 +39,7 @@
     <span class="num">1</span>
     <div class="step-text">
       <h2>Mira este vídeo</h2>
-      <p>1 minuto. Te cuento cómo usar la biblioteca y cuándo te llamamos.</p>
+      <p>Menos de 1 minuto. Te cuento cómo usar la biblioteca y cuándo te llamamos.</p>
     </div>
     <span class="state" id="state1">Ahora</span>
   </div>
@@ -48,26 +48,21 @@
   <div class="window" id="video">
     <div class="window-bar">
       <span class="dots"><i></i><i></i><i></i></span>
-      <span class="window-title">cómo usar tu biblioteca · 1 min</span>
+      <span class="window-title">cómo usar tu biblioteca · &lt; 1 min</span>
     </div>
     <div class="player" id="player"><!-- lo pinta acceso.js --></div>
   </div>
-  <p class="under">Un minuto. Te ahorra dar vueltas dentro.</p>
+  <p class="under">Menos de un minuto. Te ahorra dar vueltas dentro.</p>
 
   <!-- PASO 2 -->
-  <div class="step locked" id="step2">
+  <div class="step next" id="step2">
     <span class="num">2</span>
     <div class="step-text">
       <h2>Entra a tu biblioteca de recursos</h2>
-      <p id="step2Text">Se activa al terminar el vídeo.</p>
+      <p>Está todo dentro, ordenado por módulos.</p>
     </div>
-    <a href="recursos.html" class="enter" id="enterBtn" aria-disabled="true">
-      <svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16"/><circle class="ring-fill" id="ring" cx="18" cy="18" r="16"/></svg>
-      <span class="enter-label" id="enterLabel">0:45</span>
-      <span class="enter-go">Entrar <span aria-hidden="true">→</span></span>
-    </a>
+    <a href="recursos.html" class="enter">Entrar <span aria-hidden="true">→</span></a>
   </div>
-  <a href="recursos.html" class="skip" id="skipLink">Entrar sin ver el vídeo</a>
 
   <p class="foot">Tu Marca · Tus datos no se comparten con nadie</p>
 </main>
