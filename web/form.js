@@ -63,7 +63,7 @@ const STEPS = [
   {
     id: 'contacto',
     title: '¿A dónde te mandamos el acceso?',
-    sub: 'Te damos el código al instante en la pantalla siguiente. El WhatsApp es para entregártelo y resolverte dudas.',
+    sub: 'Tu acceso a la biblioteca se abre al instante en la pantalla siguiente. Por WhatsApp confirmamos que has entrado bien y te enviamos recursos adaptados a ti.',
     type: 'contact',
     fields: [
       { name: 'nombre', label: 'Tu nombre', placeholder: 'Nombre y apellido', type: 'text', required: true, autocomplete: 'name' },
@@ -71,7 +71,7 @@ const STEPS = [
       { name: 'email', label: 'Email', placeholder: 'tu@email.com', type: 'email', required: true, autocomplete: 'email' },
       { name: 'instagram', label: 'Instagram', placeholder: '@tucuenta', type: 'text', required: false },
     ],
-    hint: 'Para ver tu negocio antes de hablar contigo y no hacerte repetir lo que ya está ahí.',
+    hint: 'Opcional. Si ya tienes canal o cuenta, lo revisamos para que lo que te enviemos encaje con lo que ya haces.',
     cta: 'Conseguir mi roadmap',
   },
 ];
