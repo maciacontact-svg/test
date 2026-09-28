@@ -56,7 +56,7 @@ const STEPS = [
 
 const OTHER_LABEL = 'Otro (cuéntamelo)';
 const AUTO_ADVANCE_MS = 380;
-const NEXT_PAGE = 'recursos.html'; // paso 3
+const NEXT_PAGE = 'acceso.html'; // paso 3 (después, la biblioteca)
 
 // ===== Estado =====
 const answers = {};
@@ -211,7 +211,7 @@ function finish() {
       <div class="done">
         <div class="check"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h1>¡Listo, ${esc((answers.contacto?.nombre || '').split(' ')[0] || 'ya está')}!</h1>
-        <p class="sub">Te llevamos a tu biblioteca de recursos…</p>
+        <p class="sub">Preparando tu acceso…</p>
       </div>`;
     inner.classList.remove('out');
     inner.classList.add('in');

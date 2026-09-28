@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu acceso · Tu Marca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="acceso.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+
+<main class="wrap">
+  <!-- LOGO PROVISIONAL -->
+  <a href="index.html" class="logo" aria-label="Inicio">
+    <svg viewBox="0 0 48 48" width="40" height="40" aria-hidden="true">
+      <circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="7"/>
+      <circle cx="24" cy="24" r="5" fill="currentColor"/>
+    </svg>
+  </a>
+
+  <span class="badge">
+    <span class="tick"><svg viewBox="0 0 24 24" width="11" height="11"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    Cuenta creada · Acceso activo
+  </span>
+
+  <div class="meter">
+    <div class="meter-top"><span>Tu acceso</span><b id="pct">0%</b></div>
+    <div class="meter-bar"><i id="bar"></i></div>
+  </div>
+
+  <h1>Te falta un último paso.<br><em>Es un vídeo de un minuto.</em></h1>
+  <p class="lead">Tu biblioteca ya está lista. Antes de entrar, mira <b>este vídeo</b>: te explico cómo sacarle partido y qué pasa ahora.</p>
+
+  <!-- PASO 1 -->
+  <div class="step active" id="step1">
+    <span class="num">1</span>
+    <div class="step-text">
+      <h2>Mira este vídeo</h2>
+      <p>1 minuto. Te cuento cómo usar la biblioteca y cuándo te llamamos.</p>
+    </div>
+    <span class="state" id="state1">Ahora</span>
+  </div>
+
+  <!-- VÍDEO -->
+  <div class="window" id="video">
+    <div class="window-bar">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="window-title">cómo usar tu biblioteca · 1 min</span>
+    </div>
+    <div class="player" id="player"><!-- lo pinta acceso.js --></div>
+  </div>
+  <p class="under">Un minuto. Te ahorra dar vueltas dentro.</p>
+
+  <!-- PASO 2 -->
+  <div class="step locked" id="step2">
+    <span class="num">2</span>
+    <div class="step-text">
+      <h2>Entra a tu biblioteca de recursos</h2>
+      <p id="step2Text">Se activa al terminar el vídeo.</p>
+    </div>
+    <a href="recursos.html" class="enter" id="enterBtn" aria-disabled="true">
+      <svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16"/><circle class="ring-fill" id="ring" cx="18" cy="18" r="16"/></svg>
+      <span class="enter-label" id="enterLabel">0:45</span>
+      <span class="enter-go">Entrar <span aria-hidden="true">→</span></span>
+    </a>
+  </div>
+  <a href="recursos.html" class="skip" id="skipLink">Entrar sin ver el vídeo</a>
+
+  <p class="foot">Tu Marca · Tus datos no se comparten con nadie</p>
+</main>
+
+<script src="acceso.js"></script>
+</body>
+</html>
