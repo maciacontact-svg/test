@@ -410,7 +410,7 @@ function configurar() {
   ScriptApp.newTrigger('revisarAvisos').timeBased().everyMinutes(1).create();
 
   ss.setActiveSheet(sh);
-  try { SpreadsheetApp.getUi().alert('CRM listo ✅\n\n1. En "Ajustes" cambia los callers y sus PIN.\n2. Pega el webhook de Slack y la URL del dashboard.\n3. Implementar → Nueva implementación → Aplicación web.'); } catch (e) {}
+  ss.toast('Siguiente: en "Ajustes" cambia los PIN, pega el webhook de Slack y publica como aplicación web.', 'CRM listo ✅', 15);
 }
 
 function estiloCabecera(r) {
