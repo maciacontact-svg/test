@@ -300,9 +300,26 @@ function back() {
   render();
 }
 
+// Envía el lead al CRM (Google Sheets + Slack). keepalive: el envío sigue aunque se cambie de página.
+function sendLead() {
+  const url = (window.SA_CONFIG || {}).API_URL;
+  const c = answers.contacto || {};
+  const lead = {
+    action: 'lead',
+    nombre: c.nombre, telefono: c.whatsapp, correo: c.email, instagram: c.instagram || '',
+    punto: answers.punto, objetivo: answers.objetivo, inversion: answers.inversion,
+    meta: answers.meta, cuando: answers.cuando,
+    origen: location.search.slice(1),
+  };
+  if (!url) { console.log('CRM sin configurar (config.js). Lead:', lead); return; }
+  try {
+    fetch(url, { method: 'POST', mode: 'no-cors', keepalive: true,
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(lead) });
+  } catch (e) { console.error(e); }
+}
+
 function finish() {
-  // Aquí se enviarán las respuestas (email, Google Sheets, CRM...). De momento solo se muestran en consola.
-  console.log('Respuestas del formulario:', answers);
+  sendLead();
   busy = true;
   inner.classList.add('out');
   setTimeout(() => {
