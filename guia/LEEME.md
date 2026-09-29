@@ -1,6 +1,6 @@
 # Guía «YouTube faceless desde 0» (System Academy)
 
-- `Guia-YouTube-Faceless-System-Academy.pdf`: la guía final (25 páginas, A4, con enlaces clicables).
+- `Guia-YouTube-Faceless-System-Academy.pdf`: la guía final (25 páginas, A4, solo lectura: sin enlaces y protegido contra edición; se puede leer, imprimir y copiar texto).
 - `guia.html` + `fonts/`: el original editable. Si cambia algo (textos, prompts, herramientas), se edita aquí y se vuelve a generar el PDF.
 - `original/`: la guía de partida, sin tocar.
 
