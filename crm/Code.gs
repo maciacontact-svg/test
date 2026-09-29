@@ -1,3 +1,5 @@
+/** @OnlyCurrentDoc */
+
 /**
  * System Academy · CRM
  * Google Apps Script que vive dentro de tu Google Sheet (Extensiones → Apps Script).
