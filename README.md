@@ -21,3 +21,8 @@ importa el repositorio, sin comando de build y con la raíz como directorio de s
 ## Otras carpetas
 - `original/`: copia fiel de las referencias (copia de seguridad, no se publica enlazada).
 - `pruebas/`: variantes de diseño que se probaron.
+
+## Miniaturas del carrusel (landing)
+- Las tarjetas de *Formación* y *Recursos* usan `data-loom="ID"`: se carga la miniatura pública de Loom y se pone en blanco y negro por CSS.
+- Si una no carga o quieres otra imagen, guarda la captura como `img/looms/ID.jpg` y tiene prioridad.
+- Capturas de YouTube: `img/capturas/`.

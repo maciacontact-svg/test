@@ -54,6 +54,9 @@ const RECURSOS = [
     desc: 'El flujo completo de cada vídeo listo para pasárselo a un equipo. En "Equipo" pon los Looms para formarlo; en "Estrategias", tus canales de referencia y competencia; en "Competencia en español", las ideas y la monetización externa.',
     url: 'https://nebulous-ring-926.notion.site/PLANTILLA-e46c374b02cb830194aa8181ee0a4798?source=copy_link',
     boton: 'Duplicar plantilla' },
+  { fase: 3, tipo: 'video', titulo: 'Tutorial: cómo usar la plantilla de Notion',
+    desc: 'Paso a paso para duplicar la plantilla y organizar en ella tus vídeos, tu equipo y tus canales de referencia.',
+    video: 'https://www.loom.com/share/50eedd22adc14a839ada72468d6f522e' },
 
   // ---------- 4 · Retención y crecimiento ----------
   { fase: 4, tipo: 'video', titulo: 'El algoritmo en 4 minutos: confianza, CTR y retención',

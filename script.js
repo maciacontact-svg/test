@@ -108,3 +108,23 @@
     schedule();
   }, { threshold: 0.35 }).observe(wrap);
 })();
+
+// Miniaturas de Loom (en blanco y negro por CSS). Primero busca una captura propia en
+// img/looms/ID.jpg; si no existe, usa la miniatura pública de Loom. Si nada carga, queda el fondo oscuro.
+document.querySelectorAll('[data-loom]').forEach(box => {
+  const id = box.dataset.loom;
+  const srcs = [
+    `img/looms/${id}.jpg`,
+    `https://cdn.loom.com/sessions/thumbnails/${id}-00001.jpg`,
+    `https://cdn.loom.com/sessions/thumbnails/${id}-00001.gif`,
+    `https://cdn.loom.com/sessions/thumbnails/${id}-with-play.gif`,
+  ];
+  const img = new Image();
+  img.alt = '';
+  img.decoding = 'async';
+  let i = 0;
+  img.onload = () => img.classList.add('ok');
+  img.onerror = () => { if (++i < srcs.length) img.src = srcs[i]; else img.remove(); };
+  img.src = srcs[0];
+  box.prepend(img);
+});

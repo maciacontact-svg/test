@@ -65,7 +65,7 @@ const STEPS = [
     sub: 'Tu acceso a la biblioteca se abre al instante en la pantalla siguiente. Por WhatsApp confirmamos que has entrado bien y te enviamos recursos adaptados a ti.',
     type: 'contact',
     fields: [
-      { name: 'nombre', label: 'Tu nombre', placeholder: 'Nombre y apellido', type: 'text', required: true, autocomplete: 'name' },
+      { name: 'nombre', label: 'Tu nombre', placeholder: 'Tu nombre', type: 'text', required: true, autocomplete: 'name' },
       { name: 'whatsapp', label: 'WhatsApp', placeholder: '+34 654 32 19 87', type: 'tel', required: true, autocomplete: 'tel' },
       { name: 'email', label: 'Email', placeholder: 'tu@email.com', type: 'email', required: true, autocomplete: 'email' },
       { name: 'instagram', label: 'Instagram', placeholder: '@tucuenta', type: 'text', required: false },
@@ -94,14 +94,14 @@ const isSequence = d => '01234567890123456789'.includes(d) || '98765432109876543
 
 function validateName(v) {
   const words = v.trim().replace(/\s+/g, ' ').split(' ').filter(Boolean);
-  if (words.length < 2) return 'Escribe tu nombre y tu apellido.';
+  if (!words.length) return 'Escribe tu nombre.';
   for (const w of words) {
-    if (!/^[A-Za-zÀ-ÖØ-öø-ÿÑñ'’-]{2,}$/.test(w)) return 'Usa solo letras, con al menos 2 por palabra.';
+    if (!/^[A-Za-zÀ-ÖØ-öø-ÿÑñ'’-]{2,}$/.test(w)) return 'Escribe tu nombre real, solo con letras (mínimo 2).';
     const low = w.toLowerCase();
-    if (allSame(low) || !/[aeiouáéíóúüy]/i.test(low)) return 'Ese nombre no parece real. Escribe tu nombre y apellido.';
+    if (allSame(low) || !/[aeiouáéíóúüy]/i.test(low)) return 'Ese nombre no parece real. Escribe tu nombre.';
   }
   const all = words.join(' ').toLowerCase();
-  if (JUNK.some(x => all.includes(x))) return 'Ese nombre no parece real. Escribe tu nombre y apellido.';
+  if (JUNK.some(x => all.includes(x))) return 'Ese nombre no parece real. Escribe tu nombre.';
   return '';
 }
 
