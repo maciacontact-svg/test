@@ -15,6 +15,7 @@ const FASES = [
 // tipo:  'video'        → vídeo incrustado. Pega en `video` un enlace de YouTube o de Loom.
 //        'enlace'       → caja "Acceder al recurso" (Drive, Notion, Docs…). Pega el enlace en `url`.
 //        'herramientas' → lista de IAs con para qué sirve cada una y su enlace.
+//        'calculadora'  → calculadora de beneficio (los RPM se editan en RPM_IDIOMA, más abajo).
 // Si un enlace está vacío, se muestra un hueco provisional.
 const YT = id => `https://www.youtube.com/watch?v=${id}`;
 const RECURSOS = [
@@ -70,6 +71,8 @@ const RECURSOS = [
     video: YT('h1CBfyW8DFk') },
 
   // ---------- 5 · Monetización y escala ----------
+  { fase: 5, tipo: 'calculadora', titulo: 'Calculadora de beneficio del canal (RPM por idioma)',
+    desc: 'Elige el idioma del canal, tus visitas al mes y cuántos canales tienes, y te sale una estimación de lo que puedes ganar. Si parte de tu audiencia está en EE. UU., indícalo: allí se paga bastante más.' },
   { fase: 5, tipo: 'video', titulo: 'Contenido inauténtico: por qué no apelar y cómo proteger tu red',
     desc: 'Cómo YouTube relaciona tus canales (Gmail, IP, AdSense, verificación, recuperación) y el sistema para aislarlos.',
     video: YT('nI9xdP2u2Ns') },
@@ -149,8 +152,85 @@ let seen = new Set();
 try { seen = new Set(JSON.parse(localStorage.getItem(STORE) || '[]')); } catch (e) {}
 function saveSeen() { try { localStorage.setItem(STORE, JSON.stringify([...seen])); } catch (e) {} }
 
-const TIPO_LABEL = { video: 'Vídeo', enlace: 'Documento', herramientas: 'Herramientas' };
+const TIPO_LABEL = { video: 'Vídeo', enlace: 'Documento', herramientas: 'Herramientas', calculadora: 'Calculadora' };
+
+// ---------- Calculadora ----------
+// RPM medio en dólares por cada 1.000 visitas, según el idioma del canal. Siempre hay excepciones
+// (nicho, época del año, tipo de contenido): es una estimación.
+const RPM_IDIOMA = [
+  ['Inglés', 10, 10], ['Español', 2, 3], ['Francés', 3, 5], ['Alemán', 7, 9],
+  ['Italiano', 4, 6], ['Portugués', 2, 3], ['Polaco', 3, 4], ['Griego', 4, 5],
+  ['Húngaro', 3, 4], ['Checo', 3, 4], ['Rumano', 3, 4], ['Turco', 2, 4],
+  ['Tagalo', 2, 4], ['Ruso', 2, 4], ['Coreano', 6, 8], ['Japonés', 8, 11], ['Chino', 2, 3],
+];
+const RPM_EEUU = [15, 30];     // audiencia que ve el canal desde EE. UU.
+const EUR_POR_USD = 0.86;      // cambio aproximado para mostrar el resultado en euros
+const OBJETIVO_EUR = 3000;     // objetivo de la marca: 3.000-4.000 €/mes
+
+const nf = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0, useGrouping: 'always' });
+const nf1 = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
+const rango = (a, b, f = nf, u = ' €') => f.format(a) === f.format(b) ? `${f.format(a)}${u}` : `${f.format(a)} – ${f.format(b)}${u}`;
+
+function calcHTML() {
+  return `
+    <div class="calc">
+      <div class="calc-in">
+        <label class="fld"><span>Idioma del canal</span>
+          <select id="cLang">${RPM_IDIOMA.map(([n, a, b], i) =>
+            `<option value="${i}"${n === 'Español' ? ' selected' : ''}>${n} · ${a === b ? a : a + '-' + b} $</option>`).join('')}</select>
+        </label>
+        <label class="fld"><span>Visitas al mes (por canal)</span>
+          <input id="cViews" type="text" inputmode="numeric" value="250.000" autocomplete="off">
+        </label>
+        <div class="fld"><span>Número de canales</span>
+          <div class="stepper"><button type="button" data-d="-1" aria-label="Menos">−</button><b id="cCh">1</b><button type="button" data-d="1" aria-label="Más">+</button></div>
+        </div>
+        <label class="fld full"><span>Visitas desde EE. UU. <output id="cUsOut">0 %</output></span>
+          <input id="cUs" type="range" min="0" max="100" step="5" value="0">
+          <small>En EE. UU. se paga 15-30 $ de RPM, también en canales en español.</small>
+        </label>
+      </div>
+      <div class="calc-out">
+        <div class="kpi"><small>RPM estimado</small><b id="oRpm"></b></div>
+        <div class="kpi hero"><small>Beneficio al mes</small><b id="oMes"></b></div>
+        <div class="kpi"><small>En 6 meses</small><b id="o6"></b></div>
+        <div class="kpi"><small>En 12 meses</small><b id="o12"></b></div>
+      </div>
+      <p class="calc-goal" id="oGoal"></p>
+      <p class="calc-note">Estimación orientativa, en euros (1 $ ≈ ${EUR_POR_USD.toLocaleString("es-ES")} €). El RPM cambia según el nicho, la época del año (en el último trimestre sube) y el tipo de contenido. Siempre hay excepciones.</p>
+    </div>`;
+}
+
+function initCalc(root) {
+  const q = id => root.querySelector('#' + id);
+  let canales = 1;
+  const views = () => Number(q('cViews').value.replace(/\D/g, '')) || 0;
+  function update() {
+    const [, a, b] = RPM_IDIOMA[q('cLang').value];
+    const us = q('cUs').value / 100;
+    q('cUsOut').textContent = `${q('cUs').value} %`;
+    const lo = a * (1 - us) + RPM_EEUU[0] * us, hi = b * (1 - us) + RPM_EEUU[1] * us;
+    const k = views() / 1000 * canales * EUR_POR_USD;
+    q('oRpm').textContent = rango(lo, hi, nf1, ' $');
+    q('oMes').textContent = rango(k * lo, k * hi);
+    q('o6').textContent = rango(k * lo * 6, k * hi * 6);
+    q('o12').textContent = rango(k * lo * 12, k * hi * 12);
+    const need = OBJETIVO_EUR / EUR_POR_USD / ((lo + hi) / 2) * 1000;
+    q('oGoal').innerHTML = `Para llegar a <b>${nf.format(OBJETIVO_EUR)} €/mes</b> con este RPM necesitas unas <b>${nf.format(Math.round(need / 1000) * 1000)} visitas al mes</b> entre todos tus canales.`;
+  }
+  q('cViews').addEventListener('input', update);
+  q('cViews').addEventListener('blur', () => { q('cViews').value = nf.format(views()); });
+  q('cLang').addEventListener('change', update);
+  q('cUs').addEventListener('input', update);
+  root.querySelectorAll('.stepper button').forEach(bt => bt.addEventListener('click', () => {
+    canales = Math.min(20, Math.max(1, canales + Number(bt.dataset.d)));
+    q('cCh').textContent = canales;
+    update();
+  }));
+  update();
+}
 const ICON = {
+  calculadora: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M8.5 7.5h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/></svg>',
   herramientas: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>',
   video: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="14" height="14" rx="3"/><path d="M17 10l4-2v8l-4-2"/></svg>',
   enlace: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
@@ -169,6 +249,7 @@ function videoEmbed(link) {
 }
 
 function mediaHTML(r) {
+  if (r.tipo === 'calculadora') return calcHTML();
   if (r.tipo === 'herramientas') {
     return `<div class="tools">${r.herramientas.map(h => `
       <${h.url ? `a href="${esc(h.url)}" target="_blank" rel="noopener"` : 'div'} class="tool${h.url ? '' : ' nolink'}">
@@ -243,6 +324,7 @@ function show(i, fromUser) {
   $('crumbNum').textContent = `Recurso ${pad(i + 1)} de ${pad(total)}`;
   titleEl.textContent = r.titulo;
   mediaEl.innerHTML = mediaHTML(r);
+  if (r.tipo === 'calculadora') initCalc(mediaEl);
   document.title = `${r.titulo} · System Academy`;
 
   prevBtn.disabled = i === 0;

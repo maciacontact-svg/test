@@ -25,3 +25,8 @@ importa el repositorio, sin comando de build y con la raíz como directorio de s
 ## Miniaturas del carrusel (landing)
 - Las tarjetas de *Formación* y *Recursos* usan capturas en `img/formacion/` y `img/capturas/`, en blanco y negro por CSS.
 - Para cambiar una, sustituye el archivo con el mismo nombre (o cambia el `src` en `index.html`).
+
+## Calculadora de beneficio (biblioteca, recurso "Calculadora…")
+- Los RPM por idioma están en `recursos.js`, en `RPM_IDIOMA` (en dólares por 1.000 visitas). Cámbialos ahí.
+- `RPM_EEUU` = RPM de la audiencia de EE. UU. (15-30 $), `EUR_POR_USD` = cambio, `OBJETIVO_EUR` = objetivo mensual.
+- Fórmula: RPM mezclado = RPM del idioma × (1 − % EE. UU.) + RPM EE. UU. × % EE. UU.; beneficio = visitas/1.000 × canales × RPM × cambio.
