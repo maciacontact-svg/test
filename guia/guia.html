@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Guía completa · YouTube Faceless desde 0 · System Academy</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+/* ============ System Academy · guía en PDF (A4) ============ */
+:root {
+  --bg: #f3f3f3; --card: #f3f3f3; --card-2: #fafafa; --ink: #111111; --ink-2: #3a3a3a;
+  --muted: #707070; --hair: #e3e3e3; --ok: #1f8a4c; --ok-bg: #e7f5ea; --ko: #b3261e; --ko-bg: #fbeceb;
+  --sans: "Poppins", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+@page {
+  size: A4; margin: 22mm 18mm 20mm;
+  @top-left { content: "SYSTEM ACADEMY"; font: 600 7.5pt var(--sans); letter-spacing: .12em; color: #111; vertical-align: bottom; padding-bottom: 5mm; }
+  @top-right { content: "YouTube faceless desde 0"; font: 400 7.5pt var(--sans); color: #8a8a8a; vertical-align: bottom; padding-bottom: 5mm; }
+  @bottom-left { content: "Guía completa · System Academy"; font: 400 7.5pt var(--sans); color: #8a8a8a; vertical-align: top; padding-top: 5mm; }
+  @bottom-right { content: counter(page); font: 600 8pt var(--sans); color: #111; vertical-align: top; padding-top: 5mm; }
+}
+@page cover { margin: 0; @top-left { content: none } @top-right { content: none } @bottom-left { content: none } @bottom-right { content: none } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: var(--sans); color: var(--ink); font-size: 9.6pt; line-height: 1.6; }
+a { color: inherit; text-decoration: none; }
+em { font-style: italic; font-weight: 500; }
+b, strong { font-weight: 600; }
+
+/* ---------- Portada y contraportada ---------- */
+.cover { page: cover; width: 210mm; height: 297mm; position: relative; overflow: hidden; background: var(--bg); padding: 22mm 20mm; display: flex; flex-direction: column; break-after: page; }
+.cover .brand { display: flex; align-items: center; gap: 10px; }
+.cover .brand b { font-size: 11pt; letter-spacing: -.01em; }
+.cover .brand small { display: block; font-size: 7.5pt; color: var(--muted); font-weight: 400; }
+.badge { display: inline-block; margin-top: 30mm; padding: 5px 12px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--hair); font-size: 7.5pt; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.cover h1 { font-size: 44pt; line-height: 1.02; letter-spacing: -.035em; font-weight: 600; margin-top: 9mm; }
+.cover h1 em { font-weight: 500; }
+.cover .sub { font-size: 13pt; color: var(--ink-2); margin-top: 6mm; max-width: 145mm; line-height: 1.45; }
+.cover ul { list-style: none; margin-top: 12mm; display: grid; gap: 7px; }
+.cover li { display: flex; gap: 10px; align-items: center; font-size: 10pt; }
+.tick { flex: none; width: 17px; height: 17px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; }
+.stats { margin-top: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stat { background: #fff; border-radius: 16px; padding: 12px 14px; box-shadow: 0 0 0 1px rgba(0,0,0,.04); }
+.stat b { display: block; font-size: 20pt; line-height: 1.1; letter-spacing: -.03em; }
+.stat span { font-size: 7.5pt; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.cover .foot { display: flex; justify-content: space-between; margin-top: 8mm; padding-top: 5mm; border-top: 1px solid #dcdcdc; font-size: 7.5pt; color: var(--muted); }
+.ring { position: absolute; right: -60mm; top: -40mm; width: 170mm; height: 170mm; border-radius: 50%; border: 1px solid #e0e0e0; }
+.ring.r2 { right: -35mm; top: -15mm; width: 120mm; height: 120mm; }
+.ring.r3 { right: -10mm; top: 10mm; width: 70mm; height: 70mm; background: #ebebeb; border: 0; }
+
+.back { background: var(--ink); color: #fff; justify-content: center; break-after: auto; break-before: page; position: relative; top: 0; }
+.back h2 { font-size: 34pt; line-height: 1.05; letter-spacing: -.03em; font-weight: 600; }
+.back p { color: #c9c9c9; font-size: 11pt; max-width: 150mm; margin-top: 6mm; }
+.back .box { margin-top: 10mm; border-radius: 18px; background: #1d1d1d; padding: 16px 20px; }
+.back .box small { font-size: 7.5pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #9a9a9a; }
+.back .box p { margin-top: 6px; color: #eaeaea; font-size: 10pt; }
+.back .cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; background: #fff; color: #111; font-weight: 600; font-size: 10pt; padding: 10px 18px; border-radius: 999px; }
+.back .sign { position: absolute; left: 20mm; bottom: 20mm; right: 20mm; display: flex; gap: 24px; justify-content: space-between; align-items: center; text-align: right; font-size: 7.5pt; color: #8a8a8a; }
+.back .sign .brand b { color: #fff; white-space: nowrap; }
+
+/* ---------- Secciones ---------- */
+section { break-before: page; padding-top: .5px; }
+section.cont { break-before: auto; margin-top: 10mm; }
+.mod { display: flex; gap: 14px; align-items: center; padding-bottom: 5mm; margin-bottom: 6mm; border-bottom: 1px solid var(--hair); position: relative; }
+.mod::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 22mm; height: 2px; background: var(--ink); }
+.num { flex: none; width: 15mm; height: 15mm; border-radius: 4.5mm; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 15pt; font-weight: 600; letter-spacing: -.02em; }
+.mod h2 { font-size: 21pt; line-height: 1.1; letter-spacing: -.025em; font-weight: 600; }
+.mod p { font-size: 9pt; color: var(--muted); margin-top: 2px; }
+h3 { font-size: 11.5pt; font-weight: 600; letter-spacing: -.01em; margin: 7mm 0 2.5mm; break-after: avoid; }
+p + p { margin-top: 2.5mm; }
+.lead { font-size: 10.5pt; color: var(--ink-2); }
+.muted { color: var(--muted); }
+.small { font-size: 8.4pt; }
+
+.banner { background: var(--ink); color: #fff; border-radius: 16px; padding: 14px 18px; margin: 6mm 0; break-inside: avoid; }
+.banner b { font-size: 13pt; letter-spacing: -.015em; display: block; }
+.banner span { font-size: 8.8pt; color: #bdbdbd; }
+.card { background: var(--card); border-radius: 14px; padding: 12px 16px; margin: 5mm 0; break-inside: avoid; }
+.card.line { background: #fff; box-shadow: 0 0 0 1px var(--hair); }
+.label { display: block; font-size: 7pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); margin-bottom: 4px; }
+.label.m { color: var(--muted); }
+.warn { border-left: 3px solid var(--ink); border-radius: 4px 14px 14px 4px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 5mm 0; break-inside: avoid; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 5mm 0; break-inside: avoid; }
+.grid2 .card, .grid3 .card { margin: 0; }
+.big { font-size: 17pt; font-weight: 600; letter-spacing: -.03em; line-height: 1.15; display: block; }
+
+ul.dots { list-style: none; }
+ul.dots li { position: relative; padding-left: 14px; margin: 3px 0; }
+ul.dots li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); }
+ul.yes, ul.no, ul.check { list-style: none; }
+ul.yes li, ul.no li, ul.check li { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0; }
+ul.yes li::before, ul.no li::before, ul.check li::before { flex: none; width: 15px; height: 15px; border-radius: 50%; margin-top: 2px; font-size: 8pt; font-weight: 700; display: grid; place-items: center; line-height: 1; }
+ul.yes li::before { content: "✓"; background: var(--ok-bg); color: var(--ok); }
+ul.no li::before { content: "✕"; background: var(--ko-bg); color: var(--ko); }
+ul.check li::before { content: "✓"; background: var(--ink); color: #fff; border-radius: 4px; }
+.cols2 { columns: 2; column-gap: 10mm; }
+.cols2 li { break-inside: avoid; }
+
+ol.steps { list-style: none; counter-reset: s; margin: 3mm 0; }
+ol.steps > li { counter-increment: s; display: grid; grid-template-columns: 24px 1fr; gap: 10px; margin: 3.2mm 0; break-inside: avoid; }
+ol.steps > li::before { content: counter(s); width: 20px; height: 20px; border-radius: 7px; background: var(--ink); color: #fff; font-size: 8pt; font-weight: 600; display: grid; place-items: center; margin-top: 1px; }
+ol.steps.w > li::before { content: attr(data-n); width: 24px; }
+
+table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 4mm 0; font-size: 8.8pt; break-inside: avoid; }
+th { background: var(--ink); color: #fff; text-align: left; font-weight: 600; font-size: 7.6pt; letter-spacing: .06em; text-transform: uppercase; padding: 8px 10px; }
+th:first-child { border-radius: 10px 0 0 0; } th:last-child { border-radius: 0 10px 0 0; }
+td { padding: 7px 10px; border-bottom: 1px solid #ececec; vertical-align: top; }
+tr:nth-child(even) td { background: #f7f7f7; }
+td b { font-weight: 600; }
+td a { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: #bbb; }
+
+.chain { display: flex; align-items: center; gap: 8px; margin: 5mm 0; break-inside: avoid; }
+.chain .card { flex: 1; margin: 0; text-align: center; }
+.chain .card b { display: block; font-size: 12pt; letter-spacing: -.01em; }
+.chain .card span { font-size: 8pt; color: var(--muted); }
+.chain i { font-style: normal; color: #9a9a9a; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 3mm 0; }
+.chip { background: #fff; box-shadow: 0 0 0 1px var(--hair); border-radius: 999px; padding: 4px 11px; font-size: 8.4pt; font-weight: 500; }
+.chip.d { background: var(--ink); color: #fff; box-shadow: none; }
+
+.timeline { display: grid; grid-template-columns: 1fr 1.2fr 3.4fr 1.2fr; gap: 6px; margin: 4mm 0 2mm; }
+.timeline div { border-radius: 10px; padding: 8px 10px; color: #fff; font-size: 8pt; }
+.timeline b { display: block; font-size: 9pt; letter-spacing: .04em; }
+.timeline div:nth-child(1) { background: #111; } .timeline div:nth-child(2) { background: #3a3a3a; }
+.timeline div:nth-child(3) { background: #5c5c5c; } .timeline div:nth-child(4) { background: #111; }
+
+.pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 5mm 0; break-inside: avoid; }
+.pipe div { background: var(--card); border-radius: 12px; padding: 10px; text-align: center; }
+.pipe .n { width: 22px; height: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--ink); color: #fff; margin: 0 auto 6px; font-size: 8pt; font-weight: 600; }
+.pipe b { display: block; font-size: 9.4pt; }
+.pipe span { font-size: 7.6pt; color: var(--muted); line-height: 1.35; display: block; }
+
+.toc { display: grid; grid-template-columns: 1fr 1fr; column-gap: 10mm; margin-top: 3mm; }
+.toc div { display: grid; grid-template-columns: 11mm 1fr; padding: 6px 0; border-bottom: 1px solid #ececec; break-inside: avoid; }
+.toc b { font-size: 10pt; }
+.toc i { font-style: normal; font-weight: 600; font-size: 10pt; }
+.toc span { display: block; font-size: 8pt; color: var(--muted); }
+
+/* ---------- Prompts ---------- */
+.prompt-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin: 7mm 0 3mm; break-after: avoid; }
+.prompt-head .k { font-size: 7.5pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.prompt-head h3 { margin: 2px 0 0; font-size: 13pt; }
+.prompt-head a { flex: none; font-size: 8pt; font-weight: 600; background: var(--ink); color: #fff; border-radius: 999px; padding: 5px 12px; }
+pre.prompt { background: var(--ink); color: #ededed; border-radius: 14px; padding: 14px 16px; font: 400 7.9pt/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+pre.prompt .h { color: #fff; font-weight: 600; }
+pre.prompt .ph { color: #9fd3a8; }
+.use { font-size: 8.6pt; color: var(--ink-2); margin-bottom: 3mm; }
+</style>
+</head>
+<body>
+
+<!-- ======================= PORTADA ======================= -->
+<div class="cover">
+  <div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div>
+  <div class="brand">
+    <svg viewBox="0 0 100 100" width="40" height="40"><defs><mask id="m1"><rect width="100" height="100" fill="#fff"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#000" stroke-width="5.5" stroke-linecap="round"/></mask></defs><rect width="100" height="100" rx="26" fill="#111"/><path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round" mask="url(#m1)"/></svg>
+    <div><b>System Academy</b><small>Formación en YouTube faceless y monetización</small></div>
+  </div>
+  <div><span class="badge">Guía práctica · Nivel: desde cero</span></div>
+  <h1>YouTube <em>faceless</em><br>desde 0 hasta<br><em>monetizar</em></h1>
+  <p class="sub">El sistema completo para lanzar un canal sin dar la cara: elegir nicho, validar ideas con datos, producir con IA y escalar hasta la monetización.</p>
+  <ul>
+    <li><span class="tick"><svg width="9" height="9" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Cómo elegir un nicho rentable y validarlo con datos</li>
+    <li><span class="tick"><svg width="9" height="9" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>La estructura de guion que sostiene la retención</li>
+    <li><span class="tick"><svg width="9" height="9" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Producción con IA: guion, voz, edición y miniatura</li>
+    <li><span class="tick"><svg width="9" height="9" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Los 5 prompts de System Academy, listos para copiar</li>
+  </ul>
+  <div class="stats">
+    <div class="stat"><b>10</b><span>Módulos</span></div>
+    <div class="stat"><b>5</b><span>Prompts</span></div>
+    <div class="stat"><b>30</b><span>Días de plan</span></div>
+    <div class="stat"><b>13</b><span>Herramientas</span></div>
+  </div>
+  <div class="foot"><span>Documento formativo · Uso personal del alumno</span><span>System Academy</span></div>
+</div>
+
+<!-- ======================= INTRO + ÍNDICE ======================= -->
+<section style="break-before:auto">
+  <div class="banner"><b>Lo que vas a construir con esta guía</b><span>Un sistema repetible: no un canal de suerte, sino un método que puedes repetir.</span></div>
+  <p class="lead">Un canal faceless no es «subir vídeos y esperar». Es un negocio de atención con tres palancas medibles. Si dominas las tres, el canal crece. Si falla una, el canal se para. Esta guía va justo de eso: <b>entender las palancas, construir el proceso y optimizar con datos.</b></p>
+  <div class="chain">
+    <div class="card"><b>Tráfico</b><span>Clics (CTR alto)</span></div><i>→</i>
+    <div class="card"><b>Retención</b><span>Que vean el vídeo entero</span></div><i>→</i>
+    <div class="card"><b>Monetización</b><span>Ads + afiliados + productos</span></div>
+  </div>
+  <h3>Índice de la guía</h3>
+  <div class="toc">
+    <div><i>01</i><b>Entender el modelo<span>Las 3 palancas que mueven todo</span></b></div>
+    <div><i>07</i><b>Subida optimizada<span>SEO y checklist de publicación</span></b></div>
+    <div><i>02</i><b>Elegir nicho<span>Demanda, RPM por idioma y escala</span></b></div>
+    <div><i>08</i><b>Monetización real<span>AdSense, afiliados, productos y marcas</span></b></div>
+    <div><i>03</i><b>Investigación<span>Validar ideas con datos, no con intuición</span></b></div>
+    <div><i>09</i><b>Estrategia de crecimiento<span>Volumen, métricas y decisiones</span></b></div>
+    <div><i>04</i><b>Estructura del vídeo<span>Hook, desarrollo, retención y CTA</span></b></div>
+    <div><i>10</i><b>Mentalidad y plan de 30 días<span>Testear, analizar, optimizar</span></b></div>
+    <div><i>05</i><b>Producción con IA<span>De la idea al archivo final</span></b></div>
+    <div><i>+</i><b>IAs por tarea<span>Qué herramienta usar en cada paso</span></b></div>
+    <div><i>06</i><b>Miniatura y título<span>El 50% del resultado</span></b></div>
+    <div><i>+</i><b>Los 5 prompts y la biblioteca<span>Prompts listos para copiar y todos los recursos</span></b></div>
+  </div>
+  <div class="card warn">
+    <span class="label">Cómo usar esta guía</span>
+    Léela entera una vez para entender el sistema. Después vuelve a cada módulo mientras ejecutas: <b>nicho → 10 ideas validadas → 5 guiones → primer lote de vídeos</b>. No pases al siguiente módulo sin haber terminado el anterior. Todo lo que se menciona aquí (vídeos, plantilla de Notion, calculadora y prompts) está también en tu <b>Biblioteca de Recursos</b>.
+  </div>
+</section>
+
+<!-- ======================= 01 ======================= -->
+<section>
+  <div class="mod"><div class="num">01</div><div><h2>Entender el <em>modelo</em></h2><p>Lo que realmente hace que un canal funcione</p></div></div>
+  <p>Todo canal faceless rentable se explica con una sola cadena. Cada eslabón depende del anterior: no sirve un vídeo brillante que nadie clica, ni un título irresistible con un vídeo que aburre a los 20 segundos.</p>
+  <div class="card"><span class="label m">La cadena</span><span class="big">Tráfico → Retención → Monetización</span></div>
+  <ol class="steps">
+    <li><div><b>Tráfico:</b> conseguir el clic. Depende casi por completo de miniatura y título. Se mide con el <b>CTR</b> (porcentaje de personas que ven la miniatura y hacen clic).</div></li>
+    <li><div><b>Retención:</b> que se queden. Depende del guion y del ritmo de edición. Se mide con la <b>duración media de visualización</b> y el porcentaje medio visto.</div></li>
+    <li><div><b>Monetización:</b> convertir esas horas en dinero. AdSense es la base, pero el margen real llega con afiliados, productos propios y patrocinios.</div></li>
+  </ol>
+  <div class="banner"><b>La regla que lo ordena todo</b><span>YouTube no premia el esfuerzo: premia la retención. Optimiza siempre en ese orden.</span></div>
+  <h3>Qué NO es un canal faceless</h3>
+  <div class="grid2">
+    <div class="card line"><span class="label">Haz esto</span><ul class="yes"><li>Tratarlo como un negocio con métricas</li><li>Producir en lotes y publicar con constancia</li><li>Copiar formatos que ya funcionan</li><li>Matar rápido lo que no rinde</li></ul></div>
+    <div class="card line"><span class="label">Evita esto</span><ul class="no"><li>Esperar que un vídeo «explote» por suerte</li><li>Publicar cuando te apetece</li><li>Inventar formatos sin validar demanda</li><li>Insistir 6 meses en un formato con 2% de CTR</li></ul></div>
+  </div>
+  <div class="card"><span class="label">Cómo se traduce esto en decisiones</span>Cuando algo no funcione, no toques todo a la vez. Mira la cadena en orden y arregla solo el eslabón roto: si nadie hace clic, el problema está en el envoltorio; si hacen clic pero se van, está en el guion; si se quedan pero no ganas dinero, está en el nicho o en las fuentes de ingreso. Cambiar cinco cosas a la vez te deja sin saber cuál era la que fallaba.</div>
+</section>
+
+<!-- ======================= 02 ======================= -->
+<section>
+  <div class="mod"><div class="num">02</div><div><h2>Elegir <em>nicho</em></h2><p>El 80% del resultado se decide aquí</p></div></div>
+  <p>No elijas lo que te gusta. Elige la intersección entre <b>demanda real</b>, <b>RPM alto</b> y <b>capacidad de producir volumen</b>. Un nicho sin búsquedas te condena a trabajar gratis; uno rentable que no puedes producir cada día te quema en tres semanas.</p>
+  <div class="grid3">
+    <div class="card"><span class="big">1</span><b>Demanda</b><br><span class="muted small">Que la gente ya lo esté buscando</span></div>
+    <div class="card"><span class="big">2</span><b>RPM</b><br><span class="muted small">Cuánto te pagan por cada 1.000 visitas</span></div>
+    <div class="card"><span class="big">3</span><b>Escala</b><br><span class="muted small">Que puedas producir en volumen</span></div>
+  </div>
+  <h3>Nichos faceless con mejor relación demanda / ingresos</h3>
+  <p class="small muted">El RPM varía según país, formato y época del año: estos rangos son orientativos y sirven solo para comparar nichos entre sí.</p>
+  <table>
+    <tr><th>Nicho</th><th>RPM orientativo</th><th>Dificultad</th><th>Por qué funciona</th></tr>
+    <tr><td>Finanzas e inversión</td><td>Muy alto</td><td>Alta</td><td>Anunciantes con mucho presupuesto</td></tr>
+    <tr><td>IA y tecnología</td><td>Alto</td><td>Media</td><td>Demanda creciente y constante</td></tr>
+    <tr><td>Motivación e historias</td><td>Medio</td><td>Baja</td><td>Producción sencilla y muy escalable</td></tr>
+    <tr><td>Resúmenes de libros</td><td>Medio</td><td>Baja</td><td>Contenido evergreen y reutilizable</td></tr>
+    <tr><td>Curiosidades y misterio</td><td>Medio-bajo</td><td>Baja</td><td>Alto CTR, muy viral en Shorts</td></tr>
+    <tr><td>Salud y bienestar</td><td>Alto</td><td>Alta</td><td>Rentable, pero exige rigor y cuidado</td></tr>
+  </table>
+  <div class="card warn"><span class="label">Aviso sobre salud y finanzas</span>Son los nichos que mejor pagan y también los que más canales tumban. Si entras: cita fuentes reconocidas, evita promesas de curación o de rentabilidad, y añade siempre un aviso de que no es consejo médico ni financiero.</div>
+  <h3>Test rápido antes de decidir</h3>
+  <ul class="check">
+    <li>¿Existen canales pequeños (menos de 50.000 subs) con vídeos de más de 100.000 visitas en 90 días?</li>
+    <li>¿Puedo listar 30 ideas de vídeo ahora mismo sin bloquearme?</li>
+    <li>¿Puedo producir un vídeo completo en menos de 3 horas?</li>
+    <li>¿Hay anunciantes o productos de afiliado evidentes en este tema?</li>
+  </ul>
+</section>
+
+<section>
+  <div class="mod"><div class="num">02</div><div><h2>RPM por <em>idioma</em></h2><p>El mismo vídeo puede pagar cinco veces más según a quién se lo cuentes</p></div></div>
+  <p>El RPM (lo que ganas por cada 1.000 visitas) depende sobre todo del <b>idioma del canal</b> y del <b>país de la audiencia</b>. Por eso muchos nichos se validan en inglés y se replican en otros idiomas. Estas son las referencias con las que trabajamos en System Academy:</p>
+  <div class="grid2" style="align-items:start">
+    <table style="margin:0">
+      <tr><th>Idioma</th><th>RPM medio</th></tr>
+      <tr><td><b>Inglés</b></td><td><b>10 $</b></td></tr>
+      <tr><td>Japonés</td><td>8-11 $</td></tr>
+      <tr><td>Alemán</td><td>7-9 $</td></tr>
+      <tr><td>Coreano</td><td>6-8 $</td></tr>
+      <tr><td>Italiano</td><td>4-6 $</td></tr>
+      <tr><td>Francés</td><td>3-5 $</td></tr>
+      <tr><td>Griego</td><td>4-5 $</td></tr>
+      <tr><td>Polaco</td><td>3-4 $</td></tr>
+      <tr><td>Húngaro</td><td>3-4 $</td></tr>
+    </table>
+    <table style="margin:0">
+      <tr><th>Idioma</th><th>RPM medio</th></tr>
+      <tr><td>Checo</td><td>3-4 $</td></tr>
+      <tr><td>Rumano</td><td>3-4 $</td></tr>
+      <tr><td>Turco</td><td>2-4 $</td></tr>
+      <tr><td>Tagalo</td><td>2-4 $</td></tr>
+      <tr><td>Ruso</td><td>2-4 $</td></tr>
+      <tr><td><b>Español</b></td><td><b>2-3 $</b></td></tr>
+      <tr><td>Portugués</td><td>2-3 $</td></tr>
+      <tr><td>Chino</td><td>2-3 $</td></tr>
+      <tr><td class="muted" colspan="2">Referencias orientativas: siempre hay excepciones.</td></tr>
+    </table>
+  </div>
+  <div class="banner"><b>La excepción que más cambia el resultado: Estados Unidos</b><span>La audiencia que ve el canal desde EE. UU. paga 15-30 $ de RPM, también en canales en español (el público hispano de EE. UU. y México lo entiende). Un canal en español con un 30% de visitas desde EE. UU. puede pasar de 2-3 $ a 6-11 $.</span></div>
+  <h3>Cómo usarlo para decidir</h3>
+  <ul class="dots">
+    <li>Valida el nicho donde ya funciona (normalmente en inglés) y replícalo en el idioma que mejor te encaje.</li>
+    <li>Traducir un canal que funciona a <b>alemán o inglés</b> dentro de YouTube suele pagar más que abrir en otras plataformas.</li>
+    <li>Una audiencia <b>adulta (+30)</b> paga más que una joven: los anunciantes pujan más por ella.</li>
+  </ul>
+  <div class="card"><span class="label">Calcúlalo con tus números</span>En la Biblioteca tienes la <b>Calculadora de beneficio del canal</b>: eliges el idioma, tus visitas al mes, cuántos canales tienes y el % de audiencia en EE. UU., y te dice lo que ganarías al mes, a 6 y a 12 meses, y cuántas visitas necesitas para llegar a 3.000 €/mes.</div>
+</section>
+
+<!-- ======================= 03 ======================= -->
+<section>
+  <div class="mod"><div class="num">03</div><div><h2><em>Investigación</em></h2><p>Validar con datos, nunca con intuición</p></div></div>
+  <p>Aquí entran las herramientas clave: <b>NexLev</b> (base de datos de canales, nichos, RPM y outliers) y la extensión <b>vidIQ</b>. Su función no es darte ideas bonitas, sino enseñarte qué está funcionando <b>ahora mismo</b> en tu nicho para que lo repliques mejor.</p>
+  <div class="grid2">
+    <div class="card line"><span class="label">Qué hacer con NexLev y vidIQ</span><ul class="dots">
+      <li>Encontrar <b>canales de referencia</b> y nichos con datos reales (NexLev)</li>
+      <li>Detectar <b>vídeos outlier</b>: los que rinden muy por encima de la media del canal</li>
+      <li>Ver <b>keywords y etiquetas</b> de la competencia (vidIQ)</li>
+      <li>Analizar canales grandes: formato, duración, frecuencia</li></ul></div>
+    <div class="card"><span class="label">El pro tip que más ahorra</span><b style="font-size:11pt">No inventes ideas.</b><br>Copia lo que ya funciona y mejóralo: mejor hook, mejor ritmo, mejor miniatura. La originalidad se aplica a la <b>ejecución</b>, no al tema.</div>
+  </div>
+  <h3>Cómo detectar un formato ganador (método outlier)</h3>
+  <ol class="steps">
+    <li><div>Busca 10 canales de tu nicho con entre 5.000 y 100.000 suscriptores.</div></li>
+    <li><div>Ordena sus vídeos por <b>más populares</b> y filtra por los últimos 6 meses.</div></li>
+    <li><div>Marca los vídeos que superen <b>5 veces</b> la media de visitas del canal: eso es un outlier. Mejor si es <b>reciente</b> y el canal tiene <b>más visitas que suscriptores</b>.</div></li>
+    <li><div>Apunta el <b>patrón</b>: tipo de título, ángulo, estructura, duración, estilo de miniatura.</div></li>
+    <li><div>Construye tu vídeo con ese patrón aplicado a un tema distinto del mismo nicho.</div></li>
+  </ol>
+  <div class="card warn"><b>Copia el FORMATO, nunca el contenido.</b> Replicar la estructura de un vídeo que funciona es estrategia. Copiar imágenes, guion o audio de otro creador es una infracción de derechos de autor que puede costarte el canal.</div>
+  <div class="grid2" style="margin-bottom:0">
+    <div class="card"><span class="label">Acelera con los prompts</span><b>Prompt 01</b> te devuelve solo canales con rendimiento consistente; <b>Prompt 02</b> saca los patrones virales de un canal y 30 ideas nuevas. Mejor con NexLev conectado a tu IA.</div>
+    <div class="card"><span class="label">Banco de ideas</span>Mantén siempre 20 ideas listas. Nunca te sientes a producir sin saber qué vas a grabar. La <b>plantilla de Notion</b> ya trae este tablero:</div>
+  </div>
+  <div class="chips"><span class="chip d">Idea</span><span class="chip">Keyword</span><span class="chip">Canal de referencia</span><span class="chip">Ángulo diferencial</span><span class="chip">Estado</span></div>
+</section>
+
+<!-- ======================= 04 ======================= -->
+<section>
+  <div class="mod"><div class="num">04</div><div><h2>Estructura del <em>vídeo</em></h2><p>Donde se gana o se pierde la retención</p></div></div>
+  <p>La retención no se «consigue»: se diseña antes de escribir la primera frase. Esta es la estructura que sostiene la mayoría de vídeos faceless que funcionan.</p>
+  <div class="timeline">
+    <div><b>HOOK</b>0-5 s · impacto + promesa</div>
+    <div><b>SETUP</b>5-30 s · contexto en 3 frases</div>
+    <div><b>DESARROLLO</b>30 s - 80% · ritmo + cliffhangers</div>
+    <div><b>CTA</b>Últimos 15 s</div>
+  </div>
+  <h3>1. Hook (0-5 segundos)</h3>
+  <p>Los primeros cinco segundos deciden si el vídeo vive o muere. Impacto directo y promesa clara: el espectador tiene que saber qué va a conseguir si se queda.</p>
+  <div class="chips"><span class="chip">«Esto no debería ser legal…»</span><span class="chip">«En 3 minutos vas a entender…»</span><span class="chip">«El 90% comete este error»</span><span class="chip">«Nadie habla de esto»</span></div>
+  <h3>2. Desarrollo</h3>
+  <ul class="dots"><li>Ritmo rápido, sin pausas ni relleno</li><li>Cambio visual cada <b>2-4 segundos</b></li><li>Curiosidad constante: abre bucles antes de cerrarlos</li></ul>
+  <h3>3. Retención: los cliffhangers</h3>
+  <p>Un cliffhanger es una promesa de que lo mejor está a punto de llegar. Colócalos justo antes de los puntos donde la gente suele abandonar (segundo 30, mitad del vídeo y minuto 6).</p>
+  <div class="chips"><span class="chip">«Pero lo peor viene ahora…»</span><span class="chip">«Y aquí está el problema…»</span><span class="chip">«Espera, porque el dato final lo cambia todo»</span></div>
+  <h3>4. CTA (cierre)</h3>
+  <p>No cierres con un final plano. Enlaza con el siguiente vídeo: es lo que más sube el tiempo de sesión, la métrica que más valora el algoritmo.</p>
+  <ul class="dots"><li>Suscripción, siempre en una frase corta y natural</li><li>Enlace directo al siguiente vídeo, mencionado <b>antes</b> de que acabe la narración</li></ul>
+  <div class="card"><span class="label">La prueba definitiva del guion</span>Lee el guion en voz alta. Si en algún punto te aburres tú, el espectador ya se ha ido: marca esas frases y bórralas.</div>
+</section>
+
+<!-- ======================= 05 ======================= -->
+<section>
+  <div class="mod"><div class="num">05</div><div><h2>Producción con <em>IA</em></h2><p>De la idea al archivo final, en cinco pasos</p></div></div>
+  <p>El objetivo es un proceso repetible que puedas ejecutar en lote: guionizar cinco vídeos seguidos, generar cinco voces seguidas, editar cinco veces seguidas. Cambiar de tarea todo el rato es lo que hace que un canal muera en la semana tres.</p>
+  <div class="pipe">
+    <div><div class="n">1</div><b>Idea</b><span>NexLev · vidIQ</span></div>
+    <div><div class="n">2</div><b>Guion</b><span>IA de texto + prompt de guiones</span></div>
+    <div><div class="n">3</div><b>Voz IA</b><span>ElevenLabs · GenAI Pro</span></div>
+    <div><div class="n">4</div><b>Edición</b><span>CapCut · EasyTubers</span></div>
+    <div><div class="n">5</div><b>Subida</b><span>SEO</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card line"><span class="label">Guion</span><ul class="dots"><li>Corto, directo y sin relleno</li><li>Frases simples: una idea por frase</li><li>Lenguaje emocional y concreto</li><li>Léelo en voz alta: si te trabas, reescríbelo</li><li>Usa el <b>Prompt 03 · Crear guiones</b></li></ul></div>
+    <div class="card line"><span class="label">Voz IA</span><ul class="dots"><li><b>ElevenLabs</b>: la referencia en calidad</li><li><b>GenAI Pro</b>: las mismas voces por mucho menos</li><li>Usa siempre la misma voz: es tu marca sonora</li><li>Mejor voz masculina y sin subir la exageración; ajusta velocidad y pausas</li></ul></div>
+  </div>
+  <h3>Edición: los detalles que multiplican la retención</h3>
+  <p>Herramientas: <b>CapCut</b> para editar a mano (rápido y gratuito) o <b>EasyTubers</b> si quieres generar el vídeo entero (guion, voz, imágenes y música) y subirlo a tu canal.</p>
+  <ul class="check cols2">
+    <li>Cortes rápidos: elimina cada silencio y cada respiración</li>
+    <li>Subtítulos grandes y legibles en móvil</li>
+    <li>Zooms suaves y constantes para que la imagen nunca esté quieta</li>
+    <li>Música de fondo suave, siempre por debajo de la voz</li>
+    <li>Imágenes y clips dinámicos que cambien cada 2-4 segundos</li>
+    <li>Mezcla siempre IA con vídeo de stock para evitar desmonetizaciones</li>
+  </ul>
+  <div class="grid2">
+    <div class="card"><span class="label">Recursos visuales gratuitos</span><b>Pixabay</b> y <b>Pexels</b> para vídeo e imagen de stock. Revisa siempre la licencia: la música y el metraje con copyright son la vía rápida a perder la monetización del vídeo.</div>
+    <div class="card"><span class="label">Organiza la producción en Notion</span>La <b>plantilla de Notion</b> trae el flujo de cada vídeo (ideas → miniatura → guion → locución → edición → programado) y el espacio para formar a tu equipo. Con tutorial en Loom.</div>
+  </div>
+</section>
+
+<!-- ======================= 06 ======================= -->
+<section>
+  <div class="mod"><div class="num">06</div><div><h2>Miniatura y <em>título</em></h2><p>El 50% del éxito ocurre antes del play</p></div></div>
+  <p>Si esto falla, no entra nadie. Da igual lo bueno que sea el vídeo: un CTR bajo significa que YouTube deja de mostrarlo. Trata la miniatura y el título como el producto y el vídeo como la entrega.</p>
+  <div class="grid2">
+    <div class="card line"><span class="label">Miniatura</span><ul class="dots"><li>Una <b>cara con emoción</b> (no tiene que ser la tuya: stock o generada)</li><li>Texto muy grande: <b>3-4 palabras máximo</b></li><li>Contraste fuerte entre sujeto y fondo</li><li>Que se entienda a tamaño de sello: mírala en el móvil</li><li>Herramientas: <b>Nano Banana</b>, <b>ChatGPT</b> o <b>getimg.ai (Flux)</b> para nichos donde otras IAs bloquean la imagen; retoques finales en <b>Canva</b></li></ul></div>
+    <div class="card line"><span class="label">Título</span><ul class="dots"><li>Debe <b>completar</b> la miniatura, no repetirla</li><li>Menos de 60 caracteres para que no se corte</li><li>Keyword principal al principio</li><li>Curiosidad + beneficio concreto</li><li>Sin clickbait imposible de cumplir: destroza la retención</li></ul></div>
+  </div>
+  <h3>Plantillas de título que funcionan</h3>
+  <table>
+    <tr><th>Plantilla</th><th>Ejemplo</th></tr>
+    <tr><td>Cómo X hizo Y</td><td>Cómo un chico de 19 años facturó 40.000 € con IA</td></tr>
+    <tr><td>Nadie habla de esto…</td><td>Nadie habla de este error al invertir tu primer sueldo</td></tr>
+    <tr><td>El secreto de…</td><td>El secreto de los canales que crecen en 30 días</td></tr>
+    <tr><td>Por qué X (y qué hacer)</td><td>Por qué tu canal no crece (y cómo arreglarlo hoy)</td></tr>
+    <tr><td>Número + promesa</td><td>7 nichos faceless que casi nadie está tocando</td></tr>
+  </table>
+  <div class="card"><span class="label">Prueba A / B</span>Si un vídeo tiene buena retención pero poco CTR, el problema no es el vídeo: es el envoltorio. Cambia la miniatura, deja pasar 48-72 horas y compara. Es la optimización más rentable que existe: cero producción, resultado inmediato.</div>
+</section>
+
+<!-- ======================= 07 ======================= -->
+<section>
+  <div class="mod"><div class="num">07</div><div><h2>Subida <em>optimizada</em></h2><p>SEO para que el algoritmo sepa a quién enseñárselo</p></div></div>
+  <p>El SEO no hace virales los vídeos malos, pero sí decide a quién se le muestra el vídeo en las primeras horas. Esa primera audiencia determina si el vídeo despega.</p>
+  <h3>Checklist de publicación</h3>
+  <ul class="check cols2">
+    <li>Título con la keyword principal al inicio</li>
+    <li>Miniatura personalizada, revisada en tamaño pequeño</li>
+    <li>Descripción: 2 primeras líneas con la keyword y el gancho</li>
+    <li>Descripción larga: resumen real del vídeo, no relleno</li>
+    <li>Tags con keyword principal, variantes y nombre del canal</li>
+    <li>Capítulos con marcas de tiempo si el vídeo supera los 8 minutos</li>
+    <li>Primer comentario fijado con una pregunta que genere respuestas</li>
+    <li>Pantalla final enlazando al siguiente vídeo</li>
+    <li>Añadir el vídeo a una playlist temática</li>
+  </ul>
+  <div class="banner"><b>Las primeras 2 horas mandan</b><span>Responde a todos los comentarios iniciales: el algoritmo lee la interacción temprana como señal de calidad.</span></div>
+  <h3>Duración y formato</h3>
+  <div class="grid3">
+    <div class="card"><span class="big">8-15 min</span><span class="small muted">Formato largo. Permite varios bloques de anuncios y es el que mejor monetiza.</span></div>
+    <div class="card"><span class="big">Shorts</span><span class="small muted">Crecimiento rápido de audiencia. Úsalos para captar, no para monetizar (y mejor en un canal aparte del largo).</span></div>
+    <div class="card"><span class="big">Reutiliza</span><span class="small muted">Cada vídeo largo da 3-5 Shorts. Publícalos también en TikTok e Instagram.</span></div>
+  </div>
+  <h3>Plantilla de descripción</h3>
+  <div class="card">
+    <p><b>Líneas 1-2:</b> resumen con la keyword principal y el gancho del vídeo. Es lo único que se ve sin desplegar, así que trátalas como un segundo título.</p>
+    <p><b>Bloque central:</b> resumen real en 4-6 líneas, con las variantes de la keyword escritas de forma natural.</p>
+    <p><b>Capítulos:</b> marcas de tiempo si el vídeo pasa de 8 minutos.</p>
+    <p><b>Cierre:</b> enlaces a tu playlist, redes y afiliados, siempre en el mismo orden en todos los vídeos.</p>
+  </div>
+</section>
+
+<!-- ======================= 08 ======================= -->
+<section>
+  <div class="mod"><div class="num">08</div><div><h2>Monetización <em>real</em></h2><p>De dónde sale el dinero (y en qué orden llega)</p></div></div>
+  <p>AdSense es la parte más lenta y la que menos margen deja. Los canales faceless que de verdad generan ingresos apoyan el negocio en varias patas a la vez.</p>
+  <table>
+    <tr><th>Fuente</th><th>Cuándo activarla</th><th>Potencial</th></tr>
+    <tr><td>AdSense (anuncios)</td><td>Al entrar en el Programa de Socios</td><td>Base estable, depende del RPM</td></tr>
+    <tr><td>Marketing de afiliados</td><td>Desde el primer vídeo</td><td>Muy alto si el nicho tiene productos</td></tr>
+    <tr><td>Producto propio o infoproducto</td><td>A partir de audiencia recurrente</td><td>El margen más alto de todos</td></tr>
+    <tr><td>Patrocinios de marca</td><td>A partir de ~10.000 suscriptores</td><td>Pago fijo por vídeo, muy rentable</td></tr>
+    <tr><td>Licencia y reutilización</td><td>Cuando tengas catálogo</td><td>Ingreso pasivo secundario</td></tr>
+  </table>
+  <h3>Requisitos del Programa de Socios de YouTube</h3>
+  <p>Para activar los anuncios necesitas cumplir <b>una</b> de estas dos vías, además de 1.000 suscriptores y de respetar las normas de la plataforma. Los requisitos cambian con el tiempo: confirma siempre las condiciones vigentes en la ayuda oficial de YouTube.</p>
+  <div class="grid2">
+    <div class="card line"><span class="label">Vía largo</span><span class="big">4.000 horas</span><span class="small muted">de visualización pública en los últimos 12 meses</span></div>
+    <div class="card line"><span class="label">Vía Shorts</span><span class="big">10 millones</span><span class="small muted">de visualizaciones válidas de Shorts en 90 días</span></div>
+  </div>
+  <div class="card warn"><span class="label">Contenido auténtico</span>Faceless no significa automático ni genérico. YouTube desmonetiza el contenido repetitivo o producido en masa sin aportación real. Añade siempre criterio propio: análisis, estructura, narración y opinión. Y si montas varios canales, <b>aíslalos</b> (Gmail, IP, AdSense, verificación y recuperación distintos): en la biblioteca tienes el vídeo sobre contenido inauténtico que explica cómo proteger tu red.</div>
+</section>
+
+<!-- ======================= 09 ======================= -->
+<section>
+  <div class="mod"><div class="num">09</div><div><h2>Estrategia de <em>crecimiento</em></h2><p>Volumen al principio, precisión después</p></div></div>
+  <p>Al arrancar no tienes datos. La única forma de conseguirlos es publicar. El volumen inicial no es para «hacerte viral»: es para descubrir rápido qué formato responde en tu nicho.</p>
+  <div class="grid2">
+    <div class="card line"><span class="label">Ritmo de publicación</span><ul class="dots"><li><b>1-2 vídeos diarios</b> durante el arranque</li><li><b>Mínimo 30 días seguidos</b> sin fallar uno</li><li>Produce en lotes: 7 vídeos en 2 días de trabajo</li><li>Programa las subidas, no publiques a mano cada día</li></ul></div>
+    <div class="card line"><span class="label">Analiza siempre</span><ul class="dots"><li><b>CTR:</b> 5% en evergreen, hasta 15% en tendencia</li><li><b>Retención media:</b> mínimo 30-40%</li><li><b>Duración media vista</b> en minutos absolutos</li><li><b>Curva de abandono:</b> dónde exactamente se van</li></ul></div>
+  </div>
+  <h3>Tus tres números</h3>
+  <div class="grid3">
+    <div class="card"><span class="big">5-15%</span><b>CTR</b><br><span class="small muted">Por debajo: falla la miniatura o el título</span></div>
+    <div class="card"><span class="big">30-40%+</span><b>Retención</b><br><span class="small muted">Por debajo: falla el guion o el ritmo</span></div>
+    <div class="card"><span class="big">30</span><b>Días</b><br><span class="small muted">Antes de sacar cualquier conclusión</span></div>
+  </div>
+  <div class="banner"><b>Mata rápido lo que no funciona. Duplica lo que sí.</b><span>Si un formato funciona, haz cinco vídeos más con esa misma estructura antes de probar nada nuevo. La mayoría abandona un formato ganador demasiado pronto por aburrimiento propio. Tu audiencia no está aburrida: acaba de descubrirte.</span></div>
+  <h3>Diagnóstico rápido</h3>
+  <table>
+    <tr><th>Síntoma</th><th>Causa probable</th><th>Qué hacer</th></tr>
+    <tr><td>Pocas impresiones</td><td>Tema sin demanda o SEO flojo</td><td>Cambia de tema, revisa keywords</td></tr>
+    <tr><td>Muchas impresiones, poco CTR</td><td>Miniatura o título débiles</td><td>Prueba A/B de miniatura</td></tr>
+    <tr><td>Buen CTR, poca retención</td><td>Hook o ritmo del guion</td><td>Reescribe los primeros 30 segundos</td></tr>
+    <tr><td>Caída brusca al inicio</td><td>El vídeo no cumple la promesa</td><td>Alinea título, miniatura y contenido</td></tr>
+    <tr><td>Buenas vistas, pocos subs</td><td>Falta CTA o identidad de canal</td><td>Refuerza el cierre y la playlist</td></tr>
+  </table>
+</section>
+
+<!-- ======================= 10 ======================= -->
+<section>
+  <div class="mod"><div class="num">10</div><div><h2>Mentalidad y plan de <em>30 días</em></h2><p>El sistema por encima de la inspiración</p></div></div>
+  <div class="grid2">
+    <div class="card line"><span class="label m">Esto no es</span>Subir vídeos y esperar a que pase algo.</div>
+    <div class="card" style="background:#111;color:#fff"><span class="label" style="color:#bdbdbd">Esto es</span><b style="font-size:13pt">Testear · Analizar · Optimizar</b></div>
+  </div>
+  <h3>Plan de ejecución de 30 días</h3>
+  <ol class="steps w">
+    <li data-n="S1"><div><b>Semana 1 · Fundación.</b> Elige nicho (Prompt 01), analiza 10 canales (Prompt 02), reúne 30 ideas validadas, crea la marca del canal y define la plantilla de miniatura. Publica los 3 primeros vídeos.</div></li>
+    <li data-n="S2"><div><b>Semana 2 · Producción en lote.</b> 7 guiones seguidos, 7 voces seguidas, 7 ediciones seguidas. Programa toda la semana de una vez.</div></li>
+    <li data-n="S3"><div><b>Semana 3 · Primeras señales.</b> Revisa CTR y retención vídeo a vídeo. Identifica el formato con mejor rendimiento y produce tres variantes de ese formato.</div></li>
+    <li data-n="S4"><div><b>Semana 4 · Doblar la apuesta.</b> Elimina lo que no rinde, repite lo que funciona, prueba A/B de miniaturas y empieza a cortar Shorts de los vídeos con mejor retención.</div></li>
+  </ol>
+  <h3>Errores que hunden a la mayoría</h3>
+  <div class="grid2">
+    <div class="card line"><span class="label">Haz esto</span><ul class="yes"><li>Publicar con calendario fijo, pase lo que pase</li><li>Revisar métricas una vez por semana, no cada hora</li><li>Reinvertir los primeros ingresos en herramientas</li><li>Guardar todo lo que produces: es un catálogo</li></ul></div>
+    <div class="card line"><span class="label">Evita esto</span><ul class="no"><li>Cambiar de nicho a las dos semanas</li><li>Comparar tu vídeo 5 con el vídeo 500 de otro</li><li>Perfeccionar un vídeo durante una semana entera</li><li>Comprar visitas o suscriptores</li></ul></div>
+  </div>
+  <div class="card"><span class="label">La única métrica del primer mes</span>No son las visitas ni los suscriptores: es <b>cuántos vídeos has publicado</b>. Los primeros 30 existen para que aprendas a producir rápido y para darle datos al algoritmo. Los resultados empiezan a leerse a partir de ahí.</div>
+</section>
+
+<!-- ======================= PRO TIPS ======================= -->
+<section>
+  <div class="banner" style="margin-top:0"><b>Pro tips avanzados</b><span>Lo que separa un canal que sobrevive de uno que escala</span></div>
+  <ol class="steps">
+    <li><div><b>Copia formatos virales, no ideas.</b> El formato es la estructura; la idea es el tema. Replica lo primero, cambia lo segundo.</div></li>
+    <li><div><b>Vídeos de 8-15 minutos</b> para la mejor monetización: permiten varios bloques de anuncios sin castigar la retención.</div></li>
+    <li><div><b>Una playlist por formato.</b> Convierte visitas sueltas en maratones.</div></li>
+    <li><div><b>Estandariza todo.</b> Una plantilla de miniatura, una voz, una estructura de guion: la consistencia visual y sonora es lo que crea marca.</div></li>
+  </ol>
+  <h3>Cuándo escalar y qué delegar</h3>
+  <p>El cuello de botella siempre es el mismo: la edición. Cuando tengas un formato validado y estable, ese es el primer proceso que se externaliza, porque es el que más horas consume y el que menos criterio propio requiere.</p>
+  <ol class="steps">
+    <li><div><b>Documenta tu proceso</b> antes de delegar nada: plantilla de guion, referencia de voz, estilo de miniatura y ejemplos de vídeos correctos. La plantilla de Notion ya tiene el espacio para guías y Looms de formación del equipo.</div></li>
+    <li><div><b>Delega la edición</b> primero. Empieza con un vídeo de prueba pagado antes de comprometer un volumen.</div></li>
+    <li><div><b>Reserva siempre para ti</b> la elección de tema, el título y la miniatura: son las decisiones que determinan el resultado.</div></li>
+    <li><div><b>Reinvierte</b> los primeros ingresos en herramientas y en horas de edición, no en material innecesario.</div></li>
+  </ol>
+</section>
+
+<!-- ======================= IAs POR TAREA ======================= -->
+<section>
+  <div class="mod"><div class="num" style="font-size:12pt">IA</div><div><h2>IAs por <em>tarea</em></h2><p>Qué herramienta usar en cada paso del proceso</p></div></div>
+  <table>
+    <tr><th style="width:23%">Tarea</th><th style="width:22%">Herramienta</th><th>Para qué</th></tr>
+    <tr><td rowspan="2"><b>Analizar canales y buscar nichos</b></td><td><a href="https://www.nexlev.io">NexLev</a></td><td>Base de datos de canales: nichos, RPM, outliers y canales terminados. Conéctalo a tu IA para usar los prompts con datos reales.</td></tr>
+    <tr><td><a href="https://vidiq.com">vidIQ</a></td><td>Ver las palabras clave y etiquetas de los canales de la competencia.</td></tr>
+    <tr><td><b>Comprobar ideas</b></td><td><a href="https://www.nexlev.io">NexLev</a> + tu IA</td><td>Detectar outliers recientes y validar la idea con el Prompt 02 antes de producir, adaptándola sin copiar.</td></tr>
+    <tr><td><b>Guiones</b></td><td>Tu IA de texto (p. ej. <a href="https://chatgpt.com">ChatGPT</a>)</td><td>Guiones originales a partir de las ideas ganadoras, con el Prompt 03.</td></tr>
+    <tr><td rowspan="2"><b>Voces</b></td><td><a href="https://elevenlabs.io">ElevenLabs</a></td><td>La referencia en calidad de voz con IA.</td></tr>
+    <tr><td><a href="https://genaipro.io/">GenAI Pro</a></td><td>Las mismas voces que ElevenLabs por mucho menos.</td></tr>
+    <tr><td rowspan="4"><b>Miniaturas e imágenes</b></td><td><a href="https://gemini.google.com">Nano Banana (Gemini)</a></td><td>Imágenes de gran calidad para el vídeo y las miniaturas.</td></tr>
+    <tr><td><a href="https://chatgpt.com">ChatGPT</a></td><td>Miniaturas a partir de la idea.</td></tr>
+    <tr><td><a href="https://getimg.ai/blog/flux-1-dev-now-supports-image-to-image-restyle-any-photo-in-seconds">getimg.ai (Flux)</a></td><td>Modelo casi sin censura para nichos donde otras IAs bloquean la imagen.</td></tr>
+    <tr><td><a href="https://www.canva.com">Canva</a></td><td>Retoques finales de la miniatura (texto, sello 4K…).</td></tr>
+    <tr><td rowspan="3"><b>Crear y editar vídeos</b></td><td><a href="https://easytubers.com/">EasyTubers</a></td><td>Genera el vídeo entero (guion, voz, imágenes y música) y puede subirlo a tu canal.</td></tr>
+    <tr><td><a href="https://www.capcut.com">CapCut</a></td><td>Edición manual con la locución y las imágenes.</td></tr>
+    <tr><td><a href="https://pixabay.com">Pixabay</a> · <a href="https://www.pexels.com">Pexels</a></td><td>Vídeos e imágenes de stock gratis y sin copyright.</td></tr>
+    <tr><td><b>Organizar y delegar</b></td><td><a href="https://nebulous-ring-926.notion.site/PLANTILLA-e46c374b02cb830194aa8181ee0a4798?source=copy_link">Plantilla de Notion</a></td><td>Workflow de cada vídeo, canales de referencia, ideas y formación del equipo.</td></tr>
+  </table>
+  <div class="card"><span class="label">Regla de oro</span>Mezcla siempre IA con material de stock y criterio propio. Las herramientas aceleran la producción; lo que hace que un canal dure es el análisis, la estructura y la narración que aportas tú.</div>
+</section>
+
+<!-- ======================= PROMPTS ======================= -->
+<section>
+  <div class="mod"><div class="num" style="font-size:12pt">5</div><div><h2>Los prompts de <em>System Academy</em></h2><p>Copia el bloque completo, pégalo en tu IA y ejecuta</p></div></div>
+  <p>Cinco prompts que cubren todo el proceso: encontrar el nicho, analizar a la competencia, escribir guiones y convertir transcripciones en guiones listos para narrar. Cada uno tiene su enlace a Google Docs para copiarlo sin errores de formato.</p>
+  <table>
+    <tr><th>Prompt</th><th>Para qué sirve</th><th>Cuándo usarlo</th></tr>
+    <tr><td><b>01 · Buscar nichos rentables</b></td><td>Canales en inglés con rendimiento consistente, no picos virales</td><td>Semana 1, antes de elegir nicho</td></tr>
+    <tr><td><b>02 · Analizar canales</b></td><td>Patrones virales, títulos, miniaturas y 30 ideas nuevas</td><td>Con cada canal de referencia</td></tr>
+    <tr><td><b>03 · Crear guiones</b></td><td>Diagnóstico de guiones, ADN del canal e ideas originales</td><td>Cuando tengas guiones que analizar</td></tr>
+    <tr><td><b>04 · Guion diario</b></td><td>Traduce, limpia y reestructura una transcripción</td><td>El día a día de la producción</td></tr>
+    <tr><td><b>05 · Ultra retención</b></td><td>Storytelling agresivo desde el primer segundo</td><td>Formato historia y vídeos clave</td></tr>
+  </table>
+  <div class="card warn"><span class="label">Antes de pegar una transcripción</span>Usa la transcripción como <b>materia prima de investigación</b>, no como texto a copiar. El objetivo es un guion nuevo con tu estructura, tu ángulo y tu voz. Reproducir el guion de otro creador es una infracción de derechos de autor, y YouTube penaliza el contenido duplicado.</div>
+
+  <div class="prompt-head"><div><span class="k">Prompt 01</span><h3>Buscar nichos rentables</h3></div><a href="https://docs.google.com/document/d/10fD6d4XAOdXnJ1HHlQNjtHLVOoky_KfwPyrCBusL0WE/edit?usp=sharing">Abrir en Google Docs ↗</a></div>
+  <p class="use">Funciona mejor en una IA con NexLev conectado: así trabaja con datos reales de canales y no con suposiciones.</p>
+<pre class="prompt"><span class="h">PROMPT BUSCAR NICHOS RENTABLES · SYSTEM ACADEMY</span>
+
+Actúa como un analista experto en detección de canales de YouTube replicables, faceless y escalables.
+
+Tu objetivo es encontrar canales en inglés que cumplan criterios MUY ESTRICTOS. No quiero canales con picos virales aislados. No quiero canales inconsistentes. No quiero canales donde algunos vídeos funcionen y muchos otros fracasen.
+
+Quiero detectar nichos potenciales reales, es decir: canales donde el rendimiento sea estable, consistente y repetible.
+
+<span class="h">====================================
+FILTRO 1 — ELEGIBILIDAD DEL CANAL
+====================================</span>
+
+El canal solo puede entrar si cumple TODO esto:
+
+- Idioma: inglés
+- Vídeos largos: mínimo 15 minutos
+- Contenido replicable
+- Formato faceless o semi-faceless
+- No marca personal
+- No depender de una persona en cámara
+- Producción simple
+- Sin animación 3D avanzada
+- Público adulto (+30)
+- Canal con menos de 7 meses de antigüedad
+  O
+- Canal con menos de 40 vídeos subidos
+
+EXCLUIR COMPLETAMENTE:
+- true crime
+- asesinatos
+- policías
+- detectives
+- interrogatorios
+- contenido criminal en general
+- canales infantiles
+- vlogs
+- talking head
+- streamers
+- formatos difíciles de replicar
+- animación compleja
+
+Si no cumple TODO esto, DESCARTAR.
+
+<span class="h">====================================
+FILTRO 2 — CONSISTENCIA REAL
+====================================</span>
+
+Este filtro es obligatorio y es el más importante.
+
+Analiza TODOS los vídeos publicados en los últimos 30 días.
+No tomes solo los mejores.
+No tomes una muestra parcial.
+No tomes solo los más virales.
+Toma TODOS los vídeos del último mes.
+
+El canal solo puede entrar si cumple TODAS estas condiciones al mismo tiempo:
+
+1. TODOS los vídeos del último mes deben superar las 30.000 vistas
+- sin excepción
+- si hay 1 solo vídeo con menos de 30.000 vistas, DESCARTAR el canal
+
+2. DESCARTAR inmediatamente cualquier canal que tenga vídeos recientes con:
+- 800 vistas
+- 700 vistas
+- 5.000 vistas
+- 10.000 vistas
+- 20.000 vistas
+o cualquier número inferior a 30.000
+
+3. El millón de vistas del último mes debe salir de la suma del rendimiento consistente de TODOS los vídeos
+- no por 1 vídeo viral
+- no por 2 o 3 vídeos excepcionales
+- no por outliers
+
+4. El promedio de vistas de TODOS los vídeos publicados en el último mes debe ser suficientemente alto como para justificar el millón mensual de forma sólida y pareja
+
+5. Si detectas que:
+- algunos vídeos fueron bien
+- pero otros tuvieron rendimiento flojo
+- o hubo picos aislados
+- o el canal es irregular
+entonces DESCARTAR
+
+6. Penalizar fuertemente canales con distribución desigual de vistas
+Ejemplo de canal a DESCARTAR:
+- 3 vídeos con 300k
+- 4 vídeos con 8k
+- 2 vídeos con 900 vistas
+
+Eso NO sirve.
+Eso NO es un nicho potencial sólido.
+
+7. Solo aceptar canales donde el rendimiento reciente sea estable y parejo en casi todos o todos los vídeos
+
+<span class="h">====================================
+REGLA CENTRAL
+====================================</span>
+
+La prioridad absoluta es la CONSISTENCIA.
+No la viralidad.
+No el tamaño del canal.
+No uno o dos vídeos fuertes.
+
+Quiero canales donde el rendimiento sea repetible.
+Si el canal depende de outliers, DESCARTAR.
+
+<span class="h">====================================
+DOBLE VERIFICACIÓN OBLIGATORIA
+====================================</span>
+
+Antes de incluir un canal, haz esta comprobación final:
+
+CHECK A:
+¿Todos los vídeos del último mes superan 30.000 vistas?
+Si no, DESCARTAR.
+
+CHECK B:
+¿El canal llegó al millón mensual por consistencia general y no por unos pocos vídeos?
+Si no, DESCARTAR.
+
+Solo incluir canales que aprueben A y B.
+
+<span class="h">====================================
+FORMATO DE RESPUESTA
+====================================</span>
+
+Quiero SOLO esto. Nada más.
+No agregues análisis largos.
+No agregues conclusión final.
+No agregues introducción.
+
+Para cada canal, usar exactamente este formato:
+
+1. NOMBRE DEL CANAL — NICHO
+🔗 Link
+
+📊 Ratio vistas/subs: X.Xx
+👁️ Vistas último mes: X
+⏱️ Duración: X min
+
+🎬 Modelo:
+(frase muy breve)
+
+💡 Oportunidad:
+(frase muy breve)
+
+<span class="h">====================================
+REGLAS DE RESPUESTA
+====================================</span>
+
+- Máximo 10 canales
+- Respuesta corta
+- Limpia
+- Directa
+- Si no encuentras suficientes canales que cumplan todo, mostrar menos
+- Es mejor dar 3 canales muy buenos que 10 malos
+- No rellenar con ejemplos dudosos
+- Si un canal tiene aunque sea una señal clara de inconsistencia, DESCARTAR</pre>
+
+  <div class="prompt-head"><div><span class="k">Prompt 02</span><h3>Analizar canales y sacar ideas ganadoras</h3></div><a href="https://docs.google.com/document/d/1XubNFRSNKhCLGNzPSqYxBeVrFChLtSTVNcMbwbYH2IE/edit?usp=sharing">Abrir en Google Docs ↗</a></div>
+  <p class="use">Pásale el canal de referencia (o sus datos desde NexLev: títulos, visitas, duración y miniaturas) justo después del prompt.</p>
+<pre class="prompt"><span class="h">PROMPT ANALIZAR CANALES · SYSTEM ACADEMY</span>
+
+Actúa como un estratega experto en YouTube, análisis de canales virales, retención de audiencia, packaging, storytelling y crecimiento orgánico.
+
+Voy a pasarte información de un canal de YouTube. Quiero que analices el canal completo con profundidad y extraigas patrones accionables.
+
+Tu análisis debe incluir:
+
+<span class="h">## 1. Resumen general del canal</span>
+Explica de forma clara:
+- De qué trata el canal.
+- A qué tipo de audiencia se dirige.
+- Qué promesa principal parece ofrecer.
+- Qué emociones, deseos o miedos utiliza para atraer visitas.
+- Qué posición ocupa frente a otros canales similares.
+
+<span class="h">## 2. Patrones virales del canal</span>
+Analiza los vídeos con mejor rendimiento y detecta patrones comunes en:
+- Temas.
+- Títulos.
+- Miniaturas.
+- Estructura del gancho inicial.
+- Tipo de promesa.
+- Duración.
+- Estilo narrativo.
+- Nivel de dramatización.
+- Uso de curiosidad, miedo, deseo, urgencia o polémica.
+- Palabras o conceptos repetidos.
+- Tipos de historias que más funcionan.
+- Formato de los vídeos más exitosos.
+
+No te limites a decir "funciona porque es interesante". Quiero que expliques exactamente por qué esos vídeos tienen potencial viral desde el punto de vista psicológico y estratégico.
+
+<span class="h">## 3. Ideas más potentes del canal</span>
+Selecciona las mejores ideas del canal y clasifícalas en una tabla con estas columnas:
+- Idea / vídeo.
+- Por qué es potente.
+- Qué deseo o dolor toca.
+- Qué tipo de audiencia atrae.
+- Qué patrón viral utiliza.
+- Cómo podría mejorarse aún más.
+- Nivel de potencial: bajo, medio, alto o muy alto.
+
+Después, extrae las grandes categorías de ideas que más potencial tienen para repetir o escalar.
+
+<span class="h">## 4. Ideas más flojas</span>
+Detecta las ideas más débiles del canal y explica:
+- Por qué tienen menos potencial.
+- Si fallan por tema, título, miniatura, enfoque, promesa o saturación.
+- Qué les falta para ser más atractivas.
+- Si deberían descartarse, reformularse o fusionarse con una idea más potente.
+- Cómo se podrían convertir en una versión mucho más viral.
+
+Preséntalas también en una tabla.
+
+<span class="h">## 5. Análisis de títulos</span>
+Analiza los títulos del canal y responde:
+- Qué fórmulas se repiten.
+- Qué palabras generan más interés.
+- Qué títulos parecen más virales.
+- Qué títulos parecen más débiles.
+- Qué títulos tienen buena idea pero mala ejecución.
+- Qué patrones de título debería repetir el canal.
+- Qué patrones debería evitar.
+
+Luego crea 20 nuevos títulos basados en los patrones más exitosos del canal.
+
+<span class="h">## 6. Análisis de miniaturas</span>
+Analiza las miniaturas y responde:
+- Qué elementos visuales se repiten.
+- Qué miniaturas parecen más clicables.
+- Qué miniaturas parecen más genéricas.
+- Qué colores, rostros, objetos, símbolos o contrastes funcionan mejor.
+- Qué miniaturas transmiten mejor la promesa del vídeo.
+- Qué errores visuales se repiten.
+- Qué estilo de miniatura debería estandarizar el canal.
+
+Propón 10 conceptos de miniaturas nuevas basadas en los mejores patrones detectados.
+
+<span class="h">## 7. Análisis de estructura narrativa</span>
+Detecta cómo suelen estar construidos los vídeos más fuertes:
+- Tipo de introducción.
+- Gancho inicial.
+- Desarrollo.
+- Puntos de tensión.
+- Momentos de curiosidad.
+- Ritmo.
+- Cierre.
+- Uso de cliffhangers.
+- Uso de promesas abiertas.
+- Elementos que mantienen la retención.
+
+Después, crea una estructura ideal para futuros vídeos del canal.
+
+<span class="h">## 8. Mapa de oportunidades</span>
+Dime qué oportunidades está desaprovechando el canal:
+- Temas que debería explotar más.
+- Series que podría crear.
+- Formatos repetibles.
+- Nichos secundarios relacionados.
+- Enfoques más emocionales o polémicos.
+- Ideas que podrían atraer más clics.
+- Ideas que podrían mejorar la retención.
+- Ideas con potencial para convertirse en vídeos evergreen.
+
+<span class="h">## 9. Ranking de ideas nuevas</span>
+Crea 30 ideas nuevas para el canal, ordenadas de mayor a menor potencial viral.
+Para cada idea incluye:
+- Título sugerido.
+- Por qué podría funcionar.
+- Promesa principal.
+- Miniatura recomendada.
+- Nivel de potencial viral.
+- Tipo de emoción que activa.
+
+<span class="h">## 10. Conclusión estratégica</span>
+Termina con una conclusión clara y directa:
+- Qué debería repetir el canal.
+- Qué debería dejar de hacer.
+- Qué tipo de vídeos debería priorizar.
+- Qué patrón tiene más probabilidades de escalar.
+- Qué errores están frenando el crecimiento.
+- Cuál sería la estrategia de contenido ideal para los próximos 30 días.
+
+Sé muy crítico, específico y directo. No quiero una respuesta genérica. Quiero un análisis útil para decidir qué vídeos hacer, qué ideas evitar y cómo replicar los patrones que ya han demostrado tener potencial viral.
+
+Cuando te pase los datos del canal, no empieces con teoría. Analiza directamente.</pre>
+
+  <div class="prompt-head"><div><span class="k">Prompt 03</span><h3>Crear guiones que retienen</h3></div><a href="https://docs.google.com/document/d/13dCaCNTWy9zPHMQKyNnDl8sI9sdgfYH6xYnqFl0hbbU/edit?usp=sharing">Abrir en Google Docs ↗</a></div>
+  <p class="use">Rellena los campos entre corchetes con los datos de tu canal y pega tus guiones antiguos (o los de tu canal de referencia) donde se indica.</p>
+<pre class="prompt"><span class="h">PROMPT CREAR GUIONES · SYSTEM ACADEMY</span>
+
+<span class="h"># ROL</span>
+Eres un guionista y estratega de contenido de YouTube con experiencia en canales de alto rendimiento. Tu especialidad es el análisis forense de guiones: detectar qué patrones generan retención y reconstruirlos en ideas originales.
+
+<span class="h"># CONTEXTO DEL CANAL</span>
+- Nicho: <span class="ph">[TU NICHO]</span>
+- Público objetivo: <span class="ph">[EDAD / INTERESES / NIVEL DE CONOCIMIENTO]</span>
+- Formato: <span class="ph">[long-form 8-15 min / short / documental / videoensayo]</span>
+- Tono de voz: <span class="ph">[ej. cercano y sarcástico / didáctico / narrativo intenso]</span>
+- Objetivo del canal: <span class="ph">[retención / suscriptores / ventas / autoridad]</span>
+- Métricas si las tengo: <span class="ph">[CTR, retención media, views de cada guion]</span>
+
+<span class="h"># MATERIAL DE ENTRADA</span>
+A continuación te pego <span class="ph">[N]</span> guiones antiguos del canal:
+&lt;&lt;&lt;
+<span class="ph">[PEGA AQUÍ LOS GUIONES, separados por --- y con su título + views si los tienes]</span>
+&gt;&gt;&gt;
+
+<span class="h"># PROCESO (ejecútalo en este orden y muestra cada fase)</span>
+
+<span class="h">## FASE 1 — Diagnóstico</span>
+Para cada guion, analiza:
+- Hook (primeros 15 s): qué promete, qué tensión abre, cómo de fuerte es del 1 al 10.
+- Estructura narrativa: divídela en bloques y marca dónde se pierde el ritmo.
+- Curva de tensión: dónde hay caídas de interés y por qué (relleno, repetición, explicación innecesaria, falta de conflicto).
+- Recursos que funcionan: bucles abiertos, analogías, giros, datos, humor.
+- Debilidades recurrentes en TODOS los guiones.
+
+<span class="h">## FASE 2 — ADN del canal</span>
+Sintetiza el "código genético" que se repite en lo que funciona: temas, ángulos, estructuras, muletillas narrativas y promesas implícitas al espectador.
+Sepáralo en: (a) lo que hay que conservar, (b) lo que hay que abandonar, (c) lo que está infrautilizado y podría explotarse más.
+
+<span class="h">## FASE 3 — Ideas originales</span>
+Genera 10 ideas de vídeo NUEVAS derivadas de ese ADN. Para cada una:
+- Título (estilo YouTube, sin clickbait vacío)
+- Ángulo original: qué enfoque nadie ha usado en este nicho
+- Por qué funciona: qué tensión o curiosidad concreta activa
+- Conexión con el material antiguo: de qué patrón nace
+- Nivel de riesgo: seguro / experimental
+Reglas: nada de refritos del mismo tema con otro título. Al menos 3 ideas deben romper con el formato habitual del canal.
+
+<span class="h">## FASE 4 — Guion mejorado</span>
+Elige la idea con mayor potencial y desarrolla el guion completo:
+- 3 hooks alternativos para los primeros 15 segundos
+- Estructura por bloques con timestamps aproximados
+- Guion palabra por palabra, en el tono de voz del canal
+- Bucles abiertos marcados con [LOOP] y su cierre con [CIERRE LOOP]
+- Notas de edición/visual entre corchetes
+- CTA integrado de forma natural, no pegado al final
+
+<span class="h"># REGLAS</span>
+- No elogies el material antiguo por cortesía: sé crítico y específico.
+- Cada crítica debe venir con una alternativa concreta reescrita.
+- Nada de frases genéricas de IA ("en el mundo de hoy", "sumérgete en").
+- Si el material que te doy es insuficiente para alguna fase, dilo en lugar de inventar conclusiones.
+- Antes de la Fase 4, pregúntame si quiero cambiar de idea.</pre>
+
+  <div class="prompt-head"><div><span class="k">Prompt 04</span><h3>Guion diario: traducción + mejora + viralización</h3></div></div>
+  <p class="use">El prompt del día a día: limpia, traduce y reestructura una transcripción para la retención.</p>
+<pre class="prompt">Actúa como un guionista experto en YouTube especializado en vídeos virales faceless.
+
+Te voy a dar una transcripción de un vídeo. Quiero que hagas lo siguiente:
+
+1. Traduce el contenido al español.
+2. Mejora la redacción para que sea más clara, directa y emocional.
+3. Elimina todo el relleno innecesario.
+4. Añade un HOOK inicial extremadamente llamativo (primeros 3-5 segundos).
+5. Reestructura el contenido para maximizar la retención (curiosidad, tensión, ritmo).
+6. Usa frases cortas, simples y poderosas.
+7. Añade pequeños cliffhangers durante el texto (ej: "pero lo peor viene ahora...").
+8. Asegúrate de que el resultado suene natural para una voz en off.
+
+<span class="h">IMPORTANTE:</span>
+- No expliques nada, solo devuelve el guion final.
+- El texto debe estar listo para narrar directamente.
+- Mantén un tono dinámico y adictivo.
+
+Aquí tienes la transcripción:
+<span class="ph">[PEGA AQUÍ EL TEXTO]</span></pre>
+
+  <div class="prompt-head"><div><span class="k">Prompt 05</span><h3>Ultra retención (storytelling agresivo)</h3></div></div>
+  <p class="use">Cuando el vídeo tiene que enganchar sí o sí desde el primer segundo.</p>
+<pre class="prompt">Actúa como un experto en retención de audiencia para YouTube, especializado en vídeos virales tipo storytelling.
+
+Te voy a dar una transcripción. Tu objetivo es transformarla en un guion altamente adictivo. Haz lo siguiente:
+
+1. Traduce al español si es necesario.
+2. Convierte el contenido en una historia envolvente.
+3. Empieza con un HOOK extremadamente impactante que genere curiosidad inmediata.
+4. Divide el contenido en bloques cortos y dinámicos.
+5. Introduce tensión constante y curiosidad abierta.
+6. Añade patrones de interrupción (cambios de ritmo, giros, frases inesperadas).
+7. Usa lenguaje emocional y directo.
+8. Mantén al espectador enganchado en cada línea.
+9. Termina con un cierre fuerte que invite a ver otro vídeo.
+
+<span class="h">Reglas:</span>
+- Nada de relleno.
+- Nada de explicaciones.
+- Todo debe estar optimizado para retención.
+- Frases cortas, contundentes y naturales para voz en off.
+
+Devuelve SOLO el guion final listo para narrar.
+
+Transcripción:
+<span class="ph">[PEGA AQUÍ EL TEXTO]</span></pre>
+  <div class="card"><span class="label">Cómo sacarles el máximo</span><ul class="dots">
+    <li>Añade al final: «Duración objetivo: 9 minutos» para controlar la extensión</li>
+    <li>Añade: «Tono: cercano y directo, sin tecnicismos» para fijar el estilo</li>
+    <li>Pide <b>tres versiones del hook</b> y quédate con la mejor</li>
+    <li>Después del guion, pide <b>5 títulos y 3 ideas de miniatura</b> en el mismo chat</li></ul></div>
+</section>
+
+<!-- ======================= BIBLIOTECA ======================= -->
+<section>
+  <div class="mod"><div class="num" style="font-size:12pt">+</div><div><h2>Tu biblioteca de <em>recursos</em></h2><p>Todo lo que acompaña a esta guía, ordenado por fase</p></div></div>
+  <table>
+    <tr><th style="width:22%">Fase</th><th>Recurso</th></tr>
+    <tr><td><b>Empieza aquí</b></td><td><a href="https://www.youtube.com/watch?v=VdA3kkwUS9s">Qué es YouTube Faceless y por qué funciona en 2026</a><br><a href="https://www.youtube.com/watch?v=Tcycc4jeaF0">El proceso completo: de canal nuevo a monetizado con IA</a></td></tr>
+    <tr><td><b>Nicho y validación</b></td><td><a href="https://www.youtube.com/watch?v=1vxIkF00OGY">Cómo validar un nicho: demanda, competencia en español y RPM</a><br><a href="https://www.youtube.com/watch?v=_DbyIBDn1_c">15 nichos faceless sin competencia en español</a><br><a href="https://www.youtube.com/watch?v=MGXbF76AnaM">15 nichos que ya desmonetizan (y la regla para evitarlos)</a></td></tr>
+    <tr><td><b>Producción con IA</b></td><td><a href="https://www.youtube.com/watch?v=5Mf70MOwy0w">De cero a monetizado en 5 días: cuenta, guion, voz e imágenes</a><br><a href="https://www.youtube.com/watch?v=Zda6lKtwTvs">Comparativa de IAs: crear un canal faceless de principio a fin</a><br><a href="https://www.loom.com/share/951e2cbad74d452595152f271c1dcd79">IA para miniaturas casi sin censura</a> (Loom)<br><a href="https://nebulous-ring-926.notion.site/PLANTILLA-e46c374b02cb830194aa8181ee0a4798?source=copy_link">Plantilla de Notion: workflow para producir y delegar</a><br><a href="https://www.loom.com/share/50eedd22adc14a839ada72468d6f522e">Tutorial: cómo usar la plantilla de Notion</a> (Loom)</td></tr>
+    <tr><td><b>Retención y crecimiento</b></td><td><a href="https://www.youtube.com/watch?v=rop7gxYTHnQ">El algoritmo en 4 minutos: confianza, CTR y retención</a><br><a href="https://www.youtube.com/watch?v=nerv3g0JipU">Cómo decide el algoritmo y el filtro de 3 capas para validar ideas</a><br><a href="https://www.youtube.com/watch?v=h1CBfyW8DFk">Por qué caen las visitas (5 causas) y cómo diagnosticar tu canal</a></td></tr>
+    <tr><td><b>Monetización y escala</b></td><td>Calculadora de beneficio del canal (RPM por idioma), en la biblioteca<br><a href="https://www.youtube.com/watch?v=nI9xdP2u2Ns">Contenido inauténtico: por qué no apelar y cómo proteger tu red</a><br><a href="https://www.youtube.com/watch?v=kyYKQEJDxbw">Bilibili, el «YouTube chino»: ¿merece la pena? RPM por idioma</a></td></tr>
+    <tr><td><b>Formación recomendada</b></td><td><a href="https://www.youtube.com/watch?v=zhOWo843BLI">Curso completo para empezar</a><br><a href="https://www.youtube.com/watch?v=7lO5A7GUD6M">Masterclass de nichos</a></td></tr>
+  </table>
+  <p class="small muted">Todos los títulos son enlaces: haz clic para abrir cada recurso.</p>
+</section>
+<div style="break-after:page;height:0"></div>
+
+<!-- ======================= CONTRAPORTADA ======================= -->
+<div class="cover back">
+  <h2>Ahora te toca<br><em>ejecutar.</em></h2>
+  <p>Nadie ha construido un canal leyendo. Cierra este PDF, elige tu nicho y publica el primer vídeo esta semana. El vídeo número 1 será malo. El número 30 no lo será.</p>
+  <div class="box"><small>Tu próximo paso, hoy</small>
+    <p>1. Elige el nicho con el Prompt 01 · 2. Analiza 10 canales con el Prompt 02 · 3. Escribe 30 ideas · 4. Produce los 3 primeros vídeos · 5. Publica y repite 30 días.</p></div>
+  <div class="box"><small>¿Quieres ir más rápido?</small>
+    <p style="font-size:13pt;color:#fff;font-weight:600;line-height:1.3">¿Quieres crear, escalar o revivir tus canales hasta <em>3.000-4.000 €/mes</em>?</p>
+    <p>Aplica para ver si cumples los requisitos para que implementemos nuestros sistemas, estrategias y acompañamiento en tus canales de YouTube.</p>
+    <a class="cta" href="https://calendly.com/maciacontact/proceso-de-admision-system-academy">Agendar llamada gratuita →</a></div>
+  <div class="sign">
+    <div class="brand" style="display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 100 100" width="30" height="30"><defs><mask id="m2"><rect width="100" height="100" fill="#fff"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#000" stroke-width="5.5" stroke-linecap="round"/></mask></defs><rect width="100" height="100" rx="26" fill="#fff"/><path d="M37 27 L77 50 L37 73 Z" fill="#111" stroke="#111" stroke-width="9" stroke-linejoin="round" mask="url(#m2)"/></svg>
+      <b style="font-size:10pt">System Academy</b></div>
+    <span>Guía completa: YouTube faceless desde 0 · Documento formativo para uso personal del alumno.</span>
+  </div>
+</div>
+
+</body>
+</html>
