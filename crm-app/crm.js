@@ -322,7 +322,10 @@ $('drawer').addEventListener('click', e => {
   if (!l) return;
   const n = Number(b.dataset.etapa);
   // pulsar la etapa en la que ya está la deshace (vuelve a la anterior)
-  guardar(id, cambiosEtapa(l, n === etapa(l) ? n - 1 : n)).then(() => abrirFicha(id));
+  // se marca al instante (guardar actualiza el lead antes de esperar al servidor) y se confirma al volver
+  const p = guardar(id, cambiosEtapa(l, n === etapa(l) ? n - 1 : n));
+  abrirFicha(id);
+  p.then(ok => { if ($('drawer').classList.contains('open')) abrirFicha(id); if (ok) toast('Guardado'); });
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarFicha(); });
 
