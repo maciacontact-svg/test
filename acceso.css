@@ -143,7 +143,9 @@ h1 em { color: var(--ink-2); }
 .window-title b { font-weight: 600; font-size: 16px; color: var(--ink, #111); letter-spacing: 0; }
 .window-title .sep { margin: 0 8px; color: #c4c4c4; }
 .window-title { font-size: 13px; color: var(--muted); letter-spacing: .02em; padding: 0 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.player { position: relative; aspect-ratio: 16 / 9; background: #0e0e0e; }
+.player { position: relative; aspect-ratio: 1984 / 961; background: #f3f3f3; }   /* proporción del vídeo: llena sin franjas */
+.poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none; transition: opacity .6s ease; }
+.poster.gone { opacity: 0; }
 .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .player-empty {
   position: absolute; inset: 0;

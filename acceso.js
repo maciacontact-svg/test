@@ -23,12 +23,20 @@ setTimeout(() => setProgress(90), 300);
 // Vídeo
 function loomEmbed(link) {
   const m = String(link || '').match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/);
-  return m ? `https://www.loom.com/embed/${m[1]}?hide_owner=true&hide_share=true&hide_title=true` : '';
+  return m ? `https://www.loom.com/embed/${m[1]}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true&speed=1` : '';
 }
 const src = loomEmbed(LOOM_URL);
+// Mientras Loom carga se ve la portada (misma proporción que el vídeo, sin recortes); se desvanece al cargar.
 player.innerHTML = src
-  ? `<iframe src="${src}" allow="autoplay; fullscreen" allowfullscreen title="Cómo usar tu biblioteca"></iframe>`
+  ? `<iframe src="${src}" allow="autoplay; fullscreen" allowfullscreen title="Cómo usar tu biblioteca"></iframe>
+     <img class="poster" id="poster" src="img/acceso/portada-video.webp" alt="" width="1984" height="961" fetchpriority="high">`
   : `<button type="button" class="player-empty" id="fakePlay"><span class="play"></span>Aquí irá tu vídeo de Loom (menos de 1 min)</button>`;
+const poster = $('poster');
+if (poster) {
+  const quitar = () => poster.classList.add('gone');
+  player.querySelector('iframe').addEventListener('load', () => setTimeout(quitar, 900));
+  setTimeout(quitar, 12000);   // por si el evento de carga no llega
+}
 
 // Sin bloqueos: el botón de la biblioteca funciona siempre.
 // Cuando le dan al play, el paso 1 se marca como visto y la barra llega al 100 %.
