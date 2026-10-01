@@ -584,7 +584,7 @@ function configurar() {
     aj.getRange('F6:G6').setValues([['Token de Calendly (opcional: hora de la llamada en el CRM)', '']]);
   if (!aj.getRange('F7').getValue()) {
     aj.getRange('G8').setNumberFormat('@');
-    aj.getRange('F7:G8').setValues([['Acceso maestro: nombre (solo tú, ve los KPIs de todos)', 'Aleix'], ['Acceso maestro: PIN', pinAleatorio()]]);
+    aj.getRange('F7:G8').setValues([['Acceso maestro: nombre (solo tú, ve los KPIs de todos)', 'Mario'], ['Acceso maestro: PIN', pinAleatorio()]]);
   }
   aj.setColumnWidth(4, 170); aj.setColumnWidth(5, 30); aj.setColumnWidth(6, 260); aj.setColumnWidth(7, 420);
   aj.setFrozenRows(1);

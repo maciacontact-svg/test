@@ -1,12 +1,14 @@
-# Pendiente de instalar (cuando acabemos los cambios)
+# Conectarlo todo (una vez, con el código definitivo)
 
-Se hace **una sola vez al final**, con el código definitivo:
-
-1. Copiar `crm/Code.gs` desde GitHub (botón «Copy raw file») → pegar en Apps Script → guardar.
-2. Ejecutar `configurar` (añade las columnas ocultas nuevas y, en Ajustes, G6-G8).
-3. Implementar → Gestionar implementaciones → ✏️ → **Nueva versión** → Implementar (la URL no cambia).
-4. Ajustes:
-   - **G6**: token de Calendly (Calendly → Integraciones → API y webhooks → Personal access tokens).
-   - **G7/G8**: tu nombre y PIN de acceso maestro.
-   - Renombrar el caller **MARIO** a **Mario.e** (columna A) y pasarle su PIN.
-5. Prueba: formulario que cualifica → agendar → página «ATENCIÓN» → en el CRM, Autoagendado. Cancelar la reserva en Calendly.
+1. **Código**: GitHub → `crm/Code.gs` → «Copy raw file» → Apps Script: borrar todo, pegar, guardar.
+2. Ejecutar **`configurar`** (añade columnas ocultas nuevas y Ajustes G6-G8; no borra leads).
+3. **Implementar → Gestionar implementaciones → ✏️ → Versión: Nueva versión → Implementar** (la URL no cambia).
+4. **Ajustes**:
+   - A/B: renombrar el caller **MARIO** a **Mario.e** (y darle su PIN).
+   - G3: URL del CRM (`https://test-crm-app-eosin.vercel.app` o `https://crm.tudominio.com`).
+   - G6: token de Calendly (Integraciones → API y webhooks → Personal access tokens → crear).
+   - G7/G8: acceso maestro → **Mario** (fundador) + su PIN.
+5. **Pruebas**:
+   - Formulario que cualifica → agendar → página «ATENCIÓN» → CRM: Autoagendado, sin caller. Cancelar la reserva.
+   - Entrar al CRM como Mario.e → asignarse un lead → nota «llamar a las HH:MM» → sale ⏰ y a esa hora sube y avisa Slack.
+   - Entrar como Mario (maestro) → «KPIs del equipo».

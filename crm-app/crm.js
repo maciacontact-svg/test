@@ -547,8 +547,8 @@ function demoApi(action, extra) {
     };
   }
   const db = window.__demo;
-  const esMaestro = /^aleix$/i.test(S.caller || '');
-  if (action === 'login') return Promise.resolve({ ok: true, caller: esMaestro ? 'Aleix' : (db.callers.find(c => c.toUpperCase() === (S.caller || '').toUpperCase()) || 'DAVID'), rol: esMaestro ? 'maestro' : 'caller' });
+  const esMaestro = /^mario$/i.test(S.caller || '');
+  if (action === 'login') return Promise.resolve({ ok: true, caller: esMaestro ? 'Mario' : (db.callers.find(c => c.toUpperCase() === (S.caller || '').toUpperCase()) || 'DAVID'), rol: esMaestro ? 'maestro' : 'caller' });
   if (action === 'list') return Promise.resolve({ ok: true, rol: esMaestro ? 'maestro' : 'caller', ...JSON.parse(JSON.stringify(db)) });
   if (action === 'update') {
     const l = db.leads.find(x => x.id === extra.id);
