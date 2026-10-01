@@ -1,4 +1,9 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/crm-app", "destination": "/", "permanent": false },
+    { "source": "/crm-app/:path*", "destination": "/", "permanent": false },
+    { "source": "/crm/:path*", "destination": "/", "permanent": false }
+  ]
 }
