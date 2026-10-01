@@ -1,6 +1,6 @@
 // ===== Configuración (editar aquí) =====
 // Enlace para compartir del vídeo de Loom (menos de 1 minuto) (https://www.loom.com/share/...)
-const LOOM_URL = '';
+const LOOM_URL = 'https://www.loom.com/share/a650e3ef31004be9aed95a6df55eaf81';
 
 // ===== Lógica =====
 const $ = id => document.getElementById(id);
