@@ -3,9 +3,10 @@
 // El equipo entra con nombre + PIN (pestaña "Ajustes" del Sheet); nadie más que tú necesita acceso al Sheet.
 
 const API = ((window.SA_CONFIG || {}).API_URL || '').trim();
-const DEMO = !API;
+// ?demo en la URL → datos de ejemplo (para enseñar el CRM sin tocar el Sheet). Entra como «Mario» para ver el acceso maestro.
+const DEMO = !API || /[?&]demo\b/.test(location.search);
 const REFRESCO = 15000;            // cada cuánto se buscan leads nuevos (ms)
-const SESION = 'sa-crm-sesion';
+const SESION = DEMO ? 'sa-crm-demo' : 'sa-crm-sesion';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
