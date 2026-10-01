@@ -43,6 +43,10 @@
       </svg>
       <span>System Academy <b>CRM</b></span>
     </a>
+    <nav class="tabs" id="tabs" aria-label="Secciones">
+      <button type="button" data-t="leads" class="on">Leads</button>
+      <button type="button" data-t="kpis" id="tabKpis">Mis KPIs</button>
+    </nav>
     <div class="nav-right">
       <span class="live" id="live"><i></i><span id="liveText">Conectando…</span></span>
       <span class="me" id="me"></span>
@@ -53,6 +57,7 @@
   <main class="wrap">
     <div class="demo" id="demo" hidden>Modo demostración: datos de ejemplo. Pega la URL de Apps Script en <code>config.js</code> para ver tus leads reales.</div>
 
+    <div id="vLeads">
     <section class="kpis" id="kpis" aria-label="Resumen"></section>
 
     <section class="toolbar">
@@ -61,6 +66,7 @@
       <div class="chips" id="views">
         <button type="button" data-v="todos" class="on">Todos</button>
         <button type="button" data-v="buen" class="buen">⭐ Buen form no agendado <i id="nBuen"></i></button>
+        <button type="button" data-v="rellamar">📞 Rellamadas <i id="nRell"></i></button>
         <button type="button" data-v="llamar">Por llamar</button>
         <button type="button" data-v="mios">Mis leads</button>
         <button type="button" data-v="sin">Sin caller</button>
@@ -80,6 +86,36 @@
       </div>
       <p class="empty" id="empty" hidden>No hay leads que coincidan.</p>
     </section>
+    </div>
+
+    <!-- KPIs: cada caller ve los suyos; el acceso maestro ve a todos -->
+    <div id="vKpis" hidden>
+      <section class="k-head">
+        <div>
+          <h2 id="kTitle">Tus KPIs</h2>
+          <p id="kSub" class="k-sub"></p>
+        </div>
+        <div class="chips" id="periodo">
+          <button type="button" data-p="hoy" class="on">Hoy</button>
+          <button type="button" data-p="7">7 días</button>
+          <button type="button" data-p="30">30 días</button>
+          <button type="button" data-p="todo">Todo</button>
+        </div>
+      </section>
+      <section class="kpis k-tiles" id="kTiles"></section>
+      <section class="k-grid">
+        <div class="k-card">
+          <h3 id="kFunnelTitle">Embudo</h3>
+          <div id="kFunnel" class="funnel"></div>
+        </div>
+        <div class="k-card" id="kRankCard" hidden>
+          <h3>Rendimiento por caller</h3>
+          <p class="k-note">Ordenado por agendas y % de agenda sobre sus leads asignados. Pulsa un caller para ver su embudo.</p>
+          <div class="table-wrap"><table class="rank" id="kRank"></table></div>
+        </div>
+      </section>
+      <p class="k-note foot-note">Todo se cuenta sobre los leads <b>asignados</b> a cada caller en el periodo (por la fecha en que se los asignó). Los autoagendados por Calendly no cuentan para ningún caller.</p>
+    </div>
   </main>
 </div>
 

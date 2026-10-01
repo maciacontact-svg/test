@@ -205,10 +205,69 @@ em { font-style: italic; font-weight: 500; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .toast.err { background: #b3261e; }
 
+/* ----- Pestañas Leads / KPIs ----- */
+.tabs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--white); border: 1px solid var(--hair); }
+.tabs button { height: 34px; padding: 0 16px; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: var(--muted); transition: background .2s, color .2s; }
+.tabs button.on { background: var(--ink); color: #fff; }
+
+/* ----- Volver a llamar (de las notas) ----- */
+.urge.call { background: #1f6f43; color: #fff; }
+.urge.plan { background: #e8eef9; color: #1b4f8a; }
+.leads tr.due td { background: #f0f8f3; }
+.leads tr.due td:first-child { box-shadow: inset 3px 0 0 #1f6f43; }
+.tag.etapa { background: #e8eef9; color: #1b4f8a; }
+.d-rell { margin: -6px 0 14px; }
+.d-rell .urge { font-size: 12px; padding: 5px 10px; }
+
+/* Embudo del lead (ficha) */
+.pasos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
+.pasos button {
+  display: grid; justify-items: center; gap: 4px; padding: 9px 4px; border-radius: 12px; background: var(--white);
+  border: 1px solid var(--hair); font-size: 11px; line-height: 1.2; color: var(--muted); text-align: center; transition: background .2s, color .2s;
+}
+.pasos button b { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: #ececec; color: var(--ink-2); font-size: 11px; }
+.pasos button.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.pasos button.on b { background: #fff; color: var(--ink); }
+.pasos button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ----- Vista KPIs ----- */
+.k-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+.k-head h2 { font-size: 28px; font-weight: 600; letter-spacing: -0.025em; }
+.k-sub { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.k-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 14px; }
+.k-card { background: var(--card); border-radius: 22px; padding: 22px 24px; box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 24px 48px -40px rgba(0,0,0,.4); }
+.k-card h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 14px; }
+.k-note { font-size: 12.5px; color: var(--muted); margin: -8px 0 14px; }
+.foot-note { margin: 16px 2px 0; }
+.funnel { display: grid; gap: 10px; }
+.f-row { display: grid; grid-template-columns: 150px 1fr 48px 190px; align-items: center; gap: 14px; }
+.f-lbl { font-size: 13.5px; font-weight: 500; }
+.f-bar { height: 26px; border-radius: 4px; background: #ececec; overflow: hidden; }
+.f-bar i { display: block; height: 100%; background: var(--ink); border-radius: 0 4px 4px 0; transition: width .6s var(--ease); }
+.f-row:nth-child(n+3) .f-bar i { background: #3a3a3a; }
+.f-row:nth-child(n+5) .f-bar i { background: #5a5a5a; }
+.f-row:last-child .f-bar i { background: #1f6f43; }
+.f-row b { font-size: 18px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.f-row small { font-size: 12px; color: var(--muted); }
+.rank { width: 100%; border-collapse: collapse; min-width: 820px; }
+.rank th { text-align: left; font-size: 12px; font-weight: 500; color: #fff; background: var(--ink); padding: 10px; }
+.rank th:first-child { border-radius: 12px 0 0 12px; } .rank th:last-child { border-radius: 0 12px 12px 0; }
+.rank td { padding: 11px 10px; border-top: 1px solid #ececec; font-variant-numeric: tabular-nums; }
+.rank tbody tr { cursor: pointer; }
+.rank tbody tr:hover td { background: #f3f3f3; }
+.rank tr.on td { background: #fff8e1; }
+.rank tr.tot td { font-weight: 600; background: #f3f3f3; }
+
 /* ----- Móvil: cada lead es una tarjeta ----- */
 @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 760px) {
   .nav { padding: 0 16px; }
+  .tabs button { padding: 0 10px; font-size: 12.5px; }
+  .live { display: none; }
+  .f-row { grid-template-columns: 1fr 44px; gap: 4px 10px; }
+  .f-row .f-bar { grid-column: 1 / -1; order: 3; height: 18px; }
+  .f-row small { grid-column: 1 / -1; order: 4; }
+  .pasos { grid-template-columns: repeat(3, 1fr); }
   .logo span { display: none; }
   .wrap { width: calc(100% - 32px); padding-top: 18px; }
   .kpis { grid-template-columns: 1fr 1fr; gap: 10px; }

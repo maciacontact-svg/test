@@ -21,13 +21,13 @@ const COL = {
   fecha: 1, nombre: 2, telefono: 3, punto: 4, objetivo: 5, correo: 6,
   caller: 7, estado: 8, contacto: 9, intentos: 10, notas: 11,
   id: 12, inversion: 13, meta: 14, cuando: 15, instagram: 16, origen: 17, aviso: 18,
-  cualifica: 19, autoagenda: 20,
+  cualifica: 19, autoagenda: 20, rellamar: 21, rellamarAviso: 22, asignado: 23, embudo: 24,
 };
 const CABECERA = [
   'Fecha registro', 'Nombre', 'Teléfono', 'En qué punto está', 'Qué quiere conseguir', 'Correo',
   'Caller', 'Estado', 'Contacto', 'Nº intentos', 'Notas',
   'ID', 'Inversión al mes', 'Meta a 3-6 meses', 'Cuándo empieza', 'Instagram', 'Origen', 'Aviso Slack',
-  'Buen form', 'Autoagendado (Calendly)',
+  'Buen form', 'Autoagendado (Calendly)', 'Volver a llamar (hora)', 'Aviso rellamada', 'Asignado el', 'Embudo',
 ];
 const VISIBLES = 11;
 
@@ -38,9 +38,11 @@ const COLORES = { // fondo, texto (los mismos tonos que tu hoja de cold calling)
   'Nutricion': ['#e4d7f3', '#5b3a8c'], 'Agendado': ['#2f6b4f', '#e2f4e6'], 'Invalid': ['#e6e6e6', '#333333'],
 };
 const CONTACTO = ['✅', '❌'];
+const EMBUDO = ['', 'Conversación', 'Oferta llamada'];   // además de Contactado (intentos), Respondió (✅) y Agendado (estado)
+const CIERRAN = ['Agendado', 'Perdido', 'Invalid'];       // estados que quitan la hora de volver a llamar
 
 // Celdas de la pestaña "Ajustes"
-const AJ = { callers: 'A2:A', pins: 'B2:B', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6' };
+const AJ = { callers: 'A2:A', pins: 'B2:B', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8' };
 
 // =====================================================================
 // Web app: el formulario y el dashboard hablan con estas dos funciones
@@ -57,9 +59,9 @@ function doPost(e) {
     switch (b.action) {
       case 'lead':   return json(nuevoLead(b));
       case 'agendado': return json(autoagendado(b));
-      case 'login':  return json({ ok: true, caller: auth(b) });
-      case 'list':   auth(b); return json(listar());
-      case 'update': return json(actualizar(b, auth(b)));
+      case 'login':  { const u = auth(b); return json({ ok: true, caller: u.nombre, rol: u.rol }); }
+      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol })); }
+      case 'update': return json(actualizar(b, auth(b).nombre));
     }
     return json({ ok: false, error: 'Acción desconocida' });
   } catch (err) {
@@ -87,6 +89,7 @@ function nuevoLead(b) {
     inversion: limpio(b.inversion, 80), meta: limpio(b.meta, 1000), cuando: limpio(b.cuando, 80),
     instagram: limpio(b.instagram, 80), origen: limpio(b.origen, 200), aviso: '',
     cualifica: b.cualifica === true ? 'Sí' : 'No', autoagenda: '',
+    rellamar: '', rellamarAviso: '', asignado: '', embudo: '',
   };
 
   const fila = new Array(CABECERA.length).fill('');
@@ -166,7 +169,7 @@ function leadDesdeCalendly(sh, inv) {
     nombre: inv.nombre || inv.correo, telefono: inv.telefono, correo: inv.correo,
     punto: '', objetivo: '', caller: '', estado: '', contacto: '❌', intentos: 0, notas: '',
     inversion: '', meta: '', cuando: '', instagram: '', origen: 'Calendly (sin formulario)', aviso: '—',
-    cualifica: 'No', autoagenda: '',
+    cualifica: 'No', autoagenda: '', rellamar: '', rellamarAviso: '', asignado: '', embudo: '',
   };
   const fila = new Array(CABECERA.length).fill('');
   Object.keys(COL).forEach(k => { fila[COL[k] - 1] = celda(lead[k]); });
@@ -215,13 +218,24 @@ function auth(b) {
   const fallos = Number(cache.get(k) || 0);
   if (fallos >= 5) throw new Error('Demasiados intentos. Espera 10 minutos.');
 
+  const m = maestro();
+  if (m.nombre && m.pin && nombre === m.nombre.toUpperCase() && pin === m.pin) {
+    cache.remove(k);
+    return { nombre: m.nombre, rol: 'maestro' };
+  }
   const p = equipo().find(x => x.nombre.toUpperCase() === nombre && x.pin === pin);
   if (!nombre || !pin || !p) {
     cache.put(k, String(fallos + 1), 600);
     throw new Error('Nombre o PIN incorrectos');
   }
   cache.remove(k);
-  return p.nombre;
+  return { nombre: p.nombre, rol: 'caller' };
+}
+
+// Acceso maestro (solo el fundador): Ajustes → G7 nombre, G8 PIN. Ve los KPIs de todos los callers.
+function maestro() {
+  const aj = hoja(HOJA_AJUSTES);
+  return { nombre: String(aj.getRange(AJ.maestro).getDisplayValue()).trim(), pin: String(aj.getRange(AJ.maestroPin).getDisplayValue()).trim() };
 }
 
 function listar() {
@@ -262,6 +276,7 @@ function actualizar(b, quien) {
     contacto: v => (v === '' || CONTACTO.indexOf(v) >= 0) ? v : err('Contacto no válido'),
     intentos: v => { const x = Math.round(Number(v)); return x >= 0 && x <= 99 ? x : err('Intentos no válidos'); },
     notas: v => celda(limpio(v, 2000)),
+    embudo: v => EMBUDO.indexOf(v) >= 0 ? v : err('Embudo no válido'),
   };
 
   const lock = LockService.getScriptLock();
@@ -270,12 +285,35 @@ function actualizar(b, quien) {
     const sh = hoja(HOJA_LEADS);
     const fila = buscarFila(sh, id);
     if (!fila) throw new Error('Lead no encontrado (¿se ha borrado del Sheet?)');
-    if (c.caller && sh.getRange(fila, COL.autoagenda).getValue())
+    const antes = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
+    const ant = k => antes[COL[k] - 1];
+    if (c.caller && ant('autoagenda'))
       throw new Error('Este lead se ha agendado él solo por Calendly: no lleva caller');
     Object.keys(c).forEach(k => {
       if (!permitido[k]) return;
       sh.getRange(fila, COL[k]).setValue(permitido[k](c[k]));
     });
+    const ahora = new Date();
+    // Asignación: guardamos cuándo se lo ha quedado el caller (para sus KPIs por día)
+    if ('caller' in c && c.caller !== ant('caller')) sh.getRange(fila, COL.asignado).setValue(c.caller ? ahora : '');
+    // "llamar a las 19:00", "después"… en las notas → hora de volver a llamar
+    let rellamar = ant('rellamar');
+    if ('notas' in c) {
+      const nuevo = horaEnNota(c.notas, ahora), viejo = horaEnNota(ant('notas'), ahora);
+      if (nuevo.clave !== viejo.clave) {
+        rellamar = nuevo.fecha || '';
+        sh.getRange(fila, COL.rellamar).setValue(rellamar);
+        sh.getRange(fila, COL.rellamarAviso).setValue('');
+        if (rellamar && !ant('estado') && !('estado' in c)) sh.getRange(fila, COL.estado).setValue('Volver a llamar');
+      }
+    }
+    // Se quita al llamarle (un intento más cuando ya tocaba) o al cerrar el lead
+    const llamadoYa = 'intentos' in c && Number(c.intentos) > Number(ant('intentos')) &&
+      rellamar instanceof Date && rellamar.getTime() - ahora.getTime() < 15 * 60000;
+    if (rellamar && (llamadoYa || CIERRAN.indexOf(c.estado) >= 0)) {
+      sh.getRange(fila, COL.rellamar).setValue('');
+      sh.getRange(fila, COL.rellamarAviso).setValue('');
+    }
     SpreadsheetApp.flush();
     return { ok: true, lead: filaALead(sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0]), por: quien };
   } finally {
@@ -303,7 +341,62 @@ function filaALead(f) {
     inversion: String(v('inversion')), meta: String(v('meta')), cuando: String(v('cuando')),
     instagram: String(v('instagram')), origen: String(v('origen')),
     cualifica: v('cualifica') === 'Sí', autoagenda: String(v('autoagenda') || ''),
+    rellamar: v('rellamar') instanceof Date ? v('rellamar').toISOString() : '',
+    asignado: v('asignado') instanceof Date ? v('asignado').toISOString() : '',
+    embudo: String(v('embudo') || ''),
   };
+}
+
+// =====================================================================
+// Notas → hora de volver a llamar
+//   "19:00", "19.30", "19h", "a las 7", "mañana a las 10", "en 2 horas", "en 30 min"
+//   "después", "luego", "más tarde", "en un rato" → dentro de 2 h 30 min
+// Devuelve { fecha, clave }: la clave sirve para recalcular solo si cambia lo que se ha escrito.
+// =====================================================================
+const DESPUES_MIN = 150;
+
+function horaEnNota(nota, ahora) {
+  const t = String(nota || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const ninguna = { fecha: null, clave: '' };
+  if (!t.trim()) return ninguna;
+  const base = new Date(ahora.getTime());
+
+  // relativo: "en 2 horas", "en 30 min", "en una hora", "en media hora"
+  let m = t.match(/\ben\s+(\d{1,3}|una|un|media)\s*(h|hr|hrs|hora|horas|min|mins|minutos)\b/);
+  if (m) {
+    const n = m[1] === 'media' ? 30 : (m[1] === 'una' || m[1] === 'un') ? 1 : Number(m[1]);
+    const min = /^h/.test(m[2]) ? n * 60 : n;
+    if (m[1] === 'media') return { fecha: new Date(base.getTime() + 30 * 60000), clave: m[0] };
+    return { fecha: new Date(base.getTime() + min * 60000), clave: m[0] };
+  }
+
+  // hora concreta
+  let h = -1, mi = 0, clave = '';
+  if ((m = t.match(/\b([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)\b/))) { h = +m[1]; mi = +m[2]; clave = m[0]; }
+  else if ((m = t.match(/\ba\s+las?\s+([01]?\d|2[0-3])(?:\s*y\s*(media|cuarto))?\b/))) {
+    h = +m[1]; mi = m[2] === 'media' ? 30 : m[2] === 'cuarto' ? 15 : 0; clave = m[0];
+  }
+  else if ((m = t.match(/\b([01]?\d|2[0-3])\s*(?:h|hs|horas?)\b/))) { h = +m[1]; clave = m[0]; }
+
+  if (h >= 0) {
+    const porLaManana = /\b(por|de) la manana\b/.test(t);
+    const tarde = /\b(tarde|noche)\b/.test(t) && !/\bmas tarde\b/.test(t);
+    const dias = /\bpasado manana\b/.test(t) ? 2 : (/\bmanana\b/.test(t) && !porLaManana) ? 1 : 0;
+    if (tarde && h < 12) h += 12;
+    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + dias, h, mi);
+    if (!dias && d <= base) {
+      // "a las 7" a las 15:00 → las 19:00; si no, mañana a esa hora
+      if (h < 12 && !porLaManana && new Date(d.getTime() + 12 * 3600e3) > base) d.setHours(h + 12);
+      else d.setDate(d.getDate() + 1);
+    }
+    return { fecha: d, clave: clave + (dias ? '+' + dias : '') + (tarde ? 't' : '') };
+  }
+
+  // sin hora: "después", "luego", "más tarde", "en un rato", "otro momento"
+  if ((m = t.match(/\b(despues|luego|mas tarde|en un rato|otro momento|ahora no puede)\b/))) {
+    return { fecha: new Date(base.getTime() + DESPUES_MIN * 60000), clave: m[1] };
+  }
+  return ninguna;
 }
 
 // =====================================================================
@@ -343,6 +436,21 @@ function revisarAvisos() {
   const datos = sh.getRange(desde + 1, 1, n - desde + 1, CABECERA.length).getValues();
   const min = minutosAviso(), ahora = Date.now();
   datos.forEach((f, i) => {
+    // Hora de volver a llamar (de las notas)
+    const rl = f[COL.rellamar - 1];
+    if (rl instanceof Date && !f[COL.rellamarAviso - 1] && rl.getTime() <= ahora && ahora - rl.getTime() < 3600e3) {
+      enviarSlack({
+        text: '📞 Toca llamar a ' + f[COL.nombre - 1],
+        blocks: [
+          { type: 'section', text: md(mencion() + '📞 Toca llamar a *' + esc(f[COL.nombre - 1]) + '* (pidió las *' +
+            Utilities.formatDate(rl, TZ, 'HH:mm') + '*) · ' + telefonoSlack(String(f[COL.telefono - 1])) +
+            (f[COL.caller - 1] ? ' · caller: *' + esc(f[COL.caller - 1]) + '*' : '') +
+            (f[COL.notas - 1] ? '\n>' + esc(String(f[COL.notas - 1]).split('\n')[0]) : '')) },
+          botonCrm(),
+        ].filter(Boolean),
+      });
+      sh.getRange(desde + 1 + i, COL.rellamarAviso).setValue(Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm'));
+    }
     const fecha = f[COL.fecha - 1];
     if (f[COL.aviso - 1] || !(fecha instanceof Date)) return;
     const pasado = (ahora - fecha.getTime()) / 60000;
@@ -474,6 +582,10 @@ function configurar() {
   aj.setColumnWidth(1, 160); aj.setColumnWidth(2, 220); aj.setColumnWidth(3, 30);
   if (!aj.getRange('F6').getValue())
     aj.getRange('F6:G6').setValues([['Token de Calendly (opcional: hora de la llamada en el CRM)', '']]);
+  if (!aj.getRange('F7').getValue()) {
+    aj.getRange('G8').setNumberFormat('@');
+    aj.getRange('F7:G8').setValues([['Acceso maestro: nombre (solo tú, ve los KPIs de todos)', 'Aleix'], ['Acceso maestro: PIN', pinAleatorio()]]);
+  }
   aj.setColumnWidth(4, 170); aj.setColumnWidth(5, 30); aj.setColumnWidth(6, 260); aj.setColumnWidth(7, 420);
   aj.setFrozenRows(1);
 
@@ -491,6 +603,8 @@ function configurar() {
   sh.getRange(1, 1, sh.getMaxRows(), CABECERA.length).setFontFamily('Poppins').setVerticalAlignment('middle');
   sh.getRange(1, 1, 1, CABECERA.length).setFontFamily('Poppins');
   sh.getRange('A2:A').setNumberFormat('dd/mm/yyyy HH:mm');
+  sh.getRange(2, COL.rellamar, sh.getMaxRows() - 1, 1).setNumberFormat('dd/mm HH:mm');
+  sh.getRange(2, COL.asignado, sh.getMaxRows() - 1, 1).setNumberFormat('dd/mm/yyyy HH:mm');
   sh.getRange('C2:C').setNumberFormat('@');
   sh.getRange('I2:J').setHorizontalAlignment('center');
   sh.getRange('K2:K').setWrap(true);
