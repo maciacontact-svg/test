@@ -21,11 +21,13 @@ const COL = {
   fecha: 1, nombre: 2, telefono: 3, punto: 4, objetivo: 5, correo: 6,
   caller: 7, estado: 8, contacto: 9, intentos: 10, notas: 11,
   id: 12, inversion: 13, meta: 14, cuando: 15, instagram: 16, origen: 17, aviso: 18,
+  cualifica: 19, autoagenda: 20,
 };
 const CABECERA = [
   'Fecha registro', 'Nombre', 'Teléfono', 'En qué punto está', 'Qué quiere conseguir', 'Correo',
   'Caller', 'Estado', 'Contacto', 'Nº intentos', 'Notas',
   'ID', 'Inversión al mes', 'Meta a 3-6 meses', 'Cuándo empieza', 'Instagram', 'Origen', 'Aviso Slack',
+  'Buen form', 'Autoagendado (Calendly)',
 ];
 const VISIBLES = 11;
 
@@ -38,7 +40,7 @@ const COLORES = { // fondo, texto (los mismos tonos que tu hoja de cold calling)
 const CONTACTO = ['✅', '❌'];
 
 // Celdas de la pestaña "Ajustes"
-const AJ = { callers: 'A2:A', pins: 'B2:B', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5' };
+const AJ = { callers: 'A2:A', pins: 'B2:B', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6' };
 
 // =====================================================================
 // Web app: el formulario y el dashboard hablan con estas dos funciones
@@ -54,6 +56,7 @@ function doPost(e) {
   try {
     switch (b.action) {
       case 'lead':   return json(nuevoLead(b));
+      case 'agendado': return json(autoagendado(b));
       case 'login':  return json({ ok: true, caller: auth(b) });
       case 'list':   auth(b); return json(listar());
       case 'update': return json(actualizar(b, auth(b)));
@@ -76,13 +79,14 @@ function nuevoLead(b) {
   if (!nombre || !telefono) throw new Error('Faltan nombre o teléfono');
 
   const lead = {
-    id: Utilities.getUuid().slice(0, 8),
+    id: /^[a-z0-9]{8,24}$/i.test(String(b.id || '')) ? String(b.id) : Utilities.getUuid().slice(0, 8),
     fecha: new Date(),
     nombre: nombre, telefono: telefono,
     punto: limpio(b.punto, 200), objetivo: limpio(b.objetivo, 200), correo: limpio(b.correo, 120),
     caller: '', estado: '', contacto: '❌', intentos: 0, notas: '',
     inversion: limpio(b.inversion, 80), meta: limpio(b.meta, 1000), cuando: limpio(b.cuando, 80),
     instagram: limpio(b.instagram, 80), origen: limpio(b.origen, 200), aviso: '',
+    cualifica: b.cualifica === true ? 'Sí' : 'No', autoagenda: '',
   };
 
   const fila = new Array(CABECERA.length).fill('');
@@ -95,6 +99,60 @@ function nuevoLead(b) {
 
   try { avisarSlack(lead); } catch (err) { console.error('Slack: ' + err); }
   return { ok: true, id: lead.id };
+}
+
+// =====================================================================
+// Autoagendado: el lead ha reservado él solo en Calendly (desde llamada.html)
+// → Estado "Agendado", SIN caller (y el dashboard no deja ponérselo).
+// =====================================================================
+function autoagendado(b) {
+  const id = String(b.id || '');
+  if (!/^[a-z0-9]{8,24}$/i.test(id)) throw new Error('Lead no válido');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  let f, cuando;
+  try {
+    const sh = hoja(HOJA_LEADS);
+    const fila = buscarFila(sh, id);
+    if (!fila) throw new Error('Lead no encontrado');
+    f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
+    if (f[COL.autoagenda - 1]) return { ok: true, repetido: true };
+    cuando = horaLlamada(b.evento);
+    const marca = cuando ? 'Llamada ' + cuando : 'Reservado ' + Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm');
+    sh.getRange(fila, COL.autoagenda).setValue(marca);
+    sh.getRange(fila, COL.estado).setValue('Agendado');
+    sh.getRange(fila, COL.caller).setValue('');
+    const notas = String(f[COL.notas - 1] || '');
+    sh.getRange(fila, COL.notas).setValue(celda('📅 Autoagendado por Calendly · ' + marca + (notas ? '\n' + notas : '')));
+    SpreadsheetApp.flush();
+  } finally {
+    lock.releaseLock();
+  }
+  try {
+    enviarSlack({
+      text: '📅 ' + f[COL.nombre - 1] + ' ha agendado su llamada',
+      blocks: [
+        { type: 'section', text: md(mencion() + '📅 *' + esc(f[COL.nombre - 1]) + '* ha agendado él solo su llamada' +
+          (cuando ? ' · *' + cuando + '*' : '') + '\n' + telefonoSlack(String(f[COL.telefono - 1])) +
+          ' · _Autoagendado: sin caller_') },
+        botonCrm(),
+      ].filter(Boolean),
+    });
+  } catch (err) { console.error('Slack: ' + err); }
+  return { ok: true };
+}
+
+// Fecha y hora de la llamada (solo si has pegado tu token de Calendly en Ajustes → G6)
+function horaLlamada(evento) {
+  const token = String(hoja(HOJA_AJUSTES).getRange(AJ.calendly).getValue()).trim();
+  const uri = String(evento || '');
+  if (!token || token.length < 20 || !/^https:\/\/api\.calendly\.com\/scheduled_events\/[A-Za-z0-9-]+$/.test(uri)) return '';
+  try {
+    const r = UrlFetchApp.fetch(uri, { headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true });
+    if (r.getResponseCode() !== 200) { console.error('Calendly respondió ' + r.getResponseCode()); return ''; }
+    const t = JSON.parse(r.getContentText()).resource.start_time;
+    return t ? Utilities.formatDate(new Date(t), TZ, 'dd/MM HH:mm') : '';
+  } catch (err) { console.error('Calendly: ' + err); return ''; }
 }
 
 // =====================================================================
@@ -163,6 +221,8 @@ function actualizar(b, quien) {
     const sh = hoja(HOJA_LEADS);
     const fila = buscarFila(sh, id);
     if (!fila) throw new Error('Lead no encontrado (¿se ha borrado del Sheet?)');
+    if (c.caller && sh.getRange(fila, COL.autoagenda).getValue())
+      throw new Error('Este lead se ha agendado él solo por Calendly: no lleva caller');
     Object.keys(c).forEach(k => {
       if (!permitido[k]) return;
       sh.getRange(fila, COL[k]).setValue(permitido[k](c[k]));
@@ -193,6 +253,7 @@ function filaALead(f) {
     intentos: Number(v('intentos')) || 0, notas: String(v('notas')),
     inversion: String(v('inversion')), meta: String(v('meta')), cuando: String(v('cuando')),
     instagram: String(v('instagram')), origen: String(v('origen')),
+    cualifica: v('cualifica') === 'Sí', autoagenda: String(v('autoagenda') || ''),
   };
 }
 
@@ -202,10 +263,11 @@ function filaALead(f) {
 function avisarSlack(lead) {
   const min = minutosAviso();
   const limite = Utilities.formatDate(new Date(lead.fecha.getTime() + min * 60000), TZ, 'HH:mm');
+  const buen = lead.cualifica === 'Sí';
   enviarSlack({
-    text: 'Nuevo lead: ' + lead.nombre + ' · ' + lead.telefono,
+    text: (buen ? 'Buen form: ' : 'Nuevo lead: ') + lead.nombre + ' · ' + lead.telefono,
     blocks: [
-      { type: 'header', text: { type: 'plain_text', text: '🔥 Nuevo lead: ' + lead.nombre } },
+      { type: 'header', text: { type: 'plain_text', text: (buen ? '⭐ Buen form: ' : '🔥 Nuevo lead: ') + lead.nombre } },
       { type: 'section', fields: [
         md('*Teléfono*\n' + telefonoSlack(lead.telefono)),
         md('*Correo*\n' + esc(lead.correo || '—')),
@@ -215,7 +277,9 @@ function avisarSlack(lead) {
         md('*Cuándo empieza*\n' + esc(lead.cuando || '—')),
       ] },
       lead.meta ? { type: 'section', text: md('*Meta a 3-6 meses*\n>' + esc(lead.meta).replace(/\n/g, '\n>')) } : null,
-      { type: 'context', elements: [md(mencion() + '⏱️ Llámale antes de las *' + limite + '* (' + min + ' min)')] },
+      { type: 'context', elements: [md(mencion() + (buen
+        ? '📅 Encaja: se le ha ofrecido agendar llamada. Si a las *' + limite + '* no ha agendado, te aviso para llamarle.'
+        : '⏱️ Llámale antes de las *' + limite + '* (' + min + ' min)'))] },
       botonCrm(),
     ].filter(Boolean),
   });
@@ -236,11 +300,12 @@ function revisarAvisos() {
     if (pasado < min) return;
     const fila = desde + 1 + i;
     const llamado = f[COL.contacto - 1] === '✅' || Number(f[COL.intentos - 1]) > 0;
-    if (llamado || pasado > 60) { sh.getRange(fila, COL.aviso).setValue('—'); return; }
+    if (llamado || f[COL.autoagenda - 1] || pasado > 60) { sh.getRange(fila, COL.aviso).setValue('—'); return; }
+    const buen = f[COL.cualifica - 1] === 'Sí';
     enviarSlack({
-      text: '⏰ ' + f[COL.nombre - 1] + ' lleva ' + min + ' min sin llamar',
+      text: (buen ? '⭐ Buen form no agendado: ' : '⏰ ') + f[COL.nombre - 1] + ' lleva ' + min + ' min sin llamar',
       blocks: [
-        { type: 'section', text: md(mencion() + '⏰ *' + esc(f[COL.nombre - 1]) + '* lleva *' + Math.round(pasado) + ' min* sin llamar · ' +
+        { type: 'section', text: md(mencion() + (buen ? '⭐ *Buen form NO agendado* · *' : '⏰ *') + esc(f[COL.nombre - 1]) + '* lleva *' + Math.round(pasado) + ' min* sin ' + (buen ? 'agendar ni ' : '') + 'llamar · ' +
           telefonoSlack(String(f[COL.telefono - 1])) + (f[COL.caller - 1] ? ' · caller: *' + esc(f[COL.caller - 1]) + '*' : '')) },
         botonCrm(),
       ].filter(Boolean),
@@ -358,6 +423,8 @@ function configurar() {
   }
   [aj.getRange('A1:B1'), aj.getRange('D1'), aj.getRange('F1:G1')].forEach(estiloCabecera);
   aj.setColumnWidth(1, 160); aj.setColumnWidth(2, 220); aj.setColumnWidth(3, 30);
+  if (!aj.getRange('F6').getValue())
+    aj.getRange('F6:G6').setValues([['Token de Calendly (opcional: hora de la llamada en el CRM)', '']]);
   aj.setColumnWidth(4, 170); aj.setColumnWidth(5, 30); aj.setColumnWidth(6, 260); aj.setColumnWidth(7, 420);
   aj.setFrozenRows(1);
 
@@ -372,7 +439,7 @@ function configurar() {
   estiloCabecera(sh.getRange(1, 1, 1, CABECERA.length));
   sh.setFrozenRows(1);
   sh.setFrozenColumns(2);
-  sh.getRange('A:R').setFontFamily('Poppins').setVerticalAlignment('middle');
+  sh.getRange(1, 1, sh.getMaxRows(), CABECERA.length).setFontFamily('Poppins').setVerticalAlignment('middle');
   sh.getRange(1, 1, 1, CABECERA.length).setFontFamily('Poppins');
   sh.getRange('A2:A').setNumberFormat('dd/mm/yyyy HH:mm');
   sh.getRange('C2:C').setNumberFormat('@');

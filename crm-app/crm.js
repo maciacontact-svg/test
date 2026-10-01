@@ -140,10 +140,12 @@ function fecha(iso) {
   return d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 const llamado = l => l.contacto === '✅' || l.intentos > 0;
+// "Buen form no agendado": cualificó en el formulario, no reservó en Calendly y aún no está cerrado → prioridad
+const buenForm = l => l.cualifica && !l.autoagenda && !['Agendado', 'Perdido', 'Invalid'].includes(l.estado);
 
 // Aviso de "llámale ya": cuenta atrás de los minutos configurados y luego "tarde"
 function urgencia(l) {
-  if (llamado(l) || !l.fecha) return '';
+  if (llamado(l) || l.autoagenda || !l.fecha) return '';
   const s = (Date.now() - new Date(l.fecha)) / 1000, lim = D.minutos * 60;
   if (s > 3600) return '';
   if (s < lim) {
@@ -158,7 +160,8 @@ function filtrados() {
   const n = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const qq = n(q);
   return D.leads
-    .filter(l => vista !== 'llamar' || l.contacto !== '✅')
+    .filter(l => vista !== 'buen' || buenForm(l))
+    .filter(l => vista !== 'llamar' || (l.contacto !== '✅' && !l.autoagenda && l.estado !== 'Agendado'))
     .filter(l => vista !== 'mios' || l.caller.toUpperCase() === S.caller.toUpperCase())
     .filter(l => vista !== 'sin' || !l.caller)
     .filter(l => !fEstado || (fEstado === '__nuevo' ? !l.estado : l.estado === fEstado))
@@ -183,18 +186,23 @@ function pintarKpis() {
   const L = D.leads;
   const deHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy).length;
   const ultimaHora = L.filter(l => Date.now() - new Date(l.fecha) < 3600e3).length;
-  const porLlamar = L.filter(l => l.contacto !== '✅').length;
+  const porLlamar = L.filter(l => l.contacto !== '✅' && !l.autoagenda && l.estado !== 'Agendado').length;
+  const buenos = L.filter(buenForm).length;
+  const buenosSin = L.filter(l => buenForm(l) && !llamado(l)).length;
+  const auto = L.filter(l => l.autoagenda).length;
   const urgentes = L.filter(l => urgencia(l)).length;
   const seg = L.filter(l => l.estado === 'Seguimiento' || l.estado === 'Volver a llamar').length;
   const agend = L.filter(l => l.estado === 'Agendado').length;
   const contactados = L.filter(l => l.contacto === '✅').length;
   const tasa = L.length ? Math.round(contactados / L.length * 100) : 0;
   const k = (label, val, sub, cls = '') => `<div class="kpi ${cls}"><small>${label}</small><b>${val}</b><span>${sub}</span></div>`;
+  const n = $('nBuen'); if (n) n.textContent = buenos || '';
   $('kpis').innerHTML =
     k('Leads hoy', deHoy, `${ultimaHora} en la última hora`) +
+    k('⭐ Buen form no agendado', buenos, buenosSin ? `${buenosSin} sin llamar todavía` : 'Todos llamados', buenosSin ? 'hot' : '') +
     k('Por llamar', porLlamar, urgentes ? `${urgentes} en la última hora sin llamar` : 'Ninguno urgente', urgentes ? 'hot' : '') +
     k('En seguimiento', seg, 'Seguimiento y volver a llamar') +
-    k('Agendados', agend, 'Llamadas con el closer') +
+    k('Agendados', agend, auto ? `${auto} autoagendados por Calendly` : 'Llamadas con el closer') +
     k('Tasa de contacto', `${tasa} %`, `${contactados} de ${L.length} contactados`);
 }
 
@@ -214,14 +222,18 @@ function opciones(lista, actual, vacio) {
 
 function fila(l) {
   const id = esc(l.id);
-  return `<tr data-id="${id}" class="${llamado(l) ? '' : 'fresh'}">
+  const tags = (l.autoagenda ? '<span class="tag auto">📅 Autoagendado</span>' : '') +
+    (buenForm(l) ? '<span class="tag buen">⭐ Buen form</span>' : '');
+  return `<tr data-id="${id}" class="${llamado(l) ? '' : 'fresh'}${buenForm(l) ? ' buen' : ''}">
     <td data-label="Fecha registro" class="when"><b>${hace(l.fecha)}</b><small>${fecha(l.fecha)}</small>${urgencia(l)}</td>
-    <td data-label="Nombre" class="name"><button type="button" class="link" data-ficha="${id}">${esc(l.nombre)}</button>${l.inversion ? `<small>${esc(l.inversion)}</small>` : ''}</td>
+    <td data-label="Nombre" class="name"><button type="button" class="link" data-ficha="${id}">${esc(l.nombre)}</button>${l.inversion ? `<small>${esc(l.inversion)}</small>` : ''}${tags}</td>
     <td data-label="Teléfono" class="phone">${telLinks(l.telefono)}</td>
     <td data-label="En qué punto está" class="txt"><span title="${esc(l.punto)}">${esc(l.punto) || '—'}</span></td>
     <td data-label="Qué quiere conseguir" class="txt"><span title="${esc(l.objetivo)}">${esc(l.objetivo) || '—'}</span></td>
     <td data-label="Correo" class="mail">${l.correo ? `<a href="mailto:${esc(l.correo)}" title="${esc(l.correo)}">${esc(l.correo)}</a>` : '—'}</td>
-    <td data-label="Caller"><select class="pill caller" data-f="caller" aria-label="Caller">${opciones(D.callers, l.caller, '—')}</select></td>
+    <td data-label="Caller">${l.autoagenda
+      ? `<span class="pill locked" title="Se agendó él solo por Calendly: no lleva caller">Autoagendado</span>`
+      : `<select class="pill caller" data-f="caller" aria-label="Caller">${opciones(D.callers, l.caller, '—')}</select>`}</td>
     <td data-label="Estado"><select class="pill estado" data-e="${slug(l.estado) || 'nuevo'}" data-f="estado" aria-label="Estado">${opciones(D.estados, l.estado, 'Nuevo')}</select></td>
     <td data-label="Contacto"><button type="button" class="contact ${l.contacto === '✅' ? 'yes' : 'no'}" data-f="contacto" aria-label="Contactado: ${l.contacto === '✅' ? 'sí' : 'no'}">${l.contacto === '✅' ? '✅' : '❌'}</button></td>
     <td data-label="Nº intentos"><div class="step"><button type="button" data-f="intentos" data-d="-1" aria-label="Menos">−</button><b>${l.intentos}</b><button type="button" data-f="intentos" data-d="1" aria-label="Más">+</button></div></td>
@@ -250,7 +262,9 @@ function abrirFicha(id) {
     ${row('En qué punto está', l.punto)}${row('Qué quiere conseguir', l.objetivo)}
     ${row('Inversión al mes', l.inversion)}${row('Dónde quiere estar en 3-6 meses', l.meta)}
     ${row('Cuándo se pone en marcha', l.cuando)}${row('Instagram', l.instagram)}
-    ${row('Caller', l.caller)}${row('Estado', l.estado || 'Nuevo')}${row('Notas', l.notas)}
+    ${row('Buen form', l.cualifica ? 'Sí: encaja con el perfil (se le ofreció agendar)' : '')}
+    ${row('Autoagendado por Calendly', l.autoagenda)}
+    ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' : l.caller)}${row('Estado', l.estado || 'Nuevo')}${row('Notas', l.notas)}
     ${row('Origen', l.origen)}`;
   $('drawer').classList.add('open');
   $('drawer').setAttribute('aria-hidden', 'false');
@@ -346,7 +360,7 @@ function demoApi(action, extra) {
       ['Laura Gómez', '+34 634 21 88 90', 'laura.gomez@gmail.com', 1.5, '', '', '❌', 0, ''],
       ['Iván Castro', '612 448 301', 'ivancastro@hotmail.com', 9, '', '', '❌', 0, ''],
       ['Brayan Ruiz', '612290125', 'colombiaa0220@gmail.com', 45, 'DAVID', 'Seguimiento', '✅', 1, 'Contactar 24/08. Le interesa el nicho de historia.'],
-      ['Alain Martin', '695300210', 'amartin990@gmail.com', 180, 'DAVID', 'Agendado', '✅', 1, 'Llamada con closer el jueves 18:00'],
+      ['Alain Martin', '695300210', 'amartin990@gmail.com', 180, '', 'Agendado', '❌', 0, '📅 Autoagendado por Calendly · Llamada 03/10 18:00'],
       ['Sara Cortés', '611491664', 'saracortesochoa07@gmail.com', 300, 'MARIO', 'Contactado', '❌', 2, ''],
       ['Juan David Ospina', '642605004', 'juan.ospina.ruda@gmail.com', 1500, 'DAVID', 'Perdido', '✅', 1, 'No tiene dinero'],
       ['Mikel Portera', '+34 603 31 19 51', 'porteraso44@gmail.com', 2000, 'MARIO', 'Volver a llamar', '✅', 1, 'Llamar después de las 19:00'],
@@ -363,6 +377,7 @@ function demoApi(action, extra) {
         punto: P[i % 4], objetivo: O[i % 4], inversion: I[i % 5],
         meta: 'Generar un ingreso extra para poder dejar horas del trabajo.', cuando: i % 3 ? 'En las próximas semanas' : 'Lo antes posible',
         instagram: i % 2 ? '' : '@' + b[0].split(' ')[0].toLowerCase(), origen: 'utm_source=instagram',
+        cualifica: i === 0 || i === 2 || i === 3, autoagenda: i === 3 ? 'Llamada 03/10 18:00' : '',
       })),
     };
   }

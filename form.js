@@ -78,6 +78,15 @@ const STEPS = [
 const OTHER_LABEL = 'Otro (cuéntamelo)';
 const AUTO_ADVANCE_MS = 380;
 const NEXT_PAGE = 'acceso.html'; // paso 3 (después, la biblioteca)
+const CALL_PAGE = 'llamada.html'; // si cualifica: antes del paso 3 se le ofrece agendar llamada
+
+// ===== Cualificación (editar aquí) =====
+// Cualifica quien cumple TODAS las condiciones: su respuesta tiene que estar en la lista de cada pregunta.
+const CUALIFICA = {
+  inversion: ['Entre 200 y 400 € al mes', 'Entre 400 y 800 € al mes', 'Más de 800 € al mes'],
+  cuando: ['Lo antes posible', 'En las próximas semanas'],
+};
+const cualifica = () => Object.keys(CUALIFICA).every(k => CUALIFICA[k].includes(answers[k]));
 
 // ===== Validación de datos de contacto (evita datos inventados) =====
 const JUNK = ['asdf', 'qwer', 'qwerty', 'test', 'prueba', 'nombre', 'apellido', 'xxx', 'aaa', 'hola', 'fake', 'nadie', 'no tengo'];
@@ -301,11 +310,11 @@ function back() {
 }
 
 // Envía el lead al CRM (Google Sheets + Slack). keepalive: el envío sigue aunque se cambie de página.
-function sendLead() {
+function sendLead(id, buenForm) {
   const url = (window.SA_CONFIG || {}).API_URL;
   const c = answers.contacto || {};
   const lead = {
-    action: 'lead',
+    action: 'lead', id, cualifica: buenForm,
     nombre: c.nombre, telefono: c.whatsapp, correo: c.email, instagram: c.instagram || '',
     punto: answers.punto, objetivo: answers.objetivo, inversion: answers.inversion,
     meta: answers.meta, cuando: answers.cuando,
@@ -318,8 +327,18 @@ function sendLead() {
   } catch (e) { console.error(e); }
 }
 
+// ID aleatorio del lead: la página de llamada lo usa para marcarlo como agendado en el CRM
+function nuevoId() {
+  const a = new Uint8Array(9);
+  crypto.getRandomValues(a);
+  return Array.from(a, b => (b % 36).toString(36)).join('');
+}
+
 function finish() {
-  sendLead();
+  const id = nuevoId(), buenForm = cualifica();
+  sendLead(id, buenForm);
+  const c = answers.contacto || {};
+  try { sessionStorage.setItem('sa-lead', JSON.stringify({ id, nombre: c.nombre, correo: c.email })); } catch (e) {}
   busy = true;
   inner.classList.add('out');
   setTimeout(() => {
@@ -327,10 +346,10 @@ function finish() {
       <div class="done">
         <div class="check"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h1>¡Listo, ${esc((answers.contacto?.nombre || '').split(' ')[0] || 'ya está')}!</h1>
-        <p class="sub">Preparando tu acceso…</p>
+        <p class="sub">${buenForm ? 'Revisando tus respuestas…' : 'Preparando tu acceso…'}</p>
       </div>`;
     requestAnimationFrame(() => inner.classList.remove('out'));
-    setTimeout(() => { location.href = NEXT_PAGE; }, 1600);
+    setTimeout(() => { location.href = buenForm ? CALL_PAGE : NEXT_PAGE; }, 1600);
   }, 280);
 }
 
