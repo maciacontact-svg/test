@@ -387,3 +387,15 @@ addEventListener('keydown', e => {
 });
 
 show(fromHash(), 'init');
+
+// Cuenta: saludo con su nombre (se guardó al rellenar el formulario)
+(() => {
+  let c = null;
+  try { c = JSON.parse(localStorage.getItem('sa-lead') || 'null'); } catch (e) {}
+  const el = document.getElementById('cuenta');
+  const n = c && String(c.nombre || '').trim().split(' ')[0];
+  if (!el || !n) return;
+  el.textContent = n;
+  el.title = 'Tu cuenta: ' + (c.correo || n);
+  el.hidden = false;
+})();

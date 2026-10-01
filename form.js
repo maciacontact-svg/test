@@ -338,7 +338,7 @@ function finish() {
   const id = nuevoId(), buenForm = cualifica();
   sendLead(id, buenForm);
   const c = answers.contacto || {};
-  const datos = JSON.stringify({ id, nombre: c.nombre, correo: c.email });
+  const datos = JSON.stringify({ id, nombre: c.nombre, correo: c.email, desde: new Date().toISOString() });
   try { localStorage.setItem('sa-lead', datos); } catch (e) {}
   try { sessionStorage.setItem('sa-lead', datos); } catch (e) {}
   busy = true;
@@ -381,11 +381,96 @@ inner.addEventListener('focusout', e => {
   if (f && e.target.value.trim()) showFieldError(e.target, validateField(f, e.target.value));
 });
 
-card.addEventListener('submit', e => { e.preventDefault(); next(); });
+card.addEventListener('submit', e => { e.preventDefault(); modo === 'login' ? entrarConEmail() : next(); });
 
 // Enter en el textarea avanza (Shift+Enter hace salto de línea)
 inner.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.tagName === 'TEXTAREA' && !e.shiftKey) { e.preventDefault(); next(); }
 });
 
-render(false);
+// ===== Cuenta: quien ya rellenó el formulario no lo repite =====
+// Se guarda en este navegador al terminar (sa-lead). En otro dispositivo entra con su email.
+const LIBRARY_PAGE = 'recursos.html';
+let modo = 'form';
+const cuenta = (() => { try { return JSON.parse(localStorage.getItem('sa-lead') || 'null'); } catch (e) { return null; } })();
+
+function pantallaCuenta(html, titulo) {
+  document.getElementById('yaCuenta').hidden = true;
+  inner.innerHTML = html;
+  countEl.textContent = titulo;
+  progressEl.style.width = '100%';
+  const f = inner.querySelector('input');
+  if (f && matchMedia('(hover: hover)').matches) f.focus({ preventScroll: true });
+}
+
+function bienvenida() {
+  modo = 'cuenta';
+  const n = String(cuenta.nombre || '').trim().split(' ')[0];
+  pantallaCuenta(`
+    <div class="done">
+      <div class="check"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h1>Hola de nuevo${n ? ', ' + esc(n) : ''}</h1>
+      <p class="sub">Ya tienes tu cuenta: no hace falta rellenar nada otra vez.</p>
+      <div class="actions"><a class="next" href="${LIBRARY_PAGE}">Entrar a mi biblioteca →</a></div>
+      <button type="button" class="link-btn" data-a="otra">¿No eres ${n ? esc(n) : 'tú'}? Empezar de cero</button>
+    </div>`, 'Tu cuenta');
+}
+
+function loginEmail(msg = '') {
+  modo = 'login';
+  pantallaCuenta(`
+    <h1>Entra a tu biblioteca</h1>
+    <p class="sub">Escribe el email con el que rellenaste el formulario.</p>
+    <div class="field">
+      <label class="lbl" for="f-login">Email</label>
+      <input class="input" id="f-login" name="login" type="email" autocomplete="email" placeholder="tu@email.com">
+      <p class="field-err" id="e-login" aria-live="polite">${esc(msg)}</p>
+    </div>
+    <div class="actions">
+      <button type="button" class="back" data-a="form">Atrás</button>
+      <button type="submit" class="next">Entrar</button>
+    </div>
+    <button type="button" class="link-btn" data-a="form">¿Primera vez? Rellena el formulario (2 min)</button>`, 'Ya tengo cuenta');
+}
+
+async function entrarConEmail() {
+  const inp = inner.querySelector('#f-login'), btn = inner.querySelector('.next');
+  const correo = inp.value.trim().toLowerCase();
+  const fallo = validateEmail(correo);
+  if (fallo) { showFieldError(inp, fallo); shake(inp); return; }
+  const url = (window.SA_CONFIG || {}).API_URL;
+  btn.disabled = true; btn.textContent = 'Buscando tu cuenta…';
+  try {
+    if (!url) throw new Error('sin API');
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'cuenta', correo }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'No encontrado');
+    try { localStorage.setItem('sa-lead', JSON.stringify({ id: j.id, nombre: j.nombre, correo, desde: new Date().toISOString() })); } catch (e) {}
+    location.href = LIBRARY_PAGE;
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Entrar';
+    showFieldError(inp, /demasiados/i.test(err.message) ? err.message
+      : 'No encontramos ninguna cuenta con ese email. Revisa que esté bien escrito o rellena el formulario.');
+    shake(inp);
+  }
+}
+
+function volverAlFormulario() {
+  modo = 'form';
+  document.getElementById('yaCuenta').hidden = false;
+  step = 0;
+  render(false);
+}
+
+inner.addEventListener('click', e => {
+  const a = e.target.closest('[data-a]');
+  if (!a) return;
+  e.stopPropagation();
+  if (a.dataset.a === 'form') volverAlFormulario();
+  if (a.dataset.a === 'otra') { try { localStorage.removeItem('sa-lead'); sessionStorage.removeItem('sa-lead'); } catch (er) {} volverAlFormulario(); }
+}, true);
+document.getElementById('yaCuenta').addEventListener('click', () => (cuenta ? bienvenida() : loginEmail()));
+
+if (cuenta && cuenta.nombre && !/[?&]nuevo\b/.test(location.search)) bienvenida();
+else render(false);

@@ -109,3 +109,14 @@
   }, { threshold: 0.35 }).observe(wrap);
 })();
 
+
+// ===== Cuenta: si ya rellenó el formulario en este navegador, entra directo a la biblioteca =====
+(() => {
+  let c = null;
+  try { c = JSON.parse(localStorage.getItem('sa-lead') || 'null'); } catch (e) {}
+  if (!c || !c.nombre) return;
+  document.querySelectorAll('a.cta[href="empezar.html"]').forEach(a => {
+    a.href = 'recursos.html';
+    a.textContent = 'Entrar a mi biblioteca';
+  });
+})();

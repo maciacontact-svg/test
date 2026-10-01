@@ -59,6 +59,7 @@ function doPost(e) {
     switch (b.action) {
       case 'lead':   return json(nuevoLead(b));
       case 'agendado': return json(autoagendado(b));
+      case 'cuenta': return json(buscarCuenta(b));
       case 'login':  { const u = auth(b); return json({ ok: true, caller: u.nombre, rol: u.rol }); }
       case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol })); }
       case 'update': return json(actualizar(b, auth(b).nombre));
@@ -152,6 +153,22 @@ function autoagendado(b) {
     });
   } catch (err) { console.error('Slack: ' + err); }
   return { ok: true };
+}
+
+// "Ya tengo cuenta": entra a la biblioteca con el email con el que rellenó el formulario (sin repetirlo)
+function buscarCuenta(b) {
+  const correo = limpio(b.correo, 120).toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(correo)) throw new Error('Email no válido');
+  const cache = CacheService.getScriptCache();
+  const k = 'cuenta_' + correo, n = Number(cache.get(k) || 0), tot = Number(cache.get('cuenta_total') || 0);
+  if (n >= 8 || tot >= 300) throw new Error('Demasiados intentos. Prueba en unos minutos.');
+  cache.put(k, String(n + 1), 600);
+  cache.put('cuenta_total', String(tot + 1), 600);
+  const sh = hoja(HOJA_LEADS);
+  const fila = buscarCorreo(sh, correo);
+  if (!fila) return { ok: false, error: 'No encontrado' };
+  const f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
+  return { ok: true, id: String(f[COL.id - 1]), nombre: String(f[COL.nombre - 1]).trim().split(' ')[0] };
 }
 
 function buscarCorreo(sh, correo) {
