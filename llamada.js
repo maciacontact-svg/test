@@ -1,20 +1,22 @@
 // ===== Configuración (editar aquí) =====
 // Tu evento de Calendly (sin ?month=… ni &date=…)
 const CALENDLY_URL = 'https://calendly.com/maciacontact/proceso-de-admision-system-academy';
+// Después de reservar: página con el vídeo y los pasos para confirmar la llamada
+const CONFIRM_PAGE = 'confirmar.html';
 
-// ===== Lógica =====
+// ===== Lógica (la usan llamada.html y agendar.html) =====
 const $ = id => document.getElementById(id);
-let lead = {};
-try { lead = JSON.parse(sessionStorage.getItem('sa-lead') || '{}') || {}; } catch (e) {}
+const leer = st => { try { return JSON.parse(st.getItem('sa-lead') || 'null'); } catch (e) { return null; } };
+const lead = leer(sessionStorage) || leer(localStorage) || {};
 
 const nombre = String(lead.nombre || '').trim().split(' ')[0];
-if (nombre) $('hola').textContent = `Enhorabuena, ${nombre}`;
+if (nombre && $('hola')) $('hola').textContent = `Enhorabuena, ${nombre}`;
 
 // Calendario de Calendly dentro de la página, con nombre y email ya rellenos
 let abierto = false;
-function abrirCalendario() {
+function abrirCalendario(scroll = true) {
   $('cal').hidden = false;
-  $('cal').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (scroll) $('cal').scrollIntoView({ behavior: 'smooth', block: 'start' });
   if (abierto) return;
   abierto = true;
   const p = new URLSearchParams({
@@ -30,31 +32,38 @@ function abrirCalendario() {
   if (lead.id) p.set('utm_content', lead.id);
   $('calBody').innerHTML = `<iframe src="${CALENDLY_URL}?${p}" title="Agendar llamada" loading="lazy"></iframe>`;
 }
-$('open').addEventListener('click', abrirCalendario);
+if ($('open')) $('open').addEventListener('click', () => abrirCalendario());
+if (document.body.dataset.calAbierto !== undefined) abrirCalendario(false);
 
 // Calendly avisa a la página cuando se reserva → el lead pasa a "Agendado" en el CRM (sin caller)
-window.addEventListener('message', e => {
-  if (e.origin !== 'https://calendly.com' || !e.data || e.data.event !== 'calendly.event_scheduled') return;
+// y se le manda a la página de confirmación.
+let reservado = false;
+window.addEventListener('message', async e => {
+  if (e.origin !== 'https://calendly.com' || !e.data || e.data.event !== 'calendly.event_scheduled' || reservado) return;
+  reservado = true;
   const pl = e.data.payload || {};
-  marcarAgendado((pl.event || {}).uri, (pl.invitee || {}).uri);
-  setTimeout(() => {
-    $('cal').hidden = true; $('open').hidden = true; $('skip').hidden = true;
-    $('booked').hidden = false;
-    $('booked').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 1800);
+  $('cal').hidden = true;
+  ['open', 'skip'].forEach(id => { if ($(id)) $(id).hidden = true; });
+  $('booked').hidden = false;
+  $('booked').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  await Promise.race([
+    marcarAgendado((pl.event || {}).uri, (pl.invitee || {}).uri),
+    new Promise(r => setTimeout(r, 5000)),
+  ]);
+  location.href = CONFIRM_PAGE;
 });
 
 async function marcarAgendado(evento, invitado) {
   const url = (window.SA_CONFIG || {}).API_URL;
-  if (!url || !lead.id) return;
-  const body = JSON.stringify({ action: 'agendado', id: lead.id, evento: evento || '', invitado: invitado || '' });
+  if (!url || (!lead.id && !invitado)) return;
+  const body = JSON.stringify({ action: 'agendado', id: lead.id || '', evento: evento || '', invitado: invitado || '' });
   // reintenta por si el lead aún no se había guardado en el Sheet
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     try {
       const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body, keepalive: true });
       const j = await r.json();
-      if (j.ok) return;
+      if (j.ok || /no válido/.test(j.error || '')) return;
     } catch (err) { console.error(err); }
-    await new Promise(r => setTimeout(r, 2500 * (i + 1)));
+    await new Promise(r => setTimeout(r, 1500));
   }
 }

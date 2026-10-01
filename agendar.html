@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tu llamada · System Academy</title>
+<title>Agenda tu llamada · System Academy</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="img/logo/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="acceso.css">
 <link rel="stylesheet" href="llamada.css">
 </head>
-<body>
+<body data-cal-abierto>
 <div class="bg" aria-hidden="true"></div>
 
 <main class="wrap">
@@ -27,11 +27,11 @@
 
   <span class="badge">
     <span class="tick"><svg viewBox="0 0 24 24" width="11" height="11"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    Respuestas revisadas · Perfil apto
+    Proceso de admisión · Llamada gratuita
   </span>
 
-  <h1><span id="hola">Enhorabuena</span>: <em>encajas con el perfil que suele tener resultados.</em></h1>
-  <p class="lead">Por eso te ofrecemos una <b>llamada gratuita</b>: analizamos tu caso, te damos propuestas personalizadas y vemos si te podemos ayudar.</p>
+  <h1>Agenda tu llamada <em>gratuita.</em></h1>
+  <p class="lead">Analizamos tu caso, te damos <b>propuestas personalizadas</b> y vemos si te podemos ayudar a crear, escalar o revivir tus canales.</p>
 
   <!-- Regalo -->
   <div class="gift">
@@ -44,13 +44,7 @@
     </div>
   </div>
 
-  <ul class="points">
-    <li><b>Analizamos tu caso</b><span>Dónde estás, cuánto tiempo tienes y a dónde quieres llegar.</span></li>
-    <li><b>Propuestas a tu medida</b><span>Nicho, idioma y ritmo que encajan contigo.</span></li>
-    <li><b>Sin compromiso</b><span>Si no te podemos ayudar, te lo decimos.</span></li>
-  </ul>
 
-  <button type="button" class="enter big" id="open">Agendar mi llamada gratuita <span aria-hidden="true">→</span></button>
 
   <!-- Calendario (se abre al pulsar el botón) -->
   <div class="window cal" id="cal" hidden>
@@ -68,7 +62,7 @@
     <p>Te falta un último paso para confirmarla…</p>
   </div>
 
-  <a href="acceso.html" class="skip" id="skip"><b>Ahora no, ir a mi biblioteca</b> <span aria-hidden="true">→</span></a>
+  <a href="recursos.html" class="skip" id="skip"><b>Volver a mi biblioteca</b> <span aria-hidden="true">→</span></a>
 
   <p class="foot">System Academy · Tus datos no se comparten con nadie</p>
 </main>

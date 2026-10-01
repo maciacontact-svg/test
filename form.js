@@ -338,7 +338,9 @@ function finish() {
   const id = nuevoId(), buenForm = cualifica();
   sendLead(id, buenForm);
   const c = answers.contacto || {};
-  try { sessionStorage.setItem('sa-lead', JSON.stringify({ id, nombre: c.nombre, correo: c.email })); } catch (e) {}
+  const datos = JSON.stringify({ id, nombre: c.nombre, correo: c.email });
+  try { localStorage.setItem('sa-lead', datos); } catch (e) {}
+  try { sessionStorage.setItem('sa-lead', datos); } catch (e) {}
   busy = true;
   inner.classList.add('out');
   setTimeout(() => {

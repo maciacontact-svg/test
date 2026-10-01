@@ -64,10 +64,11 @@ h1 { max-width: 15em; }
 .booked p { font-size: 15px; color: var(--ink-2); line-height: 1.5; max-width: 26em; }
 .booked .enter { margin-top: 8px; }
 
-.skip { margin-top: 22px; font-size: 14px; color: var(--muted); border-bottom: 1px solid #cfcfcf; padding-bottom: 2px; transition: color .2s, border-color .2s; }
+.skip { margin-top: 22px; font-size: 15px; color: var(--ink-2); border-bottom: 1px solid #cfcfcf; padding-bottom: 2px; transition: color .2s, border-color .2s; }
 .skip:hover { color: var(--ink); border-color: var(--ink); }
 
 [hidden] { display: none !important; }
+.skip b { font-weight: 600; color: var(--ink); }
 
 @media (max-width: 640px) {
   .gift { grid-template-columns: 40px 1fr; padding: 16px; gap: 12px; }
@@ -76,3 +77,11 @@ h1 { max-width: 15em; }
   .enter.big { width: 100%; justify-content: center; }
   .cal-body, .cal-body iframe, .cal-body .calendly-inline-widget { height: 760px; min-height: 760px; }
 }
+
+/* ----- confirmar.html: llamada pendiente de confirmar ----- */
+.badge.warn .tick { background: #d98c00; font-size: 12px; font-weight: 700; }
+.atencion { text-transform: uppercase; letter-spacing: .02em; }
+.state.must { background: #111; color: #fff; }
+.step.second { margin-top: 12px; }
+.step.active + .window { margin-top: 16px; }
+.step.next.ready { margin-top: 30px; }

@@ -102,18 +102,27 @@ function nuevoLead(b) {
 }
 
 // =====================================================================
-// Autoagendado: el lead ha reservado él solo en Calendly (desde llamada.html)
+// Autoagendado: el lead ha reservado él solo en Calendly (desde llamada.html o agendar.html)
 // → Estado "Agendado", SIN caller (y el dashboard no deja ponérselo).
 // =====================================================================
 function autoagendado(b) {
   const id = String(b.id || '');
-  if (!/^[a-z0-9]{8,24}$/i.test(id)) throw new Error('Lead no válido');
+  const conId = /^[a-z0-9]{8,24}$/i.test(id);
+  if (!conId && !b.invitado) throw new Error('Lead no válido');
   const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
+  lock.waitLock(20000);
   let f, cuando;
   try {
     const sh = hoja(HOJA_LEADS);
-    const fila = buscarFila(sh, id);
+    let fila = conId ? buscarFila(sh, id) : 0;
+    // Sin ID (p. ej. agenda desde la biblioteca en otro dispositivo): se busca por el email de Calendly
+    let inv = null;
+    if (!fila) {
+      inv = invitadoCalendly(b.invitado);
+      if (!inv && !conId) throw new Error('Lead no válido: no se ha podido identificar (revisa el token de Calendly en Ajustes → G6)');
+      if (inv && inv.correo) fila = buscarCorreo(sh, inv.correo);
+      if (!fila && inv && !conId) fila = leadDesdeCalendly(sh, inv);   // nunca rellenó el formulario
+    }
     if (!fila) throw new Error('Lead no encontrado');
     f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
     if (f[COL.autoagenda - 1]) return { ok: true, repetido: true };
@@ -133,7 +142,7 @@ function autoagendado(b) {
       text: '📅 ' + f[COL.nombre - 1] + ' ha agendado su llamada',
       blocks: [
         { type: 'section', text: md(mencion() + '📅 *' + esc(f[COL.nombre - 1]) + '* ha agendado él solo su llamada' +
-          (cuando ? ' · *' + cuando + '*' : '') + '\n' + telefonoSlack(String(f[COL.telefono - 1])) +
+          (cuando ? ' · *' + cuando + '*' : '') + '\n' + (f[COL.telefono - 1] ? telefonoSlack(String(f[COL.telefono - 1])) : esc(f[COL.correo - 1])) +
           ' · _Autoagendado: sin caller_') },
         botonCrm(),
       ].filter(Boolean),
@@ -142,17 +151,57 @@ function autoagendado(b) {
   return { ok: true };
 }
 
-// Fecha y hora de la llamada (solo si has pegado tu token de Calendly en Ajustes → G6)
-function horaLlamada(evento) {
+function buscarCorreo(sh, correo) {
+  const n = sh.getLastRow() - 1;
+  if (n < 1 || !correo) return 0;
+  const c = sh.getRange(2, COL.correo, n, 1).getValues();
+  for (let i = n - 1; i >= 0; i--) if (String(c[i][0]).trim().toLowerCase() === correo) return i + 2;
+  return 0;
+}
+
+// Lead nuevo con los datos de Calendly (agendó sin pasar por el formulario)
+function leadDesdeCalendly(sh, inv) {
+  const lead = {
+    id: Utilities.getUuid().slice(0, 8), fecha: new Date(),
+    nombre: inv.nombre || inv.correo, telefono: inv.telefono, correo: inv.correo,
+    punto: '', objetivo: '', caller: '', estado: '', contacto: '❌', intentos: 0, notas: '',
+    inversion: '', meta: '', cuando: '', instagram: '', origen: 'Calendly (sin formulario)', aviso: '—',
+    cualifica: 'No', autoagenda: '',
+  };
+  const fila = new Array(CABECERA.length).fill('');
+  Object.keys(COL).forEach(k => { fila[COL[k] - 1] = celda(lead[k]); });
+  sh.appendRow(fila);
+  return sh.getLastRow();
+}
+
+// Datos del invitado en Calendly (necesita el token de Ajustes → G6)
+function invitadoCalendly(uri) {
+  const j = calendlyGet(uri, /^https:\/\/api\.calendly\.com\/scheduled_events\/[A-Za-z0-9-]+\/invitees\/[A-Za-z0-9-]+$/);
+  if (!j || !j.resource) return null;
+  const r = j.resource;
+  let tel = r.text_reminder_number || '';
+  (r.questions_and_answers || []).forEach(q => {
+    if (!tel && /tel[eé]fono|whatsapp|m[oó]vil|phone/i.test(q.question || '')) tel = q.answer || '';
+  });
+  return { nombre: limpio(r.name, 80), correo: limpio(r.email, 120).toLowerCase(), telefono: limpio(tel, 40) };
+}
+
+function calendlyGet(uri, patron) {
   const token = String(hoja(HOJA_AJUSTES).getRange(AJ.calendly).getValue()).trim();
-  const uri = String(evento || '');
-  if (!token || token.length < 20 || !/^https:\/\/api\.calendly\.com\/scheduled_events\/[A-Za-z0-9-]+$/.test(uri)) return '';
+  uri = String(uri || '');
+  if (!token || token.length < 20 || !patron.test(uri)) return null;
   try {
     const r = UrlFetchApp.fetch(uri, { headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true });
-    if (r.getResponseCode() !== 200) { console.error('Calendly respondió ' + r.getResponseCode()); return ''; }
-    const t = JSON.parse(r.getContentText()).resource.start_time;
-    return t ? Utilities.formatDate(new Date(t), TZ, 'dd/MM HH:mm') : '';
-  } catch (err) { console.error('Calendly: ' + err); return ''; }
+    if (r.getResponseCode() !== 200) { console.error('Calendly respondió ' + r.getResponseCode()); return null; }
+    return JSON.parse(r.getContentText());
+  } catch (err) { console.error('Calendly: ' + err); return null; }
+}
+
+// Fecha y hora de la llamada (solo si has pegado tu token de Calendly en Ajustes → G6)
+function horaLlamada(evento) {
+  const j = calendlyGet(evento, /^https:\/\/api\.calendly\.com\/scheduled_events\/[A-Za-z0-9-]+$/);
+  const t = j && j.resource && j.resource.start_time;
+  return t ? Utilities.formatDate(new Date(t), TZ, 'dd/MM HH:mm') : '';
 }
 
 // =====================================================================

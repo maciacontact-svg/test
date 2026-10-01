@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirma tu llamada · System Academy</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="img/logo/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="acceso.css">
+<link rel="stylesheet" href="llamada.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+
+<main class="wrap">
+  <!-- Logo System Academy  -->
+  <a href="index.html" class="logo" aria-label="Inicio">
+    <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true">
+      <defs><mask id="saCut"><rect width="100" height="100" fill="#fff"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#000" stroke-width="5.5" stroke-linecap="round"/></mask></defs>
+      <rect width="100" height="100" rx="26" fill="#111"/>
+      <path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round" mask="url(#saCut)"/>
+    </svg>
+  </a>
+
+  <span class="badge warn">
+    <span class="tick">!</span>
+    Reserva recibida · Pendiente de confirmar
+  </span>
+
+  <h1><span class="atencion">Atención:</span> tu llamada <em>no está confirmada.</em></h1>
+  <p class="lead">Para confirmarla, <b>mira este vídeo y sigue los pasos</b>. Es un proceso de admisión: en el vídeo te explicamos cómo funciona y qué pasa en la llamada.</p>
+
+  <!-- PASO 1 -->
+  <div class="step active">
+    <span class="num">1</span>
+    <div class="step-text">
+      <h2>Confirmación obligatoria</h2>
+      <p>Te escribiremos por WhatsApp desde nuestro número para confirmar tu llamada. Respóndenos en cuanto lo recibas.</p>
+    </div>
+    <span class="state must">Obligatorio</span>
+  </div>
+
+  <!-- PASO 2 -->
+  <div class="step active second">
+    <span class="num">2</span>
+    <div class="step-text">
+      <h2>Mira el vídeo</h2>
+      <p>Te explicamos el proceso de admisión y cómo prepararte para la llamada.</p>
+    </div>
+    <span class="state">Ahora</span>
+  </div>
+
+  <div class="window" id="video">
+    <div class="window-bar">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="window-title"><b>Antes de tu llamada</b><span class="sep">·</span>proceso de admisión</span>
+    </div>
+    <div class="player">
+      <iframe src="https://www.youtube-nocookie.com/embed/4eryIj39nEo?rel=0&amp;modestbranding=1&amp;playsinline=1" title="Antes de tu llamada" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- Mientras tanto: biblioteca -->
+  <div class="step next ready">
+    <span class="num">3</span>
+    <div class="step-text">
+      <h2>Mientras tanto, entra a tu biblioteca</h2>
+      <p>Llega a la llamada con lo básico ya visto.</p>
+    </div>
+    <a href="recursos.html" class="enter">Ir a la biblioteca <span aria-hidden="true">→</span></a>
+  </div>
+
+  <p class="foot">System Academy · Tus datos no se comparten con nadie</p>
+</main>
+</body>
+</html>
