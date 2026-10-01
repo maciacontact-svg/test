@@ -1,13 +1,13 @@
 # CRM de System Academy — cómo ponerlo en marcha (≈15 min)
 
 ```
-Formulario de la web ──► Google Sheet (solo tú) ──► Dashboard del equipo (/crm)
+Formulario de la web ──► Google Sheet (solo tú) ──► Dashboard del equipo (web aparte del CRM)
                                │
                                └──► Slack: aviso al instante + recordatorio si a los 5 min nadie ha llamado
 ```
 
 - **El Sheet es tuyo y solo tuyo.** Nadie más necesita acceso.
-- **El equipo usa el dashboard** (`tu-web.vercel.app/crm`), entrando con su nombre y un PIN.
+- **El equipo usa el dashboard** (una web aparte, por ejemplo `crm-system-academy.vercel.app`; ver «Publicar el dashboard»), entrando con su nombre y un PIN.
 - Todo lo que cambian en el dashboard (caller, estado, contacto, intentos, notas) se guarda en tu Sheet al momento, y lo que tú cambies en el Sheet aparece en el dashboard en unos 15 segundos.
 
 ---
@@ -31,7 +31,7 @@ Formulario de la web ──► Google Sheet (solo tú) ──► Dashboard del e
 | **Callers y su PIN** | Columnas A y B | Añade o quita filas cuando quieras. El desplegable de «Caller» y el acceso al dashboard se actualizan solos. Ya vienen DAVID y MARIO con un PIN aleatorio: cámbialo y pásaselo a cada uno. |
 | **Estados** | Columna D | Contactado, Volver a llamar, Seguimiento, Perdido, Nutricion, Agendado, Invalid. Puedes añadir más. |
 | **Webhook de Slack** | G2 | Paso 3. |
-| **URL del dashboard** | G3 | `https://TU-WEB.vercel.app/crm` (añade un botón «Abrir CRM» en Slack). |
+| **URL del dashboard** | G3 | la URL del dashboard, por ejemplo `https://crm-system-academy.vercel.app` (añade un botón «Abrir CRM» en Slack). |
 | **Minutos para el aviso** | G4 | 5 por defecto. |
 | **Mencionar al closer** | G5 | Opcional: su *ID de miembro* de Slack (perfil → ⋮ → Copiar ID de miembro). Así le suena la notificación a él. Puedes poner varios separados por comas. |
 
@@ -55,13 +55,25 @@ Qué llega a Slack:
 4. **Implementar** → copia la **URL de la aplicación web** (termina en `/exec`).
 5. Pásame esa URL (o pégala tú en `config.js`, en `API_URL: '…'`) y súbelo. A partir de ahí:
    - el formulario manda cada lead al Sheet y a Slack;
-   - `/crm` deja de estar en modo demo y muestra tus leads reales.
+   - el dashboard deja de estar en modo demo y muestra tus leads reales.
 
 > **Si cambias el código de `Code.gs` más adelante:** Implementar → Gestionar implementaciones → ✏️ → Versión: *Nueva versión* → Implementar. La URL no cambia.
 
-## 5. Uso diario del equipo
+## 5. Publicar el dashboard (URL separada de la web)
 
-- Entran en `tu-web.vercel.app/crm` con **nombre + PIN** (se queda guardado en su navegador hasta que pulsen «Salir»).
+El dashboard vive en la carpeta `crm-app/` y se publica como **otro proyecto de Vercel** con su propia URL. La web pública (landing, formulario, acceso, biblioteca) no lo incluye.
+
+1. Vercel → **Add New → Project** → importa este mismo repositorio.
+2. **Root Directory → Edit → `crm-app`**. Framework: *Other*. **Deploy**.
+3. **Settings → Git → Production Branch**: la misma rama que usa la web.
+4. Opcional: **Settings → General → Project Name** `crm-system-academy` → la URL queda `crm-system-academy.vercel.app`.
+5. Pega esa URL en **Ajustes → G3** del Sheet.
+
+> Si cambias la URL del Apps Script, cámbiala en `config.js` **y** en `crm-app/config.js`.
+
+## 6. Uso diario del equipo
+
+- Entran en la URL del dashboard con **nombre + PIN** (se queda guardado en su navegador hasta que pulsen «Salir»).
 - Arriba: leads de hoy, por llamar, en seguimiento, agendados y tasa de contacto.
 - Filtros: *Por llamar*, *Mis leads*, *Sin caller* y por estado, más un buscador.
 - Cada lead nuevo sale con **«Llamar ya · 4:59»** en cuenta atrás; si pasa el tiempo, **«Tarde · +2 min»**.
