@@ -566,23 +566,3 @@ function demoApi(action, extra) {
 S = leerSesion();
 if (DEMO && !S) S = { caller: 'DAVID', pin: 'demo' };
 if (S) entrar(); else mostrarLogin();
-
-// ---------- App instalable (PWA) ----------
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
-
-// Al volver a la app (el iPhone congela los temporizadores en segundo plano) → datos frescos al momento
-document.addEventListener('visibilitychange', () => { if (!document.hidden && S && !$('app').hidden && Date.now() - ultimo > 5000) cargar(); });
-
-// En Safari del iPhone/iPad, explicar cómo añadirla a la pantalla de inicio (una vez cerrado, no vuelve a salir)
-(() => {
-  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const app = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
-  let visto = false;
-  try { visto = localStorage.getItem('sa-crm-instalar') === '1'; } catch (e) {}
-  if (!ios || app || visto) return;
-  $('instalar').hidden = false;
-  $('instalarX').addEventListener('click', () => {
-    $('instalar').hidden = true;
-    try { localStorage.setItem('sa-crm-instalar', '1'); } catch (e) {}
-  });
-})();

@@ -293,33 +293,3 @@ em { font-style: italic; font-weight: 500; }
   .pill { max-width: 100%; width: 100%; }
   .notes textarea { min-width: 0; background: var(--white); border-color: var(--hair); }
 }
-
-/* ----- App instalada (iPhone / Android): notch, barra de inicio y aviso de instalación ----- */
-html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
-.nav { height: calc(64px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top);
-  padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
-.wrap { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
-.login { padding-top: calc(24px + env(safe-area-inset-top)); padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
-.drawer-card { top: calc(12px + env(safe-area-inset-top)); bottom: calc(12px + env(safe-area-inset-bottom)); }
-.toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
-@media (display-mode: standalone) {
-  body { overscroll-behavior-y: none; }
-  .nav { background: rgba(243,243,243,.94); }
-}
-@media (max-width: 760px) {
-  .nav { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
-}
-
-.instalar {
-  position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 45;
-  max-width: 440px; margin: 0 auto; display: flex; align-items: center; gap: 12px;
-  background: var(--ink); color: #fff; border-radius: 20px; padding: 12px 12px 12px 14px;
-  box-shadow: 0 24px 50px -24px rgba(0,0,0,.6); font-size: 13px; line-height: 1.4;
-}
-.instalar img { width: 40px; height: 40px; border-radius: 10px; flex: none; }
-.instalar p { flex: 1; }
-.instalar b { font-weight: 600; }
-.instalar em { color: #cfcfcf; }
-.instalar svg { vertical-align: -3px; }
-.instalar button { color: #fff; opacity: .7; width: 32px; height: 32px; border-radius: 50%; font-size: 20px; flex: none; }
-.instalar button:hover { opacity: 1; background: rgba(255,255,255,.12); }
