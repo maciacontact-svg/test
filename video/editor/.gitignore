@@ -1,0 +1,5 @@
+# salidas de render (pesadas); se regeneran con render.mjs / compose.py
+*.mov
+demo/bruto_demo.mp4
+demo/demo_final.mp4
+frames/

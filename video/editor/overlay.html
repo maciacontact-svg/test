@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Overlay</title>
+<style>
+  @font-face{font-family:Poppins;font-weight:400;src:url(../../guia/fonts/Poppins-400-normal-latin.woff2) format("woff2")}
+  @font-face{font-family:Poppins;font-weight:500;src:url(../../guia/fonts/Poppins-500-normal-latin.woff2) format("woff2")}
+  @font-face{font-family:Poppins;font-weight:600;src:url(../../guia/fonts/Poppins-600-normal-latin.woff2) format("woff2")}
+  @font-face{font-family:Poppins;font-weight:700;src:url(../../guia/fonts/Poppins-700-normal-latin.woff2) format("woff2")}
+  @font-face{font-family:Poppins;font-weight:400;font-style:italic;src:url(../../guia/fonts/Poppins-400-italic-latin.woff2) format("woff2")}
+  @font-face{font-family:Poppins;font-weight:500;font-style:italic;src:url(../../guia/fonts/Poppins-500-italic-latin.woff2) format("woff2")}
+  @font-face{font-family:Poppins;font-weight:600;font-style:italic;src:url(../../guia/fonts/Poppins-600-italic-latin.woff2) format("woff2")}
+  @font-face{font-family:JetBrains Mono;font-weight:600;src:url(../../guia/fonts/JetBrainsMono-600-normal-latin.woff2) format("woff2")}
+
+  :root{
+    --W:1920px; --H:1080px;
+    --ink:#111; --paper:#f3f3f3; --white:#fff;
+    --accent:#f3f3f3;              /* énfasis: cursiva + gris claro, sin colores nuevos */
+    --shadow:0 18px 50px rgba(0,0,0,.45);
+  }
+  html,body{margin:0;padding:0;background:transparent;overflow:hidden}
+  body{width:var(--W);height:var(--H);position:relative;font-family:Poppins,system-ui,sans-serif;color:var(--white)}
+  #stage{position:absolute;inset:0}
+  .el{position:absolute;will-change:transform,opacity}
+  .hidden{display:none !important}
+
+  /* --- Título grande (kinetic) --- */
+  .title{left:0;right:0;top:26%;transform:translateY(-50%);text-align:center;padding:0 120px}
+  .title.center{top:50%} .title.bottom{top:76%}
+  .title .w{display:inline-block;font-weight:700;font-size:112px;line-height:1.05;letter-spacing:-.02em;margin:0 .14em;
+    text-shadow:0 6px 30px rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.6)}
+  .title .w.em{font-style:italic;font-weight:600;color:var(--accent)}
+  .title.small .w{font-size:84px}
+
+  /* --- Keyword: píldora negra con palabra clave --- */
+  .pill{left:50%;bottom:150px;transform:translateX(-50%);background:var(--ink);color:var(--white);
+    padding:22px 46px;border-radius:999px;font-weight:600;font-size:54px;letter-spacing:-.01em;white-space:nowrap;box-shadow:var(--shadow)}
+  .pill em{font-style:italic;font-weight:500;color:var(--paper)}
+  .pill.top{bottom:auto;top:110px}
+
+  /* --- Lista de pasos (tarjeta lateral) --- */
+  .list{left:110px;top:50%;transform:translateY(-50%);width:640px}
+  .list .hd{font-weight:700;font-size:34px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);opacity:.85;margin-bottom:22px;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+  .list .it{display:flex;align-items:center;gap:22px;background:var(--ink);color:var(--white);border-radius:22px;padding:22px 28px;margin-bottom:16px;
+    font-weight:600;font-size:40px;box-shadow:var(--shadow)}
+  .list .it .n{flex:0 0 58px;height:58px;border-radius:50%;background:var(--paper);color:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:30px}
+  .list .it.done{opacity:.55}
+  .list .it em{font-style:italic;font-weight:500;color:var(--paper)}
+
+  /* --- Dato grande (contador) --- */
+  .stat{right:120px;top:50%;transform:translateY(-50%);text-align:right}
+  .stat .num{font-weight:700;font-size:200px;line-height:1;letter-spacing:-.04em;text-shadow:0 8px 40px rgba(0,0,0,.6);font-variant-numeric:tabular-nums}
+  .stat .lab{font-weight:500;font-style:italic;font-size:46px;color:var(--paper);margin-top:6px;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+  .stat.center{right:auto;left:0;width:100%;text-align:center}
+
+  /* --- Tarjeta de sección (pantalla completa) --- */
+  .card{inset:0;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+  .card .k{font-weight:600;font-size:36px;letter-spacing:.22em;text-transform:uppercase;color:var(--paper);opacity:.7}
+  .card .t{font-weight:700;font-size:120px;letter-spacing:-.03em;text-align:center;padding:0 160px;line-height:1.05}
+  .card .t em{font-style:italic;font-weight:500;color:var(--paper)}
+  .card .logo{position:absolute;left:80px;bottom:70px;display:flex;align-items:center;gap:18px;font-weight:600;font-size:30px;color:var(--paper)}
+  .card .logo svg{width:52px;height:52px}
+  .card .bar{position:absolute;left:0;bottom:0;height:10px;background:var(--paper)}
+
+  /* --- Imagen / captura con marco --- */
+  .img{left:50%;top:50%;transform:translate(-50%,-50%);border-radius:28px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.6);background:#000}
+  .img img{display:block;width:100%;height:100%;object-fit:cover}
+  .img .cap{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#fff;padding:60px 36px 28px;font-weight:600;font-size:36px}
+
+  /* --- Caja resaltada (sobre captura) --- */
+  .box{border:6px solid var(--paper);border-radius:18px;box-shadow:0 0 0 6px rgba(17,17,17,.75),0 0 60px rgba(243,243,243,.45)}
+
+  /* --- Flecha --- */
+  .arrow svg{overflow:visible}
+
+  /* --- Subtítulos tipo karaoke --- */
+  .cap-line{left:0;right:0;bottom:90px;text-align:center}
+  .cap-line .bx{display:inline-block;background:rgba(17,17,17,.9);border-radius:22px;padding:14px 22px;box-shadow:var(--shadow)}
+  .cap-line span{display:inline-block;color:#fff;font-weight:600;font-size:50px;padding:6px 14px;border-radius:14px;margin:0 2px;line-height:1.1}
+  .cap-line span.on{color:var(--ink);background:var(--paper)}
+
+  /* --- Rótulo inferior (lower third) --- */
+  .lower{left:110px;bottom:230px;background:var(--ink);color:#fff;border-radius:20px;padding:22px 34px;box-shadow:var(--shadow)}
+  .lower .a{font-weight:700;font-size:44px}
+  .lower .b{font-weight:400;font-style:italic;font-size:30px;color:var(--paper);margin-top:2px}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+// ---------- utilidades de animación (todo en función de t, determinista) ----------
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const lerp=(a,b,u)=>a+(b-a)*u;
+const E={
+  outCubic:u=>1-Math.pow(1-u,3),
+  inCubic:u=>u*u*u,
+  outBack:u=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(u-1,3)+c1*Math.pow(u-1,2)},
+  outExpo:u=>u>=1?1:1-Math.pow(2,-10*u),
+  inOutQuad:u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2,
+};
+// progreso de entrada/salida de un elemento: devuelve {in,out,alive}
+function phase(t,ev,din=.45,dout=.3){
+  const s=ev.start, e=ev.end;
+  if(t<s||t>e) return {alive:false};
+  const pin=clamp((t-s)/(ev.in??din),0,1);
+  const pout=clamp((e-t)/(ev.out??dout),0,1);
+  return {alive:true,in:pin,out:pout};
+}
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+// *palabra* -> <em>palabra</em>
+const rich=s=>esc(s).replace(/\*([^*]+)\*/g,'<em>$1</em>');
+
+const LOGO=`<svg viewBox="0 0 100 100" aria-hidden="true"><path fill="#f3f3f3" d="M50 2C14 2 2 14 2 50s12 48 48 48 48-12 48-48S86 2 50 2z"/><path fill="#111" d="M66 30c-4-4-10-6-16-6-11 0-19 6-19 15 0 8 6 12 17 14l6 1c7 2 10 4 10 8 0 5-5 8-12 8-7 0-13-3-17-8l-8 8c6 7 15 11 25 11 13 0 22-7 22-17 0-9-6-14-18-16l-6-1c-7-2-10-4-10-7 0-4 4-7 10-7 6 0 11 2 15 6z"/></svg>`;
+
+// ---------- constructores ----------
+const builders={
+  title(ev){
+    const d=document.createElement('div');d.className='el title'+(ev.size==='small'?' small':'')+(ev.pos?' '+ev.pos:'');
+    // tramos *así* => cursiva, aunque abarquen varias palabras
+    let em=false; const words=[];
+    ev.text.split(/\s+/).forEach(w=>{let s=w.startsWith('*'),e=w.endsWith('*')&&w.length>1; if(s){em=true;w=w.slice(1)} if(e){w=w.slice(0,-1)} words.push({w,em}); if(e)em=false;});
+    d.innerHTML=words.map(o=>`<span class="w${o.em?' em':''}">${esc(o.w)}</span>`).join(' ');
+    d._words=[...d.querySelectorAll('.w')];
+    return d;
+  },
+  keyword(ev){
+    const d=document.createElement('div');d.className='el pill'+(ev.pos==='top'?' top':'');
+    d.innerHTML=rich(ev.text);return d;
+  },
+  list(ev){
+    const d=document.createElement('div');d.className='el list';
+    d.innerHTML=(ev.heading?`<div class="hd">${rich(ev.heading)}</div>`:'')+
+      ev.items.map((it,i)=>`<div class="it"><div class="n">${i+1}</div><div>${rich(it)}</div></div>`).join('');
+    d._items=[...d.querySelectorAll('.it')];return d;
+  },
+  stat(ev){
+    const d=document.createElement('div');d.className='el stat'+(ev.pos==='center'?' center':'');
+    d.innerHTML=`<div class="num"></div><div class="lab">${rich(ev.label||'')}</div>`;
+    d._num=d.querySelector('.num');return d;
+  },
+  card(ev){
+    const d=document.createElement('div');d.className='el card';
+    d.innerHTML=`<div class="k">${rich(ev.kicker||'')}</div><div class="t">${rich(ev.text)}</div>
+      <div class="logo">${LOGO}<span>System Academy</span></div><div class="bar"></div>`;
+    d._bar=d.querySelector('.bar');return d;
+  },
+  image(ev){
+    const d=document.createElement('div');d.className='el img';
+    d.style.width=(ev.w||1400)+'px';d.style.height=(ev.h||788)+'px';
+    d.innerHTML=`<img src="${ev.src}">`+(ev.caption?`<div class="cap">${rich(ev.caption)}</div>`:'');
+    d._img=d.querySelector('img');return d;
+  },
+  box(ev){
+    const d=document.createElement('div');d.className='el box';
+    d.style.left=ev.x+'px';d.style.top=ev.y+'px';d.style.width=ev.w+'px';d.style.height=ev.h+'px';return d;
+  },
+  arrow(ev){
+    const d=document.createElement('div');d.className='el arrow';
+    const [x1,y1,x2,y2]=[ev.x1,ev.y1,ev.x2,ev.y2];
+    const len=Math.hypot(x2-x1,y2-y1);
+    d.style.left='0';d.style.top='0';
+    d.innerHTML=`<svg width="1920" height="1080"><defs><marker id="m${ev.id||''}" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M0 0 L12 6 L0 12 z" fill="#f3f3f3"/></marker></defs>
+      <path d="M${x1} ${y1} L${x2} ${y2}" stroke="#f3f3f3" stroke-width="10" stroke-linecap="round" fill="none" marker-end="url(#m${ev.id||''})" stroke-dasharray="${len}" stroke-dashoffset="${len}" style="filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))"/></svg>`;
+    d._path=d.querySelector('path');d._len=len;return d;
+  },
+  caption(ev){
+    const d=document.createElement('div');d.className='el cap-line';
+    d.innerHTML='<div class="bx">'+ev.words.map(w=>`<span>${esc(w.text)}</span>`).join('')+'</div>';
+    d._spans=[...d.querySelectorAll('span')];return d;
+  },
+  lower(ev){
+    const d=document.createElement('div');d.className='el lower';
+    d.innerHTML=`<div class="a">${rich(ev.text)}</div>`+(ev.sub?`<div class="b">${rich(ev.sub)}</div>`:'');return d;
+  },
+};
+
+// ---------- actualizadores por tipo (aplican el estado en t) ----------
+const updaters={
+  title(ev,el,t,p){
+    const n=el._words.length, per=ev.perWord??.12;
+    el._words.forEach((w,i)=>{
+      const u=clamp((t-ev.start-i*per)/.38,0,1), k=E.outBack(u);
+      w.style.opacity=String(Math.min(u*3,1)*p.out);
+      w.style.transform=`translateY(${lerp(40,0,k)}px) scale(${lerp(.6,1,k)})`;
+    });
+    el.style.opacity=String(p.out);
+    el.style.transform=`translateY(-50%) scale(${lerp(1,1.06,E.inCubic(1-p.out))})`;
+  },
+  keyword(ev,el,t,p){
+    const k=E.outBack(p.in);
+    el.style.opacity=String(Math.min(p.in*3,1)*p.out);
+    el.style.transform=`translateX(-50%) translateY(${lerp(50,0,k)}px) scale(${lerp(.7,1,k)*lerp(.9,1,p.out)})`;
+  },
+  list(ev,el,t,p){
+    el.style.opacity=String(p.out);
+    el.style.transform=`translateY(-50%) translateX(${lerp(-80,0,E.outCubic(p.in))}px)`;
+    const times=ev.at||ev.items.map((_,i)=>ev.start+i*(ev.step??1));
+    el._items.forEach((it,i)=>{
+      const u=clamp((t-times[i])/.4,0,1), k=E.outBack(u);
+      it.style.opacity=String(u);
+      it.style.transform=`translateX(${lerp(-60,0,k)}px)`;
+      const next=times[i+1];
+      it.classList.toggle('done',ev.dim!==false && next!==undefined && t>=next);
+    });
+  },
+  stat(ev,el,t,p){
+    const u=E.outExpo(clamp((t-ev.start)/(ev.dur??1.2),0,1));
+    const v=lerp(ev.from??0,ev.to,u);
+    const dec=ev.decimals??0;
+    let s=v.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+    el._num.textContent=(ev.prefix||'')+s+(ev.suffix||'');
+    const k=E.outBack(p.in);
+    el.style.opacity=String(Math.min(p.in*3,1)*p.out);
+    el.style.transform=`translateY(-50%) scale(${lerp(.8,1,k)})`;
+  },
+  card(ev,el,t,p){
+    const kin=E.outExpo(p.in), kout=E.inCubic(1-p.out);
+    el.style.clipPath=`inset(0 ${lerp(100,0,kin)}% 0 0)`;
+    el.style.opacity=String(1-kout);
+    el._bar.style.width=(clamp((t-ev.start)/(ev.end-ev.start),0,1)*100)+'%';
+  },
+  image(ev,el,t,p){
+    const k=E.outCubic(p.in);
+    el.style.opacity=String(Math.min(p.in*2,1)*p.out);
+    const z=ev.zoom?lerp(1,ev.zoom,clamp((t-ev.start)/(ev.end-ev.start),0,1)):1;
+    el.style.transform=`translate(-50%,-50%) translateY(${lerp(60,0,k)}px) scale(${lerp(.92,1,k)*lerp(.96,1,p.out)})`;
+    el._img.style.transform=`scale(${z})`;
+    el._img.style.transformOrigin=ev.origin||'50% 50%';
+  },
+  box(ev,el,t,p){
+    const k=E.outBack(p.in);
+    el.style.opacity=String(Math.min(p.in*3,1)*p.out);
+    el.style.transform=`scale(${lerp(1.25,1,k)})`;
+  },
+  arrow(ev,el,t,p){
+    const k=E.outCubic(p.in);
+    el._path.style.strokeDashoffset=String(el._len*(1-k));
+    el.style.opacity=String(p.out);
+  },
+  caption(ev,el,t,p){
+    el.style.opacity=String(Math.min(p.in*4,1)*Math.min(p.out*4,1));
+    el._spans.forEach((s,i)=>{const w=ev.words[i];s.classList.toggle('on',t>=w.start&&t<(w.end??ev.words[i+1]?.start??ev.end));});
+  },
+  lower(ev,el,t,p){
+    const k=E.outCubic(p.in);
+    el.style.opacity=String(Math.min(p.in*3,1)*p.out);
+    el.style.transform=`translateX(${lerp(-60,0,k)}px)`;
+  },
+};
+
+// ---------- carga del timeline y seek ----------
+let EVENTS=[], ELS=[];
+window.load=function(timeline){
+  const stage=document.getElementById('stage');stage.innerHTML='';
+  EVENTS=(timeline.events||[]).map((e,i)=>({...e,id:e.id||('e'+i)}));
+  ELS=EVENTS.map(ev=>{const el=builders[ev.type](ev);el.classList.add('hidden');stage.appendChild(el);return el;});
+  // precarga de imágenes
+  return Promise.all([...document.images].map(im=>im.complete?1:new Promise(r=>{im.onload=im.onerror=r;}))).then(()=>document.fonts.ready);
+};
+window.seek=function(t){
+  let any=false;
+  EVENTS.forEach((ev,i)=>{
+    const el=ELS[i], p=phase(t,ev);
+    if(!p.alive){el.classList.add('hidden');return;}
+    any=true;el.classList.remove('hidden');updaters[ev.type](ev,el,t,p);
+  });
+  return any;
+};
+// ¿hay algo visible en [t0,t1]? (para saltar frames vacíos)
+window.activeIn=function(t0,t1){return EVENTS.some(e=>e.end>=t0&&e.start<=t1)};
+// última marca de tiempo
+window.duration=function(){return EVENTS.reduce((m,e)=>Math.max(m,e.end),0)};
+</script>
+</body>
+</html>

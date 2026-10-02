@@ -1,0 +1,26 @@
+{
+  "comment": "Demo del estilo. Tiempos en segundos del montaje. *palabra* = cursiva (énfasis).",
+  "events": [
+    { "type": "card", "start": 0.0, "end": 2.2, "kicker": "System Academy", "text": "Cómo elegir un *nicho* que paga" },
+
+    { "type": "title", "start": 2.4, "end": 5.4, "text": "El 90% elige el nicho *al revés*", "perWord": 0.14 },
+
+    { "type": "keyword", "start": 5.6, "end": 7.6, "text": "Primero el *RPM*, luego la idea" },
+
+    { "type": "list", "start": 7.8, "end": 14.5, "heading": "Los 3 filtros", "step": 1.6,
+      "items": ["RPM alto: *finanzas, software, salud*", "Demanda probada: canales *pequeños* que ya crecen", "Producción repetible con *IA*"] },
+
+    { "type": "stat", "start": 14.8, "end": 18.3, "to": 25, "prefix": "", "suffix": " €", "label": "RPM medio en *finanzas* (EE. UU.)", "dur": 1.4 },
+    { "type": "keyword", "start": 16.2, "end": 18.3, "text": "vs. *2 €* en entretenimiento", "pos": "top" },
+
+    { "type": "image", "start": 18.6, "end": 24.0, "src": "../../../img/capturas/yt-nexlev.jpg", "w": 1500, "h": 844, "caption": "Canales *outlier*: pocos subs, muchas vistas", "zoom": 1.08, "origin": "35% 40%" },
+    { "type": "box", "start": 20.0, "end": 24.0, "x": 330, "y": 300, "w": 560, "h": 150 },
+    { "type": "arrow", "start": 20.6, "end": 24.0, "x1": 1320, "y1": 760, "x2": 930, "y2": 450, "id": "a1" },
+
+    { "type": "lower", "start": 24.3, "end": 27.5, "text": "Regla práctica", "sub": "nicho = *RPM* × demanda × repetibilidad" },
+    { "type": "caption", "start": 24.3, "end": 27.5,
+      "words": [ {"text":"Si","start":24.3}, {"text":"un","start":24.5}, {"text":"nicho","start":24.7}, {"text":"falla","start":25.1}, {"text":"en","start":25.5}, {"text":"uno,","start":25.7}, {"text":"descártalo.","start":26.3,"end":27.5} ] },
+
+    { "type": "card", "start": 27.8, "end": 30.0, "kicker": "Paso 1", "text": "Buscar *outliers*" }
+  ]
+}
