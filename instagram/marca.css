@@ -121,3 +121,12 @@ em { font-style: italic; font-weight: 500; }
 .wa { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
 .wa .lbl { font-size: 64px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; }
 .wa .lbl em { font-weight: 500; }
+
+/* Visor del PNG generado */
+.visor { position: fixed; inset: 0; z-index: 10; background: rgba(17,17,17,.72); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.visor[hidden] { display: none; }
+.visor-caja { background: #fff; border-radius: 16px; padding: 18px; max-width: 520px; width: 100%; display: flex; flex-direction: column; gap: 12px; max-height: 100%; }
+.visor-caja p { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.visor-caja img { width: 100%; height: auto; min-height: 0; object-fit: contain; border-radius: 8px; border: 1px solid var(--line-soft); }
+.visor-caja button { align-self: flex-end; background: var(--ink); color: #fff; border-radius: 999px; padding: 8px 18px; font-size: 13px; }
+button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }

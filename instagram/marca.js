@@ -165,9 +165,27 @@ kit.addEventListener('click', async e => {
     document.activeElement && document.activeElement.blur();
     const url = await htmlToImage.toPng(nodo, { pixelRatio: 1, cacheBust: true, style: { transform: 'none' } });
     Object.assign(document.createElement('a'), { href: url, download: `system-academy-${b.dataset.dl}.png` }).click();
+    mostrar(url);
   } catch (err) {
-    alert('No se pudo generar el PNG. Prueba en Chrome.');
+    mostrar(null);
     console.error(err);
   }
   b.disabled = false; b.textContent = 'Descargar PNG';
 });
+
+/* Visor: por si el navegador no deja descargar, la imagen se guarda con clic derecho o pulsación larga */
+const visor = document.createElement('div');
+visor.className = 'visor';
+visor.hidden = true;
+visor.innerHTML = '<div class="visor-caja"><p></p><img alt="PNG generado"><button type="button">Cerrar</button></div>';
+document.body.appendChild(visor);
+visor.addEventListener('click', e => { if (e.target === visor || e.target.tagName === 'BUTTON') visor.hidden = true; });
+function mostrar(url) {
+  const img = visor.querySelector('img');
+  visor.querySelector('p').textContent = url
+    ? 'Si no se ha descargado solo: clic derecho → «Guardar imagen como…» (en el móvil, mantén pulsada la imagen).'
+    : 'No se pudo generar el PNG. Prueba en Chrome de ordenador.';
+  img.hidden = !url;
+  if (url) img.src = url;
+  visor.hidden = false;
+}
