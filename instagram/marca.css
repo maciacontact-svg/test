@@ -1,0 +1,123 @@
+/* System Academy · kit de Instagram y WhatsApp
+   Cada .lienzo mide en px lo mismo que el PNG final (1080×1350, 1080×1920…).
+   La vista previa se escala con --z; al exportar se clona sin escala. */
+/* Poppins local (para que la exportación PNG siempre la incruste) */
+@font-face { font-family: "Poppins"; font-style: normal; font-weight: 400; font-display: block; src: url("fuentes/poppins-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Poppins"; font-style: normal; font-weight: 500; font-display: block; src: url("fuentes/poppins-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Poppins"; font-style: normal; font-weight: 600; font-display: block; src: url("fuentes/poppins-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Poppins"; font-style: italic; font-weight: 500; font-display: block; src: url("fuentes/poppins-500-italic.woff2") format("woff2"); }
+:root {
+  --bg: #f3f3f3;
+  --ink: #111111;
+  --ink-2: #3a3a3a;
+  --muted: #6b6b6b;
+  --line-soft: #d4d4d4;
+  --sans: "Poppins", system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #e7e7e7; color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; border: 0; background: none; cursor: pointer; color: inherit; }
+em { font-style: italic; font-weight: 500; }
+
+/* ---------- Página de trabajo ---------- */
+.top { display: flex; align-items: center; gap: 14px; padding: 22px 16px 6px; max-width: 1240px; margin: 0 auto; }
+.top h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.intro { max-width: 1240px; margin: 0 auto; padding: 4px 16px 18px; color: var(--ink-2); font-size: 14px; line-height: 1.6; }
+.intro b { color: var(--ink); }
+.seccion { max-width: 1240px; margin: 0 auto; padding: 22px 16px 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.rejilla { max-width: 1240px; margin: 0 auto; padding: 0 16px 24px; display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+.pieza { display: flex; flex-direction: column; gap: 8px; }
+.marco { width: calc(var(--w) * var(--z) * 1px); height: calc(var(--h) * var(--z) * 1px); overflow: hidden; border-radius: 10px; box-shadow: 0 18px 40px -16px rgba(0,0,0,.25); }
+.marco > .lienzo { transform: scale(var(--z)); transform-origin: 0 0; }
+.pie { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.pie button { background: var(--ink); color: #fff; border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 500; }
+.pie button:disabled { opacity: .5; }
+[contenteditable]:hover { outline: 3px dashed rgba(120,120,120,.45); outline-offset: 6px; }
+[contenteditable]:focus { outline: 3px solid rgba(120,120,120,.6); outline-offset: 6px; }
+@media (max-width: 640px) { .rejilla { justify-content: center; } }
+
+/* ---------- Lienzo base ---------- */
+.lienzo { position: relative; width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); overflow: hidden; font-family: var(--sans); color: var(--ink); background: var(--bg); }
+.lienzo.claro {
+  background:
+    radial-gradient(900px 700px at 85% -10%, #ffffff 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(700px 600px at -10% 110%, #e6e6e6 0%, rgba(230,230,230,0) 70%),
+    var(--bg);
+}
+.lienzo.oscuro {
+  color: #fff;
+  background:
+    radial-gradient(900px 760px at 90% -12%, #2b2b2b 0%, rgba(43,43,43,0) 62%),
+    radial-gradient(800px 700px at -15% 115%, #1f1f1f 0%, rgba(31,31,31,0) 70%),
+    #111;
+}
+/* Rejilla fina de fondo, como la landing */
+.lienzo .rej { position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(0,0,0,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.045) 1px, transparent 1px);
+  background-size: 90px 90px; -webkit-mask-image: radial-gradient(closest-side at 50% 40%, #000 30%, transparent 100%); mask-image: radial-gradient(closest-side at 50% 40%, #000 30%, transparent 100%); }
+.oscuro .rej { background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); }
+.lienzo .marco-fino { position: absolute; inset: 28px; border: 2px solid rgba(17,17,17,.12); border-radius: 30px; pointer-events: none; }
+.oscuro .marco-fino { border-color: rgba(255,255,255,.12); }
+
+/* Cabecera tipo «Win» */
+.cab { position: absolute; left: 96px; right: 96px; top: 120px; display: flex; align-items: center; gap: 30px; }
+.cab svg { flex: none; width: 118px; height: 118px; }
+.cab .t { white-space: nowrap; font-size: 68px; font-weight: 600; letter-spacing: -0.035em; line-height: 1; }
+.cab .t em { letter-spacing: -0.03em; }
+.cab .h { font-size: 32px; color: var(--muted); margin-top: 10px; letter-spacing: 0; }
+.oscuro .cab .h { color: #9a9a9a; }
+.desc { position: absolute; left: 96px; right: 96px; top: 300px; font-size: 35px; line-height: 1.38; color: var(--ink-2); letter-spacing: -0.005em; }
+.oscuro .desc { color: #d6d6d6; }
+.desc b { color: var(--ink); font-weight: 600; }
+.oscuro .desc b { color: #fff; }
+
+/* Tarjeta de la captura */
+.cap { position: absolute; left: 50%; transform: translateX(-50%); background: #fff; border-radius: 34px; padding: 18px;
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,.35), 0 4px 12px rgba(0,0,0,.06); overflow: hidden; cursor: pointer; display: flex; }
+.oscuro .cap { background: #1b1b1b; box-shadow: 0 40px 90px -30px rgba(0,0,0,.8), 0 0 0 2px rgba(255,255,255,.07); }
+.cap img { width: 100%; height: 100%; object-fit: contain; border-radius: 20px; display: block; }
+.cap .vacio { flex: 1; border: 4px dashed #cfcfcf; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #8a8a8a; font-size: 30px; text-align: center; padding: 30px; }
+.oscuro .cap .vacio { border-color: #3a3a3a; color: #8a8a8a; }
+.cap .vacio svg { width: 72px; height: 72px; }
+
+.firma { position: absolute; left: 96px; right: 96px; bottom: 74px; display: flex; justify-content: space-between; align-items: center; font-size: 26px; color: var(--muted); }
+.oscuro .firma { color: #8d8d8d; }
+.firma .pill { border: 2px solid currentColor; border-radius: 999px; padding: 8px 22px; }
+
+/* Carrusel */
+.car-logo { position: absolute; left: 96px; top: 96px; display: flex; align-items: center; gap: 20px; font-size: 32px; font-weight: 600; letter-spacing: -0.02em; }
+.car-logo svg { width: 76px; height: 76px; }
+.car-tag { position: absolute; right: 96px; top: 116px; font-size: 26px; border: 2px solid currentColor; border-radius: 999px; padding: 8px 24px; opacity: .7; }
+.car-titulo { position: absolute; left: 96px; right: 96px; top: 380px; font-size: 112px; line-height: 1.04; font-weight: 600; letter-spacing: -0.045em; }
+.car-titulo em { letter-spacing: -0.035em; }
+.car-sub { position: absolute; left: 96px; right: 140px; top: 900px; font-size: 38px; line-height: 1.4; color: var(--ink-2); }
+.oscuro .car-sub { color: #cfcfcf; }
+.desliza { position: absolute; right: 96px; bottom: 96px; display: flex; align-items: center; gap: 16px; background: var(--ink); color: #fff; border-radius: 999px; padding: 22px 40px; font-size: 32px; font-weight: 500; }
+.oscuro .desliza { background: #fff; color: var(--ink); }
+.num { position: absolute; left: 96px; top: 250px; font-size: 220px; font-weight: 600; letter-spacing: -0.06em; line-height: 1; color: transparent; -webkit-text-stroke: 3px rgba(17,17,17,.85); }
+.oscuro .num { -webkit-text-stroke-color: rgba(255,255,255,.85); }
+.int-titulo { position: absolute; left: 96px; right: 96px; top: 520px; font-size: 74px; line-height: 1.1; font-weight: 600; letter-spacing: -0.035em; }
+.int-texto { position: absolute; left: 96px; right: 96px; top: 760px; font-size: 38px; line-height: 1.5; color: var(--ink-2); }
+.oscuro .int-texto { color: #cfcfcf; }
+.puntos { position: absolute; left: 96px; bottom: 112px; display: flex; gap: 12px; }
+.puntos i { width: 14px; height: 14px; border-radius: 99px; background: currentColor; opacity: .22; }
+.puntos i.on { width: 46px; opacity: 1; }
+.handle-b { position: absolute; right: 96px; bottom: 100px; font-size: 28px; color: var(--muted); }
+
+/* Frase / anuncio */
+.frase { position: absolute; left: 110px; right: 110px; top: 50%; transform: translateY(-50%); font-size: 92px; line-height: 1.12; font-weight: 600; letter-spacing: -0.04em; }
+.comillas { font-size: 260px; line-height: .6; font-weight: 600; opacity: .14; display: block; margin-bottom: 30px; letter-spacing: 0; }
+
+/* Story */
+.st .cab { top: 210px; }
+.st .desc { top: 420px; }
+.st .firma { bottom: 150px; }
+
+/* Portadas de destacados y fotos de perfil */
+.dest { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 46px; }
+.dest .ico { width: 360px; height: 360px; }
+.dest .lbl { font-size: 70px; font-weight: 600; letter-spacing: -0.03em; }
+.perfil { display: flex; align-items: center; justify-content: center; }
+.wa { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+.wa .lbl { font-size: 64px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; }
+.wa .lbl em { font-weight: 500; }
