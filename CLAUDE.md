@@ -15,7 +15,7 @@ Responder SIEMPRE en español. Ser conciso.
 
 ## Despliegue
 - Repo `maciacontact-svg/test`, rama `claude/infocapitals-structure-copy-egt7it`. Cada push publica solo (Vercel).
-- Web pública: proyecto Vercel raíz del repo. OJO: systemacademy.es lo sirve OTRA web (prelanding de clase gratuita, no está en este repo); el dominio de esta web para los enlaces se pone en Ajustes → G13 (el CRM y Code.gs lo leen de ahí). `vercel.json`: cleanUrls; redirige /crm-app y /crm.
+- Web pública: proyecto Vercel raíz del repo. OJO: systemacademy.es lo sirve OTRA web (prelanding de clase gratuita, no está en este repo); esta web va en go.systemacademy.es (CNAME en Vercel); el dominio de los enlaces se pone en Ajustes → G13 (por defecto go.systemacademy.es) (el CRM y Code.gs lo leen de ahí). `vercel.json`: cleanUrls; redirige /crm-app y /crm.
 - CRM: proyecto Vercel aparte con Root Directory `crm-app/` → crmbiblio.systemacademy.es (`?demo` = datos de ejemplo).
 
 ## Embudo (web estática, sin build)
@@ -46,4 +46,4 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 
 ## Otros
 - `guia/`: guía PDF (fuente `guia.html`, PDF de solo lectura). `historias/recortes/`: piezas PNG para stories.
-- Instrucciones de instalación: `crm/LEEME.md`, `crm/PENDIENTE.md`.
+- Instrucciones de instalación: `crm/LEEME.md`, `crm/PENDIENTE.md`. Activación completa paso a paso: `crm/ACTIVAR.md`.
