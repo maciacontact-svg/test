@@ -20,7 +20,7 @@ Orden: **A → B → C → D** (con eso ya funciona el seguimiento de YouTube, M
 5. Espera de 5 a 30 min hasta que Vercel ponga **Valid Configuration** (el candado SSL lo pone solo).
 6. Comprueba en una ventana privada:
    - `go.systemacademy.es/privacidad` → política de privacidad
-   - `go.systemacademy.es/agenda/youtube/prueba` → página de agenda
+   - `go.systemacademy.es/agenda/youtube/prueba` → agenda de YouTube («Lo has visto en el vídeo. Ahora, tu caso.»)
    - `go.systemacademy.es/biblio/youtube/prueba` → formulario de la biblioteca
 
 ## B. Actualizar el Apps Script (5 min)

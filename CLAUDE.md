@@ -40,7 +40,7 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 - Hoja «Instagram» (una fila por convo, ver `IG`). CRM: pestaña Instagram (seguimiento) y Setting = automático + correcciones a mano.
 
 ## Origen y enlaces
-- `/agenda/<fuente>/<etiqueta>` → agendar y `/biblio/<fuente>/<etiqueta>` → empezar (formulario de la biblioteca) (`vercel.json`), con utm_source/utm_content. Se guarda en `localStorage['sa-origen']` (script.js, form.js, llamada.js) y llega a Leads.origen (también en reservas sin formulario).
+- `/agenda/youtube/<vídeo>` → `youtube.html` (agenda con texto para YouTube, misma lógica que agendar). `/agenda/<fuente>/<etiqueta>` → agendar y `/biblio/<fuente>/<etiqueta>` → empezar (formulario de la biblioteca) (`vercel.json`), con utm_source/utm_content. Se guarda en `localStorage['sa-origen']` (script.js, form.js, llamada.js) y llega a Leads.origen (también en reservas sin formulario).
 - CRM: `origenDe(l)` y `canalDe(l)` (▶️ YouTube / 📸 Instagram = ManyChat, bio, setter / Otros / Directo): etiqueta de canal en cada lead, filtro «Todos los canales», resumen por canal en Enlaces, pestaña «Enlaces» (solo maestro): generador, lista (localStorage) y tabla por fuente.
 - `privacidad.html`: titular MASTERFORGE DIGITAL LLC, contacto maciacontact@gmail.com (enlazada en los pies de página; URL para Meta).
 

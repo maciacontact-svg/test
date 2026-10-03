@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Llamada gratuita · System Academy</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="img/logo/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="acceso.css">
+<link rel="stylesheet" href="llamada.css">
+</head>
+<!-- Agenda para quien llega desde YouTube (go.systemacademy.es/agenda/youtube/<vídeo>). El origen lo guarda llamada.js. -->
+<body data-cal-abierto>
+<div class="bg" aria-hidden="true"></div>
+
+<main class="wrap">
+  <!-- Logo System Academy  -->
+  <a href="index.html" class="logo" aria-label="Inicio">
+    <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true">
+      <defs><mask id="saCut"><rect width="100" height="100" fill="#fff"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#000" stroke-width="5.5" stroke-linecap="round"/></mask></defs>
+      <rect width="100" height="100" rx="26" fill="#111"/>
+      <path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round" mask="url(#saCut)"/>
+    </svg>
+  </a>
+
+  <span class="badge">
+    <span class="tick"><svg viewBox="0 0 24 24" width="11" height="11"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    Desde YouTube · Llamada gratuita
+  </span>
+
+  <h1>Lo has visto en el vídeo. <em>Ahora, tu caso.</em></h1>
+  <p class="lead">En una llamada gratuita analizamos tu situación, te damos <b>propuestas personalizadas</b> y vemos si te podemos ayudar a crear, escalar o revivir tus canales.</p>
+
+  <!-- Regalo -->
+  <div class="gift">
+    <span class="gift-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9zM3 7h18v4H3zM12 7v14M12 7S10.5 3 8 3a2 2 0 0 0 0 4h4zm0 0s1.5-4 4-4a2 2 0 0 1 0 4h-4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </span>
+    <div>
+      <small>Solo por entrar a la llamada</small>
+      <p>Te llevas <b>gratis</b> un <em>roadmap personalizado</em> para tu caso en específico.</p>
+    </div>
+  </div>
+
+
+
+  <!-- Calendario (se abre al pulsar el botón) -->
+  <div class="window cal" id="cal" hidden>
+    <div class="window-bar">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="window-title"><b>Elige día y hora</b><span class="sep">·</span>llamada gratuita</span>
+    </div>
+    <div class="cal-body" id="calBody"></div>
+  </div>
+
+  <!-- Confirmación -->
+  <div class="booked" id="booked" hidden>
+    <span class="tick big-tick"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <h2>Reserva recibida</h2>
+    <p>Te falta un último paso para confirmarla…</p>
+  </div>
+
+  <a href="recursos.html" class="skip" id="skip"><b>Volver a mi biblioteca</b> <span aria-hidden="true">→</span></a>
+
+  <p class="foot">System Academy · Tus datos no se comparten con nadie · <a href="privacidad" style="color:inherit">Privacidad</a></p>
+</main>
+
+<script src="config.js"></script>
+<script src="llamada.js"></script>
+</body>
+</html>
