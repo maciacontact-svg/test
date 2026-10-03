@@ -50,7 +50,7 @@ que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la A
 
 | Variable | Valor |
 |---|---|
-| `IG_APP_SECRET` | clave secreta de la app de Meta |
+| `IG_APP_SECRET` | clave secreta de la app. Si no sabes cuál es, pon las dos separadas por una coma: la «clave secreta de la app de Instagram» y la de *Configuración de la app → Básica* |
 | `IG_VERIFY_TOKEN` | una palabra larga que te inventes (la misma que en Meta) |
 | `IG_CRM_KEY` | la clave de Ajustes → **G9** |
 | `CRM_API_URL` | la URL del Apps Script (la de `config.js`) |

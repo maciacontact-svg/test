@@ -65,7 +65,7 @@ $('loginForm').addEventListener('submit', async e => {
 });
 
 $('logout').addEventListener('click', () => {
-  guardarSesion(null); S = null; clearInterval(timer); conocidos = null;
+  borrarCache(); guardarSesion(null); S = null; clearInterval(timer); conocidos = null;
   mostrarLogin();
 });
 
@@ -77,13 +77,37 @@ async function entrar() {
   $('me').textContent = maestro ? `${S.caller} · Maestro` : S.caller;
   $('tabKpis').textContent = maestro ? 'KPIs del equipo' : 'Mis KPIs';
   document.querySelector('#views [data-v="mios"]').hidden = maestro;
+  // se abre al momento con lo último que se vio en este dispositivo; los datos frescos llegan por detrás
+  const c = leerCache();
+  if (c && !D.leads.length) { pintarDatos(c); $('liveText').textContent = 'Actualizando…'; }
   await cargar();
   clearInterval(timer);
   timer = setInterval(cargar, REFRESCO);
 }
 
 // ---------- Datos ----------
+// Copia local de la última carga (solo en el dispositivo de quien ha entrado; se borra al salir)
+const CACHE = () => 'sa-crm-cache-' + (DEMO ? 'demo-' : '') + String(S?.caller || '').toUpperCase();
+function leerCache() { try { return JSON.parse(localStorage.getItem(CACHE()) || 'null'); } catch (e) { return null; } }
+function guardarCache(r) { try { localStorage.setItem(CACHE(), JSON.stringify(r)); } catch (e) {} }
+function borrarCache() { try { Object.keys(localStorage).filter(k => k.startsWith('sa-crm-cache-')).forEach(k => localStorage.removeItem(k)); } catch (e) {} }
+function pintarDatos(r) {
+  r.setting = r.setting || { on: false, dias: [] };
+  r.ig = r.ig || []; r.setters = r.setters || [];
+  D = r;
+  if (!$('fEstado').dataset.ok || $('fEstado').options.length !== D.estados.length + 2) pintarFiltroEstado();
+  render();
+  pintarTabSetting();
+  if (pestana === 'kpis') pintarKpisVista();
+  if (pestana === 'setting') pintarSetting();
+  if (pestana === 'ig') pintarIg();
+  if (pestana === 'enlaces') pintarEnlaces();
+}
+
+let cargando = false;
 async function cargar() {
+  if (cargando) return;          // si la anterior aún no ha vuelto, no se apilan peticiones
+  cargando = true;
   try {
     const r = await api('list');
     // lo que se está guardando manda sobre lo que llega del servidor
@@ -93,16 +117,10 @@ async function cargar() {
     Object.keys(pendSet).forEach(dia => Object.assign(diaSet(r.setting, dia), pendSet[dia]));
     const nuevos = conocidos ? r.leads.filter(l => !conocidos.has(l.id)) : [];
     conocidos = new Set(r.leads.map(l => l.id));
-    D = r;
     if (r.rol && S.rol !== r.rol) { S.rol = r.rol; guardarSesion(S); }
     ultimo = Date.now();
-    if (!$('fEstado').dataset.ok || $('fEstado').options.length !== D.estados.length + 1) pintarFiltroEstado();
-    render();
-    if (pestana === 'kpis') pintarKpisVista();
-    pintarTabSetting();
-    if (pestana === 'setting') pintarSetting();
-    if (pestana === 'ig') pintarIg();
-    if (pestana === 'enlaces') pintarEnlaces();
+    pintarDatos(r);
+    guardarCache(r);
     if (nuevos.length) {
       nuevos.forEach(l => document.querySelector(`tr[data-id="${CSS.escape(l.id)}"]`)?.classList.add('flash'));
       toast(nuevos.length === 1 ? `🔥 Nuevo lead: ${nuevos[0].nombre}` : `🔥 ${nuevos.length} leads nuevos`);
@@ -110,9 +128,9 @@ async function cargar() {
     }
     live(true);
   } catch (err) {
-    if (/PIN|intentos/i.test(err.message)) { guardarSesion(null); clearInterval(timer); return mostrarLogin(err.message); }
+    if (/PIN|intentos/i.test(err.message)) { borrarCache(); guardarSesion(null); clearInterval(timer); return mostrarLogin(err.message); }
     live(false, err.message);
-  }
+  } finally { cargando = false; }
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) document.title = 'CRM · System Academy'; });
 

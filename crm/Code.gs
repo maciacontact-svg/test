@@ -265,8 +265,7 @@ function auth(b) {
 
 // Acceso maestro (solo el fundador): Ajustes → G7 nombre, G8 PIN. Ve los KPIs de todos los callers.
 function maestro() {
-  const aj = hoja(HOJA_AJUSTES);
-  return { nombre: String(aj.getRange(AJ.maestro).getDisplayValue()).trim(), pin: String(aj.getRange(AJ.maestroPin).getDisplayValue()).trim() };
+  return { nombre: String(ajCelda(AJ.maestro)).trim(), pin: String(ajCelda(AJ.maestroPin)).trim() };
 }
 
 function listar() {
@@ -465,6 +464,7 @@ function activarSetting(b, u) {
   const p = equipo().find(x => x.nombre === String(b.para || ''));
   if (!p) throw new Error('Caller no encontrado');
   hoja(HOJA_AJUSTES).getRange(p.fila, 3).setValue(!!b.on);
+  AJM = null;
   SpreadsheetApp.flush();
   return { ok: true, nombre: p.nombre, on: !!b.on };
 }
@@ -493,10 +493,7 @@ const sinTildes = t => String(t || '').toLowerCase().normalize('NFD').replace(/[
 const slugDe = t => sinTildes(t).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 function setters() {
-  const aj = hoja(HOJA_AJUSTES);
-  const n = aj.getLastRow() - 1;
-  if (n < 1) return [];
-  return aj.getRange(2, 9, n, 3).getDisplayValues()
+  return ajM().d.slice(1).map(r => [r[8], r[9], r[10]])
     .map(r => ({ nombre: String(r[0]).trim(), clave: String(r[1]).trim(), slug: slugDe(r[2] || r[0]),
       claves: String(r[1]).split(',').map(x => sinTildes(x).trim()).filter(Boolean) }))
     .filter(x => x.nombre);
@@ -528,13 +525,13 @@ function setterEnTexto(texto, lista) {
 }
 function esPropuesta(texto) {
   const t = sinTildes(texto);
-  const fr = String(hoja(HOJA_AJUSTES).getRange(AJ.igFrases).getDisplayValue() || FRASES_DEF).split(',').map(x => sinTildes(x).trim()).filter(Boolean);
+  const fr = String(ajCelda(AJ.igFrases) || FRASES_DEF).split(',').map(x => sinTildes(x).trim()).filter(Boolean);
   return fr.some(f => t.indexOf(f) >= 0);
 }
 // Dominio(s) donde está publicada la web (Ajustes → G13, separados por comas). Los enlaces se reconocen en cualquiera de ellos.
 let WEB_RE = null;
 function dominiosWeb() {
-  const v = String(hoja(HOJA_AJUSTES).getRange(AJ.web).getDisplayValue() || 'biblioteca.systemacademy.es');
+  const v = String(ajCelda(AJ.web) || 'biblioteca.systemacademy.es');
   const l = v.split(',').map(x => x.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')).filter(Boolean);
   return l.length ? l : ['biblioteca.systemacademy.es'];
 }
@@ -561,7 +558,7 @@ function hojaIg() {
 
 // b = { action: 'ig', clave, eventos: [{ t: 'out'|'in'|'seen', u: IGSID, ts: ms, txt, mid }] }
 function eventosInstagram(b) {
-  const clave = String(hoja(HOJA_AJUSTES).getRange(AJ.igClave).getDisplayValue()).trim();
+  const clave = String(ajCelda(AJ.igClave)).trim();
   if (clave.length < 16 || String(b.clave || '') !== clave) throw new Error('Clave de Instagram incorrecta');
   const evs = (Array.isArray(b.eventos) ? b.eventos : []).slice(0, 200)
     .filter(e => e && /^(out|in|seen)$/.test(e.t) && /^\d{5,25}$/.test(String(e.u)) && Number(e.ts) > 0)
@@ -871,27 +868,38 @@ function probarSlack() {
 // =====================================================================
 // Ajustes y utilidades
 // =====================================================================
+// La pestaña Ajustes se lee UNA vez por petición (antes, ~15 lecturas por cada carga del CRM)
+let AJM = null;
+function ajM() {
+  if (!AJM) {
+    const sh = hoja(HOJA_AJUSTES);
+    const r = sh.getRange(1, 1, Math.max(sh.getLastRow(), 14), 11);
+    AJM = { v: r.getValues(), d: r.getDisplayValues() };
+  }
+  return AJM;
+}
+// Valor de una celda de Ajustes ('G9'…), del mismo bloque leído
+function ajCelda(a1, valor) {
+  const m = String(a1).match(/^([A-K])(\d+)$/);
+  const f = (valor ? ajM().v : ajM().d)[Number(m[2]) - 1] || [];
+  const x = f[m[1].charCodeAt(0) - 65];
+  return x == null ? '' : x;
+}
+
 function equipo() {
-  const sh = hoja(HOJA_AJUSTES);
-  const n = sh.getLastRow() - 1;
-  if (n < 1) return [];
-  const on = sh.getRange(2, 3, n, 1).getValues();   // C: casilla «Setting»
-  return sh.getRange(2, 1, n, 2).getDisplayValues()
-    .map((r, i) => ({ nombre: String(r[0]).trim(), pin: String(r[1]).trim(), fila: i + 2, setting: activo(on[i][0]) }))
+  return ajM().d.slice(1)
+    .map((r, i) => ({ nombre: String(r[0]).trim(), pin: String(r[1]).trim(), fila: i + 2, setting: activo(ajM().v[i + 1][2]) }))
     .filter(p => p.nombre);
 }
 const activo = v => v === true || /^(s[ií]|true|verdadero|x|1)$/i.test(String(v).trim());
 
 function estados() {
-  const sh = hoja(HOJA_AJUSTES);
-  const n = sh.getLastRow() - 1;
-  if (n < 1) return ESTADOS;
-  const l = sh.getRange(2, 4, n, 1).getDisplayValues().map(r => String(r[0]).trim()).filter(Boolean);
+  const l = ajM().d.slice(1).map(r => String(r[3]).trim()).filter(Boolean);
   return l.length ? l : ESTADOS;
 }
 
 function minutosAviso() {
-  const m = Number(hoja(HOJA_AJUSTES).getRange(AJ.minutos).getValue());
+  const m = Number(ajCelda(AJ.minutos, true));
   return m > 0 ? m : 5;
 }
 

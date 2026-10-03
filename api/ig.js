@@ -2,7 +2,8 @@
 // Meta avisa aquí de cada DM de @aleix.ytf (enviados, recibidos y vistos) → se reenvían al CRM (Apps Script, acción "ig").
 // URL para Meta: https://biblioteca.systemacademy.es/api/ig
 // Variables de entorno en Vercel (nunca en el repo):
-//   IG_APP_SECRET    → «Clave secreta de la app» de Meta (para comprobar que el aviso viene de Meta)
+//   IG_APP_SECRET    → clave secreta de la app (para comprobar que el aviso viene de Meta). Se pueden poner
+//                      varias separadas por comas: la «de la app de Instagram» y la de Configuración → Básica.
 //   IG_VERIFY_TOKEN  → una palabra que te inventas y pegas también en Meta al configurar el webhook
 //   IG_CRM_KEY       → la clave de Ajustes → G9 del Sheet
 //   CRM_API_URL      → la URL del Apps Script (la misma que config.js)
@@ -18,11 +19,13 @@ function cuerpo(req) {
 }
 
 function firmaValida(raw, firma) {
-  const secreto = process.env.IG_APP_SECRET || '';
-  if (!secreto || !/^sha256=[a-f0-9]{64}$/.test(firma || '')) return false;
-  const esperada = Buffer.from('sha256=' + crypto.createHmac('sha256', secreto).update(raw).digest('hex'));
+  const secretos = String(process.env.IG_APP_SECRET || '').split(',').map(x => x.trim()).filter(Boolean);
+  if (!secretos.length || !/^sha256=[a-f0-9]{64}$/.test(firma || '')) return false;
   const recibida = Buffer.from(firma);
-  return esperada.length === recibida.length && crypto.timingSafeEqual(esperada, recibida);
+  return secretos.some(secreto => {
+    const esperada = Buffer.from('sha256=' + crypto.createHmac('sha256', secreto).update(raw).digest('hex'));
+    return esperada.length === recibida.length && crypto.timingSafeEqual(esperada, recibida);
+  });
 }
 
 // Del formato de Meta a eventos simples: out (nuestro), in (suyo), seen (lo ha visto)
@@ -62,7 +65,12 @@ module.exports = async (req, res) => {
 
   // 2) Aviso de mensajes: solo si la firma es de Meta
   const raw = await cuerpo(req);
-  if (!firmaValida(raw, req.headers['x-hub-signature-256'])) { res.statusCode = 401; return res.end('Bad signature'); }
+  if (!firmaValida(raw, req.headers['x-hub-signature-256'])) {
+    const n = String(process.env.IG_APP_SECRET || '').split(',').filter(x => x.trim()).length;
+    console.error(`Firma no válida: ${n ? n + ' clave(s) en IG_APP_SECRET y ninguna coincide' : 'IG_APP_SECRET vacía'} · cuerpo ${raw.length} bytes · ` +
+      (req.headers['x-hub-signature-256'] ? 'firma recibida' : 'sin firma'));
+    res.statusCode = 401; return res.end('Bad signature');
+  }
   let body;
   try { body = JSON.parse(raw.toString('utf8')); } catch (e) { res.statusCode = 400; return res.end(); }
   const evs = eventos(body);
@@ -75,6 +83,7 @@ module.exports = async (req, res) => {
       });
       const j = await r.json().catch(() => ({}));
       if (!j.ok) console.error('CRM:', j.error || r.status);
+      else console.log(`OK: ${evs.length} evento(s) guardados en el CRM`);
     } catch (err) { console.error('CRM:', err); }
   }
   // siempre 200: si no, Meta reintenta y acaba desactivando el webhook
