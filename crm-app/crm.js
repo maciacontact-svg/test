@@ -102,6 +102,7 @@ async function cargar() {
     pintarTabSetting();
     if (pestana === 'setting') pintarSetting();
     if (pestana === 'ig') pintarIg();
+    if (pestana === 'enlaces') pintarEnlaces();
     if (nuevos.length) {
       nuevos.forEach(l => document.querySelector(`tr[data-id="${CSS.escape(l.id)}"]`)?.classList.add('flash'));
       toast(nuevos.length === 1 ? `🔥 Nuevo lead: ${nuevos[0].nombre}` : `🔥 ${nuevos.length} leads nuevos`);
@@ -171,6 +172,16 @@ function chipRellamar(l) {
 }
 // "Buen form no agendado": cualificó en el formulario, no reservó en Calendly y aún no está cerrado → prioridad
 const buenForm = l => l.cualifica && !l.autoagenda && !['Agendado', 'Perdido', 'Invalid'].includes(l.estado);
+
+// ---------- Origen del lead (por qué enlace entró) ----------
+const FUENTES = { youtube: '▶️ YouTube', manychat: '🤖 ManyChat', instagram: '📸 Instagram', ig_dm: '📸 DM Instagram', tiktok: '🎵 TikTok' };
+function origenDe(l) {
+  const o = String(l.origen || '');
+  if (!o.includes('=')) return { fuente: o ? 'calendly' : 'directo', nombre: o ? '📅 Calendly directo' : 'Directo / sin enlace', etiqueta: '' };
+  const p = new URLSearchParams(o);
+  const f = (p.get('utm_source') || (p.get('s') ? 'ig_dm' : '')).toLowerCase();
+  return { fuente: f || 'directo', nombre: FUENTES[f] || f || 'Directo / sin enlace', etiqueta: p.get('utm_content') || p.get('utm_campaign') || '' };
+}
 
 // ---------- España / LATAM ----------
 // España: +34 / 0034, o 9 cifras sin prefijo que empiezan por 6, 7 (móvil) o 9 (fijo). El resto (+52, +57…) = LATAM/otros.
@@ -300,7 +311,8 @@ function fila(l) {
   const e = etapa(l);
   const pf = prefijo(l.telefono);
   const tags = (l.setter ? `<span class="tag etapa" title="Entró con el enlace de este setter">📸 ${esc(l.setter)}</span>` : '') +
-    (/manychat/i.test(l.origen) ? '<span class="tag latam">🤖 ManyChat</span>' : '') +
+    (() => { const o = origenDe(l); return l.setter || ['directo', 'calendly'].includes(o.fuente) ? '' :
+      `<span class="tag ${o.fuente === 'youtube' ? 'yt' : 'src'}" title="Entró por este enlace">${esc(o.nombre)}${o.etiqueta ? ' · ' + esc(o.etiqueta) : ''}</span>`; })() +
     (pf === '34' ? '<span class="tag es">🇪🇸 España</span>' : `<span class="tag latam" title="Fuera de España">🌎 ${pf ? '+' + pf : 'LATAM'}</span>`) +
     (l.autoagenda ? '<span class="tag auto">📅 Autoagendado</span>' : '') +
     (buenForm(l) ? '<span class="tag buen">⭐ Buen form</span>' : '') +
@@ -355,7 +367,7 @@ function abrirFicha(id) {
     ${row('Buen form', l.cualifica ? 'Sí: encaja con el perfil (se le ofreció agendar)' : '')}
     ${row('Autoagendado por Calendly', l.autoagenda)}
     ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' : l.caller)}${row('Estado', l.estado || 'Nuevo')}${row('Notas', l.notas)}
-    ${row('Origen', l.origen)}`;
+    ${row('Origen', (o => o.nombre + (o.etiqueta ? ' · ' + o.etiqueta : '') + (l.setter ? ' · setter ' + l.setter : ''))(origenDe(l)))}`;
   $('drawer').classList.add('open');
   $('drawer').setAttribute('aria-hidden', 'false');
 }
@@ -485,6 +497,8 @@ $('tabs').addEventListener('click', e => {
   $('vKpis').hidden = pestana !== 'kpis';
   $('vSet').hidden = pestana !== 'setting';
   $('vIg').hidden = pestana !== 'ig';
+  $('vEnl').hidden = pestana !== 'enlaces';
+  if (pestana === 'enlaces') pintarEnlaces();
   if (pestana === 'kpis') pintarKpisVista();
   if (pestana === 'setting') pintarSetting();
   if (pestana === 'ig') pintarIg();
@@ -511,6 +525,8 @@ function pintarTabSetting() {
   const verIg = ver || esSetter(S.caller);
   $('tabSet').hidden = !ver;
   $('tabIg').hidden = !verIg;
+  $('tabEnl').hidden = S.rol !== 'maestro';
+  if (S.rol !== 'maestro' && pestana === 'enlaces') $('tabs').querySelector('[data-t="leads"]').click();
   if ((!ver && pestana === 'setting') || (!verIg && pestana === 'ig')) $('tabs').querySelector('[data-t="leads"]').click();
 }
 const mismo = (a, b) => String(a || '').toUpperCase() === String(b || '').toUpperCase();
@@ -654,6 +670,77 @@ $('sToggles').addEventListener('click', async e => {
     await api('settingOn', { para: c.nombre, on: c.on });
     toast(`Setting ${c.on ? 'activado' : 'desactivado'} para ${c.nombre}`);
   } catch (err) { c.on = !c.on; pintarSetting(); toast('No se ha guardado: ' + err.message, true); }
+});
+
+// ---------- Enlaces con seguimiento (solo maestro) ----------
+let ePer = '30';
+const WEB = 'systemacademy.es';
+const enlace = (destino, fuente, etiqueta) => `${WEB}/${destino}/${slugUrl(fuente)}${etiqueta ? '/' + slugUrl(etiqueta) : ''}`;
+const slugUrl = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+function misEnlaces() { try { return JSON.parse(localStorage.getItem('sa-crm-enlaces') || '[]'); } catch (e) { return []; } }
+function guardarEnlaces(l) { try { localStorage.setItem('sa-crm-enlaces', JSON.stringify(l)); } catch (e) {} }
+function enlaceActual() {
+  const f = $('eFuente').value === 'otra' ? $('eOtra').value : $('eFuente').value;
+  return { destino: $('eDestino').value, fuente: slugUrl(f) || 'otra', etiqueta: slugUrl($('eEtiqueta').value) };
+}
+function pintarGenerador() {
+  $('eOtraF').hidden = $('eFuente').value !== 'otra';
+  const e = enlaceActual();
+  $('eLink').textContent = enlace(e.destino, e.fuente, e.etiqueta);
+}
+function pintarEnlaces() {
+  pintarGenerador();
+  const item = (titulo, sub, url) => `<div class="e-item"><div><b>${esc(titulo)}</b><small>${esc(sub)}</small></div>
+    <span class="ig-copy"><span>${esc(url)}</span><button type="button" data-copy="https://${esc(url)}">Copiar</button></span>`;
+  const fijos = [
+    ['▶️ YouTube · agenda', 'Descripción de los vídeos', enlace('agenda', 'youtube')],
+    ['▶️ YouTube · biblioteca', 'Descripción de los vídeos', enlace('biblio', 'youtube')],
+    ['📸 Instagram · agenda', 'Bio o historias', enlace('agenda', 'instagram')],
+    ['📸 Instagram · biblioteca', 'Bio o historias', enlace('biblio', 'instagram')],
+  ];
+  $('eLista').innerHTML =
+    fijos.map(f => item(...f) + '<span></span></div>').join('') +
+    misEnlaces().map((e, i) => item(`${FUENTES[e.fuente] || e.fuente} · ${e.destino === 'agenda' ? 'agenda' : 'biblioteca'}`, e.etiqueta || 'sin etiqueta', enlace(e.destino, e.fuente, e.etiqueta)) +
+      `<button type="button" class="ghost e-del" data-del="${i}">Quitar</button></div>`).join('') +
+    D.setters.map(x => item(`🧑‍💻 ${x.nombre} · agenda`, 'Setter (DM de Instagram)', `${WEB}/a/${x.slug}`) + '<span></span></div>' +
+      item(`🧑‍💻 ${x.nombre} · biblioteca`, 'Setter (DM de Instagram)', `${WEB}/b/${x.slug}`) + '<span></span></div>').join('');
+  // De dónde vienen
+  const desde = desdePeriodo(ePer);
+  const g = {};
+  D.leads.filter(l => new Date(l.fecha) >= desde).forEach(l => {
+    const o = origenDe(l);
+    const k = (l.setter ? 'setter:' + l.setter : o.fuente + '|' + o.etiqueta);
+    const r = g[k] || (g[k] = { nombre: l.setter ? '🧑‍💻 Setter ' + l.setter : o.nombre, etiqueta: l.setter ? '' : o.etiqueta, n: 0, buen: 0, agenda: 0, es: 0 });
+    r.n++; if (l.cualifica) r.buen++; if (l.autoagenda || l.estado === 'Agendado') r.agenda++; if (espana(l)) r.es++;
+  });
+  const filas = Object.values(g).sort((a, b) => b.agenda - a.agenda || b.n - a.n);
+  const tot = filas.reduce((t, r) => ({ n: t.n + r.n, buen: t.buen + r.buen, agenda: t.agenda + r.agenda, es: t.es + r.es }), { n: 0, buen: 0, agenda: 0, es: 0 });
+  $('eTabla').innerHTML = `<thead><tr><th>Fuente</th><th>Etiqueta</th><th>Leads</th><th>🇪🇸 España</th><th>⭐ Buen form</th><th>📅 Agendados</th><th>% agenda</th></tr></thead><tbody>` +
+    (filas.length ? filas.map(r => `<tr><td><b>${esc(r.nombre)}</b></td><td>${esc(r.etiqueta) || '—'}</td><td>${r.n}</td><td>${r.es}</td><td>${r.buen}</td><td>${r.agenda}</td><td><b>${pct(r.agenda, r.n)} %</b></td></tr>`).join('')
+      : '<tr><td colspan="7">Aún no hay leads en este periodo.</td></tr>') +
+    `<tr class="tot"><td>Total</td><td></td><td>${tot.n}</td><td>${tot.es}</td><td>${tot.buen}</td><td>${tot.agenda}</td><td>${pct(tot.agenda, tot.n)} %</td></tr></tbody>`;
+}
+['eFuente', 'eDestino'].forEach(id => $(id).addEventListener('change', pintarGenerador));
+['eOtra', 'eEtiqueta'].forEach(id => $(id).addEventListener('input', pintarGenerador));
+$('eCopiar').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText('https://' + $('eLink').textContent); toast('Enlace copiado'); } catch (e) { toast($('eLink').textContent); }
+});
+$('eGuardar').addEventListener('click', () => {
+  const e = enlaceActual(), l = misEnlaces();
+  if (!l.some(x => x.destino === e.destino && x.fuente === e.fuente && x.etiqueta === e.etiqueta)) { l.unshift(e); guardarEnlaces(l); }
+  toast('Guardado en tu lista'); pintarEnlaces();
+});
+$('vEnl').addEventListener('click', async e => {
+  const c = e.target.closest('[data-copy]');
+  if (c) { try { await navigator.clipboard.writeText(c.dataset.copy); toast('Enlace copiado'); } catch (err) { toast(c.dataset.copy); } return; }
+  const d = e.target.closest('[data-del]');
+  if (d) { const l = misEnlaces(); l.splice(Number(d.dataset.del), 1); guardarEnlaces(l); pintarEnlaces(); }
+});
+$('ePeriodo').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  ePer = b.dataset.p;
+  $('ePeriodo').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  pintarEnlaces();
 });
 
 // ---------- Instagram (seguimiento de DMs) ----------
@@ -836,7 +923,8 @@ function demoApi(action, extra) {
         caller: b[4], estado: b[5], contacto: b[6], intentos: b[7], notas: b[8],
         punto: P[i % 4], objetivo: O[i % 4], inversion: I[i % 5],
         meta: 'Generar un ingreso extra para poder dejar horas del trabajo.', cuando: i % 3 ? 'En las próximas semanas' : 'Lo antes posible',
-        instagram: i % 2 ? '' : '@' + b[0].split(' ')[0].toLowerCase(), origen: 'utm_source=instagram',
+        instagram: i % 2 ? '' : '@' + b[0].split(' ')[0].toLowerCase(),
+        origen: ['utm_source=youtube&utm_content=video-nichos-historia', 'utm_source=youtube', 'utm_source=manychat&utm_campaign=GUIA', 'utm_source=youtube&utm_content=video-nichos-historia', '', 'utm_source=instagram', 'utm_source=youtube&utm_content=rpm-alto', 's=mario&utm_source=ig_dm', 'utm_source=manychat&utm_campaign=GUIA'][i],
         cualifica: i === 0 || i === 2 || i === 3, autoagenda: i === 3 ? 'Llamada 03/10 18:00' : '',
         asignado: b[4] ? min(b[3] - 1) : '',
         embudo: ['', '', 'Conversación', '', 'Conversación', '', 'Oferta llamada', 'Oferta llamada', 'Conversación'][i],

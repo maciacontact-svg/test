@@ -39,6 +39,11 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 - Todos los setters escriben desde @aleix.ytf **como Aleix**: se distinguen por su marca (emoji/coletilla, NUNCA su nombre) y enlace propio (`/a/<código>` → agendar, `/b/<código>` → empezar, en `vercel.json`; `?s=` se guarda en `sa-setter`).
 - Hoja «Instagram» (una fila por convo, ver `IG`). CRM: pestaña Instagram (seguimiento) y Setting = automático + correcciones a mano.
 
+## Origen y enlaces
+- `/agenda/<fuente>/<etiqueta>` → agendar y `/biblio/<fuente>/<etiqueta>` → landing (`vercel.json`), con utm_source/utm_content. Se guarda en `localStorage['sa-origen']` (script.js, form.js, llamada.js) y llega a Leads.origen (también en reservas sin formulario).
+- CRM: `origenDe(l)`, etiqueta de origen en cada lead, pestaña «Enlaces» (solo maestro): generador, lista (localStorage) y tabla por fuente.
+- `privacidad.html`: titular MASTERFORGE DIGITAL LLC, contacto maciacontact@gmail.com (enlazada en los pies de página; URL para Meta).
+
 ## Otros
 - `guia/`: guía PDF (fuente `guia.html`, PDF de solo lectura). `historias/recortes/`: piezas PNG para stories.
 - Instrucciones de instalación: `crm/LEEME.md`, `crm/PENDIENTE.md`.

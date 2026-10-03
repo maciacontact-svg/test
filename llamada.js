@@ -13,6 +13,15 @@ const lead = leer(sessionStorage) || leer(localStorage) || {};
 let setter = new URLSearchParams(location.search).get('s') || '';
 try { if (setter) localStorage.setItem('sa-setter', setter); else setter = localStorage.getItem('sa-setter') || ''; } catch (e) {}
 
+// ===== Origen: por qué enlace ha llegado (YouTube, ManyChat, setter…). Se recuerda en este navegador =====
+const ORIGEN = (() => {
+  const q = location.search.slice(1);
+  try {
+    if (/(^|&)(utm_source|s)=/.test(q)) localStorage.setItem('sa-origen', q);
+    return /(^|&)(utm_source|s)=/.test(q) ? q : (localStorage.getItem('sa-origen') || '');
+  } catch (e) { return q; }
+})();
+
 const nombre = String(lead.nombre || '').trim().split(' ')[0];
 if (nombre && $('hola')) $('hola').textContent = `Enhorabuena, ${nombre}`;
 
@@ -34,6 +43,9 @@ function abrirCalendario(scroll = true) {
   if (lead.nombre) p.set('name', lead.nombre);
   if (lead.correo) p.set('email', lead.correo);
   if (lead.id) p.set('utm_content', lead.id);
+  const o = new URLSearchParams(ORIGEN);
+  if (o.get('utm_source')) p.set('utm_source', o.get('utm_source'));
+  if (o.get('utm_content')) p.set('utm_campaign', o.get('utm_content'));
   $('calBody').innerHTML = `<iframe src="${CALENDLY_URL}?${p}" title="Agendar llamada" loading="lazy"></iframe>`;
 }
 if ($('open')) $('open').addEventListener('click', () => abrirCalendario());
@@ -60,7 +72,7 @@ window.addEventListener('message', async e => {
 async function marcarAgendado(evento, invitado) {
   const url = (window.SA_CONFIG || {}).API_URL;
   if (!url || (!lead.id && !invitado)) return;
-  const body = JSON.stringify({ action: 'agendado', id: lead.id || '', evento: evento || '', invitado: invitado || '', setter: setter });
+  const body = JSON.stringify({ action: 'agendado', id: lead.id || '', evento: evento || '', invitado: invitado || '', setter: setter, origen: ORIGEN });
   // reintenta por si el lead aún no se había guardado en el Sheet
   for (let i = 0; i < 3; i++) {
     try {

@@ -134,7 +134,7 @@ function autoagendado(b) {
       inv = invitadoCalendly(b.invitado);
       if (!inv && !conId) throw new Error('Lead no válido: no se ha podido identificar (revisa el token de Calendly en Ajustes → G6)');
       if (inv && inv.correo) fila = buscarCorreo(sh, inv.correo);
-      if (!fila && inv && !conId) fila = leadDesdeCalendly(sh, inv);   // nunca rellenó el formulario
+      if (!fila && inv && !conId) fila = leadDesdeCalendly(sh, inv, limpio(b.origen, 200));   // nunca rellenó el formulario
     }
     if (!fila) throw new Error('Lead no encontrado');
     f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
@@ -145,6 +145,7 @@ function autoagendado(b) {
     sh.getRange(fila, COL.estado).setValue('Agendado');
     sh.getRange(fila, COL.caller).setValue('');
     sh.getRange(fila, COL.agendadoEl).setValue(new Date());
+    if (b.origen && !f[COL.origen - 1]) sh.getRange(fila, COL.origen).setValue(celda(limpio(b.origen, 200)));
     const st = setterDeSlug(b.setter);
     if (st && !f[COL.setter - 1]) sh.getRange(fila, COL.setter).setValue(st);
     const notas = String(f[COL.notas - 1] || '');
@@ -192,12 +193,12 @@ function buscarCorreo(sh, correo) {
 }
 
 // Lead nuevo con los datos de Calendly (agendó sin pasar por el formulario)
-function leadDesdeCalendly(sh, inv) {
+function leadDesdeCalendly(sh, inv, origen) {
   const lead = {
     id: Utilities.getUuid().slice(0, 8), fecha: new Date(),
     nombre: inv.nombre || inv.correo, telefono: inv.telefono, correo: inv.correo,
     punto: '', objetivo: '', caller: '', estado: '', contacto: '❌', intentos: 0, notas: '',
-    inversion: '', meta: '', cuando: '', instagram: '', origen: 'Calendly (sin formulario)', aviso: '—',
+    inversion: '', meta: '', cuando: '', instagram: '', origen: origen ? origen + '&sin_formulario=1' : 'Calendly (sin formulario)', aviso: '—',
     cualifica: 'No', autoagenda: '', rellamar: '', rellamarAviso: '', asignado: '', embudo: '',
     setter: '', agendadoEl: '',
   };

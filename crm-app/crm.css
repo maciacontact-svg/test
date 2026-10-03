@@ -296,6 +296,22 @@ em { font-style: italic; font-weight: 500; }
 .s-step .f-bar { grid-column: 1 / -1; height: 10px; }
 .s-top { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+/* ----- Enlaces ----- */
+#vEnl .k-card { margin-top: 14px; }
+.e-gen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.e-gen select, .e-gen input { height: 44px; border-radius: 12px; border: 1px solid var(--hair); background: var(--white); padding: 0 12px; font-size: 14px; outline: none; width: 100%; }
+.e-out { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
+.e-out .ig-copy { flex: 1; height: 46px; font-weight: 500; }
+#eGuardar { height: 46px; padding: 0 16px; border: 1px solid var(--hair); background: var(--white); color: var(--ink); white-space: nowrap; }
+.ghost.e-del { color: var(--muted); font-size: 12px; }
+.e-lista { display: grid; gap: 8px; }
+.e-item { display: grid; grid-template-columns: 180px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.e-item small { color: var(--muted); font-size: 12px; display: block; }
+.e-item b { font-weight: 600; font-size: 13.5px; }
+.tag.src { background: #ececec; color: #333; }
+.tag.yt { background: #fde7e3; color: #8a1f12; }
+.tag.yt, .tag.src { max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+
 /* ----- Instagram ----- */
 #vIg .toolbar { margin-top: 14px; }
 #igSetter { height: 38px; padding: 0 34px 0 14px; border-radius: 999px; border: 1px solid var(--hair); font-size: 13px; appearance: none; cursor: pointer;
@@ -367,6 +383,9 @@ em { font-style: italic; font-weight: 500; }
   .notes textarea { min-width: 0; background: var(--white); border-color: var(--hair); }
   .s-ramas, .s-top { grid-template-columns: 1fr; }
   .ig-set { grid-template-columns: 1fr; }
+  .e-gen { grid-template-columns: 1fr 1fr; }
+  .e-out { flex-direction: column; align-items: stretch; }
+  .e-item { grid-template-columns: 1fr; }
   .s-counters { grid-template-columns: 1fr; }
   .leads tr.grupo { display: block; background: none; box-shadow: none; padding: 8px 2px 0; margin-bottom: 8px; }
   .leads tr.grupo td::before { display: none; }

@@ -57,6 +57,7 @@
       <button type="button" data-t="kpis" id="tabKpis">Mis KPIs</button>
       <button type="button" data-t="setting" id="tabSet" hidden>Setting</button>
       <button type="button" data-t="ig" id="tabIg" hidden>Instagram</button>
+      <button type="button" data-t="enlaces" id="tabEnl" hidden>Enlaces</button>
     </nav>
     <div class="nav-right">
       <span class="live" id="live"><i></i><span id="liveText">Conectando…</span></span>
@@ -168,6 +169,47 @@
         <h3>Setting por caller</h3>
         <p class="k-note">Pulsa un caller para ver su embudo.</p>
         <div class="table-wrap"><table class="rank" id="sRank"></table></div>
+      </section>
+    </div>
+
+    <!-- Enlaces con seguimiento (solo maestro): YouTube, bio, ManyChat… y de dónde vienen los leads -->
+    <div id="vEnl" hidden>
+      <section class="k-head">
+        <div>
+          <h2>Enlaces <em>con seguimiento</em></h2>
+          <p class="k-sub">Cada enlace dice de dónde viene el lead. Solo tú ves esta pestaña.</p>
+        </div>
+        <div class="chips" id="ePeriodo">
+          <button type="button" data-p="7">7 días</button>
+          <button type="button" data-p="30" class="on">30 días</button>
+          <button type="button" data-p="todo">Todo</button>
+        </div>
+      </section>
+
+      <section class="k-card">
+        <h3>Crear un enlace</h3>
+        <p class="k-note">Para la descripción de un vídeo: fuente «YouTube» y como etiqueta el nombre del vídeo. Así sabes qué vídeo trae cada lead.</p>
+        <div class="e-gen">
+          <label class="fld"><span>Fuente</span><select id="eFuente">
+            <option value="youtube">▶️ YouTube</option><option value="instagram">📸 Instagram (bio, historias)</option>
+            <option value="manychat">🤖 ManyChat</option><option value="tiktok">🎵 TikTok</option><option value="otra">Otra…</option></select></label>
+          <label class="fld" id="eOtraF" hidden><span>Nombre de la fuente</span><input id="eOtra" placeholder="p. ej. newsletter"></label>
+          <label class="fld"><span>Lleva a</span><select id="eDestino"><option value="agenda">📅 Agenda (llamada)</option><option value="biblio">📚 Biblioteca</option></select></label>
+          <label class="fld"><span>Etiqueta (opcional)</span><input id="eEtiqueta" placeholder="p. ej. video-nichos-historia"></label>
+        </div>
+        <div class="e-out"><span class="ig-copy"><span id="eLink"></span><button type="button" id="eCopiar">Copiar</button></span>
+          <button type="button" class="ghost" id="eGuardar">Guardar en mi lista</button></div>
+      </section>
+
+      <section class="k-card">
+        <h3>Tus enlaces</h3>
+        <div id="eLista" class="e-lista"></div>
+      </section>
+
+      <section class="k-card">
+        <h3>De dónde vienen los leads</h3>
+        <p class="k-note">Por fuente y etiqueta, según el enlace por el que entraron. «Agendados» = reservaron llamada.</p>
+        <div class="table-wrap"><table class="rank" id="eTabla"></table></div>
       </section>
     </div>
 

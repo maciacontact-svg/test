@@ -318,13 +318,22 @@ function sendLead(id, buenForm) {
     nombre: c.nombre, telefono: c.whatsapp, correo: c.email, instagram: c.instagram || '',
     punto: answers.punto, objetivo: answers.objetivo, inversion: answers.inversion,
     meta: answers.meta, cuando: answers.cuando,
-    origen: location.search.slice(1), setter: setterDelEnlace(),
+    origen: origenVisita(), setter: setterDelEnlace(),
   };
   if (!url) { console.log('CRM sin configurar (config.js). Lead:', lead); return; }
   try {
     fetch(url, { method: 'POST', mode: 'no-cors', keepalive: true,
       headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(lead) });
   } catch (e) { console.error(e); }
+}
+
+// De dónde viene (utm del enlace por el que entró; si no trae, el último que se guardó en este navegador)
+function origenVisita() {
+  const q = location.search.slice(1);
+  try {
+    if (/(^|&)(utm_source|s)=/.test(q)) { localStorage.setItem('sa-origen', q); return q; }
+    return localStorage.getItem('sa-origen') || q;
+  } catch (e) { return q; }
 }
 
 // Setter que le pasó el enlace por Instagram (systemacademy.es/b/<código> → ?s=<código>); se recuerda para cuando agende

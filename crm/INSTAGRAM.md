@@ -73,8 +73,8 @@ Manda desde @aleix.ytf un DM con la marca de un setter a otra cuenta, contesta d
 - Llamadas a Meta mínimas: una por conversación nueva (para el @usuario), y se recuerda.
 - Datos mínimos: @usuario, nombre, fechas de cada paso y un trozo del último mensaje (120 caracteres). No se guardan las conversaciones.
   Solo para el seguimiento interno: no se venden ni se ceden, ni se usan para anuncios.
-- Para activar la app, Meta pide una **URL de política de privacidad** y cómo pedir el **borrado de datos**: hay que publicarla en la web
-  (pendiente: titular y email de contacto).
+- Para activar la app, Meta pide una **URL de política de privacidad** y cómo pedir el **borrado de datos**:
+  `https://systemacademy.es/privacidad` (borrado: `https://systemacademy.es/privacidad#borrado`). Titular: MASTERFORGE DIGITAL LLC.
 - Si alguien pide que se borren sus datos: borra su fila en la hoja «Instagram» (y en «Leads» si está).
 - Los tokens y claves solo van en el Sheet y en las variables de Vercel, nunca en el repo.
 

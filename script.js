@@ -110,8 +110,15 @@
 })();
 
 
-// ===== Origen (utm de ManyChat, enlace de un setter…): se pasa al formulario para saber de dónde viene =====
-if (location.search) document.querySelectorAll('a[href="empezar.html"]').forEach(a => { a.href = 'empezar.html' + location.search; });
+// ===== Origen: por qué enlace ha llegado (YouTube, ManyChat, setter…). Se recuerda en este navegador =====
+const ORIGEN = (() => {
+  const q = location.search.slice(1);
+  try {
+    if (/(^|&)(utm_source|s)=/.test(q)) localStorage.setItem('sa-origen', q);
+    return /(^|&)(utm_source|s)=/.test(q) ? q : (localStorage.getItem('sa-origen') || '');
+  } catch (e) { return q; }
+})();
+if (ORIGEN) document.querySelectorAll('a[href="empezar.html"]').forEach(a => { a.href = 'empezar.html?' + ORIGEN; });
 
 // ===== Cuenta: si ya rellenó el formulario en este navegador, entra directo a la biblioteca =====
 (() => {
