@@ -7,8 +7,8 @@ que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la A
 
 | Qué | Cómo |
 |---|---|
-| **De qué setter es la convo** | Su **palabra clave** en un mensaje, o su **enlace** (`/a/<código>` o `/b/<código>`) |
-| **Mensaje abierto** | El primer mensaje con la palabra clave o el enlace del setter |
+| **De qué setter es la convo** | Su **marca** en un mensaje, o su **enlace** (`/a/<código>` o `/b/<código>`) |
+| **Mensaje abierto** | El primer mensaje con la marca o el enlace del setter |
 | **Convo seguida** | El lead contesta después de eso |
 | **Propuesta de llamada** | Frases de Ajustes → **G11** (p. ej. «llamada con mi socio») |
 | **Enlace de agenda** | `systemacademy.es/a/<código>` (o un enlace de Calendly) |
@@ -24,7 +24,9 @@ que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la A
 - **G11** frases de propuesta, separadas por comas. Añade las que uséis de verdad.
 - **Columnas I–K**, una fila por setter:
   - **I** nombre: el mismo que en la columna A (o «Mario» para el acceso maestro).
-  - **J** palabra clave: algo que solo escriba él, p. ej. «Mario de admisiones» o una firma. Ojo: si es un nombre suelto («Mario») contará cualquier mensaje que lo mencione.
+  - **J** marca: como todos escriben **como Aleix**, nunca su nombre. Un emoji o una coletilla natural que solo use ese setter
+    en su primer mensaje, p. ej. `🙌🏼` (Mario.e) y `💯` (otro). Puede tener varias separadas por comas: `🙌🏼, de locos crack`.
+    Que no la use nadie más ni ManyChat en sus flujos (si no, le asignaría convos que no son suyas).
   - **K** código del enlace: `mario` → `systemacademy.es/a/mario` (agenda) y `systemacademy.es/b/mario` (biblioteca).
 
 ## 2. App de Meta (una vez, ~20 min)
@@ -54,8 +56,27 @@ que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la A
 
 ## 4. Comprobar
 
-Manda desde @aleix.ytf un DM con la palabra clave de un setter a otra cuenta, contesta desde ella y mira la pestaña **Instagram** del CRM
+Manda desde @aleix.ytf un DM con la marca de un setter a otra cuenta, contesta desde ella y mira la pestaña **Instagram** del CRM
 (y la hoja **Instagram** del Sheet). Si no llega nada: Vercel › Logs de `/api/ig`, y en Meta › Webhooks › «Probar».
+
+## Quién ve qué
+
+- **Mario (acceso maestro)** ve todas las conversaciones, todos los setters y sus enlaces.
+- **Cada setter** solo recibe las suyas (las que llevan su marca o su enlace) y solo su enlace. Se filtra en el Apps Script,
+  así que no puede ver las de otro ni tocando el navegador. Las convos sin setter solo las ve Mario.
+
+## Seguridad de la cuenta y normas de Meta
+
+- Es la **API oficial** de Meta para mensajes de Instagram (la misma vía que ManyChat). No se entra con usuario y contraseña,
+  no hay extensiones ni bots que lean la bandeja: eso es lo que Instagram penaliza.
+- **Solo se lee**: el CRM nunca envía mensajes, no sigue ni da «me gusta». Todo lo escribe una persona desde la app.
+- Llamadas a Meta mínimas: una por conversación nueva (para el @usuario), y se recuerda.
+- Datos mínimos: @usuario, nombre, fechas de cada paso y un trozo del último mensaje (120 caracteres). No se guardan las conversaciones.
+  Solo para el seguimiento interno: no se venden ni se ceden, ni se usan para anuncios.
+- Para activar la app, Meta pide una **URL de política de privacidad** y cómo pedir el **borrado de datos**: hay que publicarla en la web
+  (pendiente: titular y email de contacto).
+- Si alguien pide que se borren sus datos: borra su fila en la hoja «Instagram» (y en «Leads» si está).
+- Los tokens y claves solo van en el Sheet y en las variables de Vercel, nunca en el repo.
 
 ## ManyChat
 

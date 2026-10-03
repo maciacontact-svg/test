@@ -678,13 +678,17 @@ function igDatos() {
 }
 function pintarIg() {
   const maestro = S.rol === 'maestro';
-  if (igSetter === null) igSetter = !maestro && esSetter(S.caller) ? D.setters.find(x => mismo(x.nombre, S.caller)).nombre : '';
+  // cada setter solo ve las suyas (el servidor ya solo le manda esas); el maestro ve todas y puede filtrar
+  if (!maestro) igSetter = ''; else if (igSetter === null) igSetter = '';
+  $('igSetter').hidden = !maestro;
+  $('igSub').textContent = maestro ? 'Todas las conversaciones de @aleix.ytf con setter, propuesta o enlace. Solo tú ves las de todos.'
+    : 'Tus conversaciones de @aleix.ytf (las que llevan tu marca o tu enlace). Se actualizan solas.';
   // enlaces y palabra clave
   const yo = D.setters.filter(x => maestro || mismo(x.nombre, S.caller));
   const base = 'systemacademy.es';
   const copia = url => `<span class="ig-copy"><span>${esc(url)}</span><button type="button" data-copy="https://${esc(url)}">Copiar</button></span>`;
-  $('igLinks').innerHTML = `<h3>${maestro ? 'Enlaces y palabras clave de cada setter' : 'Tus enlaces y tu palabra clave'}</h3>` + (yo.length ? yo.map(x => `
-    <div class="ig-set"><div><b>${esc(x.nombre)}</b><small>Palabra clave: ${x.clave ? `«${esc(x.clave)}»` : '— (ponla en Ajustes, columna J)'}</small></div>
+  $('igLinks').innerHTML = `<h3>${maestro ? 'Enlaces y marcas de cada setter' : 'Tus enlaces y tu marca'}</h3>` + (yo.length ? yo.map(x => `
+    <div class="ig-set"><div><b>${esc(x.nombre)}</b><small>Tu marca en los mensajes: ${x.clave ? `«${esc(x.clave)}»` : '— (Mario la pone en Ajustes, columna J)'}</small></div>
       <div><small>📅 Agenda</small>${copia(`${base}/a/${x.slug}`)}</div><div><small>📚 Biblioteca</small>${copia(`${base}/b/${x.slug}`)}</div></div>`).join('')
     : '<p class="k-note">Aún no tienes enlace: pídele a Mario que te añada en Ajustes (columnas I–K).</p>');
   // filtro de setter
@@ -848,13 +852,13 @@ function demoApi(action, extra) {
   }
   if (!window.__demo.ig) {
     const h = x => new Date(Date.now() - x * 3600e3).toISOString();
-    window.__demo.setters = [{ nombre: 'Mario.e', clave: 'Mario', slug: 'mario' }];
+    window.__demo.setters = [{ nombre: 'Mario.e', clave: '🙌🏼', slug: 'mario' }];
     window.__demo.leads[0].instagram = '@laura.gz';
     window.__demo.leads[3].instagram = 'alainmartin'; window.__demo.leads[3].setter = 'Mario.e'; window.__demo.leads[3].agendadoEl = h(2);
     window.__demo.ig = [
       { igsid: '1', usuario: 'laura.gz', nombre: 'Laura Gómez', setter: 'Mario.e', asignado: h(30), respondio: h(29), propuesta: h(26), enlaceAgenda: '', enlaceBiblio: h(26), ultimoOut: h(26), ultimoIn: h(0.2), visto: h(0.2), followups: 0, ultimoFollow: '', ultimo: '👤 Vale, ya he entrado. ¿Y la llamada cuándo sería?' },
       { igsid: '2', usuario: 'ivan_c.yt', nombre: 'Iván', setter: 'Mario.e', asignado: h(50), respondio: h(49), propuesta: h(47), enlaceAgenda: h(46), enlaceBiblio: '', ultimoOut: h(30), ultimoIn: h(46), visto: h(29), followups: 1, ultimoFollow: h(30), ultimo: '💬 ¿Has podido agendar la llamada? Te dejo el enlace otra vez' },
-      { igsid: '3', usuario: 'carla.faceless', nombre: 'Carla', setter: 'Mario.e', asignado: h(6), respondio: h(5), propuesta: h(4), enlaceAgenda: '', enlaceBiblio: '', ultimoOut: h(4), ultimoIn: h(5), visto: '', followups: 0, ultimoFollow: '', ultimo: '💬 Mario por aquí 🙌 ¿Te parecería bien tener una llamada con mi socio de admisiones?' },
+      { igsid: '3', usuario: 'carla.faceless', nombre: 'Carla', setter: 'Mario.e', asignado: h(6), respondio: h(5), propuesta: h(4), enlaceAgenda: '', enlaceBiblio: '', ultimoOut: h(4), ultimoIn: h(5), visto: '', followups: 0, ultimoFollow: '', ultimo: '💬 Genial 🙌🏼 ¿Te parecería bien tener una llamada con mi socio de admisiones?' },
       { igsid: '4', usuario: 'alainmartin', nombre: 'Alain Martin', setter: 'Mario.e', asignado: h(20), respondio: h(19), propuesta: h(18), enlaceAgenda: h(17), enlaceBiblio: '', ultimoOut: h(17), ultimoIn: h(3), visto: h(3), followups: 0, ultimoFollow: '', ultimo: '👤 Hecho, el jueves a las 18:00' },
     ];
   }
@@ -864,6 +868,7 @@ function demoApi(action, extra) {
   if (action === 'list') {
     const r = JSON.parse(JSON.stringify(db));
     const yo = db.setting.callers.find(c => c.nombre.toUpperCase() === (S.caller || '').toUpperCase());
+    if (!esMaestro) { r.setters = r.setters.filter(x => mismo(x.nombre, S.caller)); r.ig = r.ig.filter(c => mismo(c.setter, S.caller)); }
     r.setting = esMaestro ? { on: true, ...r.setting } : yo && yo.on ? { on: true, dias: r.setting.dias.filter(x => x.caller === yo.nombre) } : { on: false, dias: [] };
     return Promise.resolve({ ok: true, rol: esMaestro ? 'maestro' : 'caller', ...r });
   }

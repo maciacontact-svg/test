@@ -4,6 +4,8 @@ Negocio: formación de YouTube faceless (B2C). Fundadores: Mario y Aleix. Caller
 Responder SIEMPRE en español. Ser conciso.
 
 ## Reglas fijas
+- Acceso: solo Mario (maestro) ve todo. Cada caller/setter solo lo suyo en Instagram y Setting (filtrar en Code.gs, no solo en el navegador).
+- Instagram: solo API oficial y solo lectura; nada que ponga en riesgo la cuenta (ni scraping, ni bots, ni envíos automáticos).
 - Branding: gris #f3f3f3, negro #111, Poppins con acentos en cursiva, logo squircle con corte en S (SVG inline en cada página).
 - Guardar siempre una copia del original antes de rehacer algo (`original/`, `guia/original/`).
 - Enviar vista previa (captura) tras cambios visuales.
@@ -34,7 +36,7 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 
 ## Instagram (`crm/INSTAGRAM.md`)
 - `api/ig.js` (Vercel, web pública): webhook de Meta (firma con IG_APP_SECRET) → Apps Script `ig` con IG_CRM_KEY. Env: IG_APP_SECRET, IG_VERIFY_TOKEN, IG_CRM_KEY, CRM_API_URL.
-- Todos los setters escriben desde @aleix.ytf: se distinguen por palabra clave y enlace propio (`/a/<código>` → agendar, `/b/<código>` → empezar, en `vercel.json`; `?s=` se guarda en `sa-setter`).
+- Todos los setters escriben desde @aleix.ytf **como Aleix**: se distinguen por su marca (emoji/coletilla, NUNCA su nombre) y enlace propio (`/a/<código>` → agendar, `/b/<código>` → empezar, en `vercel.json`; `?s=` se guarda en `sa-setter`).
 - Hoja «Instagram» (una fila por convo, ver `IG`). CRM: pestaña Instagram (seguimiento) y Setting = automático + correcciones a mano.
 
 ## Otros

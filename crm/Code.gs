@@ -66,7 +66,7 @@ function doPost(e) {
       case 'agendado': return json(autoagendado(b));
       case 'cuenta': return json(buscarCuenta(b));
       case 'login':  { const u = auth(b); return json({ ok: true, caller: u.nombre, rol: u.rol }); }
-      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, setting: settingDe(u), setters: setters().map(x => ({ nombre: x.nombre, clave: x.clave, slug: x.slug })), ig: listarIg() })); }
+      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, setting: settingDe(u), setters: settersDe(u), ig: listarIg(u) })); }
       case 'update': return json(actualizar(b, auth(b).nombre));
       case 'setting':   return json(guardarSetting(b, auth(b)));
       case 'settingOn': return json(activarSetting(b, auth(b)));
@@ -470,8 +470,10 @@ function activarSetting(b, u) {
 
 // =====================================================================
 // Instagram (DMs de @aleix.ytf): la función de Vercel /api/ig recibe los avisos de Meta y los reenvía aquí.
-//  - Cada setter se reconoce por su palabra clave o por su enlace (systemacademy.es/a/<código> y /b/<código>).
-//    Tabla en Ajustes → I: nombre (igual que en la columna A, o «Mario» para el maestro), J: palabra clave, K: código del enlace.
+//  - Todos escriben como Aleix: cada setter se reconoce por su marca (emoji o coletilla, nunca su nombre) o por su enlace
+//    (systemacademy.es/a/<código> y /b/<código>). Ajustes → I: nombre (igual que en la columna A, o «Mario» para el maestro),
+//    J: marca (varias separadas por comas), K: código del enlace.
+//  - Solo se LEE: nunca se envía nada a Instagram desde aquí.
 //  - Propuesta de llamada: frases de Ajustes → G11 (separadas por comas).
 //  - Pestaña "Instagram": una fila por conversación.
 // =====================================================================
@@ -494,8 +496,14 @@ function setters() {
   const n = aj.getLastRow() - 1;
   if (n < 1) return [];
   return aj.getRange(2, 9, n, 3).getDisplayValues()
-    .map(r => ({ nombre: String(r[0]).trim(), clave: String(r[1]).trim(), slug: slugDe(r[2] || r[0]) }))
+    .map(r => ({ nombre: String(r[0]).trim(), clave: String(r[1]).trim(), slug: slugDe(r[2] || r[0]),
+      claves: String(r[1]).split(',').map(x => sinTildes(x).trim()).filter(Boolean) }))
     .filter(x => x.nombre);
+}
+// Cada caller solo ve lo suyo; el maestro (Mario) lo ve todo
+const deUsuario = (u, nombre) => u.rol === 'maestro' || String(nombre).toUpperCase() === String(u.nombre).toUpperCase();
+function settersDe(u) {
+  return setters().filter(x => deUsuario(u, x.nombre)).map(x => ({ nombre: x.nombre, clave: x.clave, slug: x.slug }));
 }
 function setterDeSlug(v) {
   const s = slugDe(v);
@@ -513,7 +521,8 @@ function setterEnTexto(texto, lista) {
   const t = sinTildes(texto);
   const l = t.match(/systemacademy\.es\/[ab]\/([a-z0-9-]+)/);
   if (l) { const x = lista.find(y => y.slug === l[1]); if (x) return x.nombre; }
-  const x = lista.find(y => y.clave && new RegExp('(^|[^a-z0-9])' + sinTildes(y.clave).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9])').test(t));
+  const tiene = c => new RegExp('(^|[^a-z0-9])' + c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9])').test(t);
+  const x = lista.find(y => y.claves.some(tiene));
   return x ? x.nombre : '';
 }
 function esPropuesta(texto) {
@@ -625,14 +634,16 @@ function perfilIg(f, cache) {
   } catch (err) { console.error('Instagram perfil: ' + err); }
 }
 
-// Para el dashboard: solo las conversaciones con setter, propuesta o enlace (las de ManyChat solas no)
-function listarIg() {
+// Para el dashboard: solo las conversaciones con setter, propuesta o enlace (las de ManyChat solas no).
+// Cada setter recibe SOLO las suyas (se filtra aquí, no en el navegador); el maestro, todas.
+function listarIg(u) {
   const ss = SpreadsheetApp.getActive();
   const sh = ss.getSheetByName(HOJA_IG);
   if (!sh || sh.getLastRow() < 2) return [];
   const iso = x => x instanceof Date ? x.toISOString() : '';
   return sh.getRange(2, 1, sh.getLastRow() - 1, IG_CABECERA.length).getValues()
     .filter(f => f[0] && (f[IG.setter - 1] || f[IG.propuesta - 1] || f[IG.enlaceAgenda - 1] || f[IG.enlaceBiblio - 1]))
+    .filter(f => u.rol === 'maestro' || (f[IG.setter - 1] && deUsuario(u, f[IG.setter - 1])))
     .map(f => {
       const o = {};
       Object.keys(IG).forEach(k => { const x = f[IG[k] - 1]; o[k] = x instanceof Date ? iso(x) : k === 'followups' ? Number(x) || 0 : String(x); });
@@ -891,7 +902,7 @@ function configurar() {
     ]);
   }
   if (!aj.getRange('I1').getValue()) {
-    aj.getRange('I1:K1').setValues([['Setter (nombre del CRM)', 'Palabra clave en sus mensajes', 'Código de su enlace']]);
+    aj.getRange('I1:K1').setValues([['Setter (nombre del CRM)', 'Marca en sus mensajes (emoji o coletilla, NO su nombre; varias con comas)', 'Código de su enlace']]);
     aj.getRange('I2:K2').setValues([['Mario.e', '', 'mario']]);
   }
   estiloCabecera(aj.getRange('I1:K1'));
