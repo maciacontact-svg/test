@@ -14,7 +14,7 @@ const slug = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ
 
 let S = null;                      // sesión { caller, pin }
 let D = { leads: [], callers: [], estados: [], minutos: 5, setting: { on: false, dias: [] } };
-let vista = 'todos', fEstado = '', q = '';
+let vista = 'todos', fEstado = '', fCanal = '', q = '';
 let pestana = 'leads', periodo = 'hoy', kSel = '';   // KPIs: periodo y caller seleccionado (maestro)
 let conocidos = null;              // ids ya vistos (para avisar de leads nuevos)
 let ultimo = 0, timer = 0, pendienteRender = false;
@@ -183,6 +183,22 @@ function origenDe(l) {
   return { fuente: f || 'directo', nombre: FUENTES[f] || f || 'Directo / sin enlace', etiqueta: p.get('utm_content') || p.get('utm_campaign') || '' };
 }
 
+// Canal: YouTube (suelen venir más nutridos) / Instagram (ManyChat, bio, DMs de setters) / otros
+const CANALES = { youtube: '▶️ YouTube', instagram: '📸 Instagram', otros: '🔗 Otros', directo: 'Directo / sin enlace' };
+function canalDe(l) {
+  const f = origenDe(l).fuente;
+  if (f === 'youtube') return 'youtube';
+  if (l.setter || ['manychat', 'instagram', 'ig_dm'].includes(f)) return 'instagram';
+  return ['directo', 'calendly'].includes(f) ? 'directo' : 'otros';
+}
+function tagCanal(l) {
+  const c = canalDe(l), o = origenDe(l);
+  if (c === 'directo') return '';
+  const det = l.setter ? 'setter ' + l.setter : o.fuente === 'manychat' ? 'ManyChat' + (o.etiqueta ? ' · ' + o.etiqueta : '') : o.etiqueta;
+  const nom = c === 'otros' ? o.nombre : CANALES[c];
+  return `<span class="tag canal ${c}" title="Entró por ${esc(nom)}${det ? ' · ' + esc(det) : ''}">${esc(nom)}</span>`;
+}
+
 // ---------- España / LATAM ----------
 // España: +34 / 0034, o 9 cifras sin prefijo que empiezan por 6, 7 (móvil) o 9 (fijo). El resto (+52, +57…) = LATAM/otros.
 const PREFIJOS = ['1', '51', '52', '53', '54', '55', '56', '57', '58', '591', '593', '595', '598', '502', '503', '504', '505', '506', '507', '509',
@@ -229,6 +245,7 @@ function filtrados() {
     .filter(l => vista !== 'llamar' || (l.contacto !== '✅' && !l.autoagenda && l.estado !== 'Agendado'))
     .filter(l => vista !== 'mios' || l.caller.toUpperCase() === S.caller.toUpperCase())
     .filter(l => vista !== 'sin' || !l.caller)
+    .filter(l => !fCanal || canalDe(l) === fCanal)
     .filter(l => !fEstado || (fEstado === '__nuevo' ? !l.estado : l.estado === fEstado))
     .filter(l => !qq || n([l.nombre, l.telefono, l.correo, l.notas, l.punto, l.objetivo].join(' ')).includes(qq))
     .sort((a, b) => {
@@ -267,6 +284,8 @@ function pintarKpis() {
   const deHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy).length;
   const ultimaHora = L.filter(l => Date.now() - new Date(l.fecha) < 3600e3).length;
   const espHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy && espana(l)).length;
+  const ytHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy && canalDe(l) === 'youtube').length;
+  const igHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy && canalDe(l) === 'instagram').length;
   const porLlamar = L.filter(l => l.contacto !== '✅' && !l.autoagenda && l.estado !== 'Agendado').length;
   const buenos = L.filter(buenForm).length;
   const buenosSin = L.filter(l => buenForm(l) && !llamado(l)).length;
@@ -284,7 +303,7 @@ function pintarKpis() {
   const nP = $('nPrio'); if (nP) nP.textContent = L.filter(l => !cerrado(l) && prioridad(l) === 1).length || '';
   const nE = $('nEsp'); if (nE) nE.textContent = L.filter(espana).length || '';
   $('kpis').innerHTML =
-    k('Leads hoy', deHoy, `🇪🇸 ${espHoy} de España · ${ultimaHora} en la última hora`) +
+    k('Leads hoy', deHoy, `▶️ ${ytHoy} YouTube · 📸 ${igHoy} Instagram · 🇪🇸 ${espHoy} España`) +
     k('⭐ Buen form no agendado', buenos, buenosSin ? `${buenosSin} sin llamar todavía` : 'Todos llamados', buenosSin ? 'hot' : '') +
     k('Por llamar', porLlamar, urgentes ? `${urgentes} en la última hora sin llamar` : 'Ninguno urgente', urgentes ? 'hot' : '') +
     k('En seguimiento', seg, 'Seguimiento y volver a llamar') +
@@ -310,9 +329,7 @@ function fila(l) {
   const id = esc(l.id);
   const e = etapa(l);
   const pf = prefijo(l.telefono);
-  const tags = (l.setter ? `<span class="tag etapa" title="Entró con el enlace de este setter">📸 ${esc(l.setter)}</span>` : '') +
-    (() => { const o = origenDe(l); return l.setter || ['directo', 'calendly'].includes(o.fuente) ? '' :
-      `<span class="tag ${o.fuente === 'youtube' ? 'yt' : 'src'}" title="Entró por este enlace">${esc(o.nombre)}${o.etiqueta ? ' · ' + esc(o.etiqueta) : ''}</span>`; })() +
+  const tags = tagCanal(l) +
     (pf === '34' ? '<span class="tag es">🇪🇸 España</span>' : `<span class="tag latam" title="Fuera de España">🌎 ${pf ? '+' + pf : 'LATAM'}</span>`) +
     (l.autoagenda ? '<span class="tag auto">📅 Autoagendado</span>' : '') +
     (buenForm(l) ? '<span class="tag buen">⭐ Buen form</span>' : '') +
@@ -367,6 +384,7 @@ function abrirFicha(id) {
     ${row('Buen form', l.cualifica ? 'Sí: encaja con el perfil (se le ofreció agendar)' : '')}
     ${row('Autoagendado por Calendly', l.autoagenda)}
     ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' : l.caller)}${row('Estado', l.estado || 'Nuevo')}${row('Notas', l.notas)}
+    ${row('Canal', CANALES[canalDe(l)])}
     ${row('Origen', (o => o.nombre + (o.etiqueta ? ' · ' + o.etiqueta : '') + (l.setter ? ' · setter ' + l.setter : ''))(origenDe(l)))}`;
   $('drawer').classList.add('open');
   $('drawer').setAttribute('aria-hidden', 'false');
@@ -714,6 +732,13 @@ function pintarEnlaces() {
     r.n++; if (l.cualifica) r.buen++; if (l.autoagenda || l.estado === 'Agendado') r.agenda++; if (espana(l)) r.es++;
   });
   const filas = Object.values(g).sort((a, b) => b.agenda - a.agenda || b.n - a.n);
+  const pc = {};
+  D.leads.filter(l => new Date(l.fecha) >= desde).forEach(l => {
+    const c = canalDe(l), r = pc[c] || (pc[c] = { n: 0, buen: 0, agenda: 0, es: 0 });
+    r.n++; if (l.cualifica) r.buen++; if (l.autoagenda || l.estado === 'Agendado') r.agenda++; if (espana(l)) r.es++;
+  });
+  $('eCanales').innerHTML = Object.keys(CANALES).map(c => { const r = pc[c] || { n: 0, buen: 0, agenda: 0, es: 0 };
+    return `<div class="kpi ${c === 'youtube' ? 'hot' : ''}"><small>${CANALES[c]}</small><b>${r.n}</b><span>${r.agenda} agendados (${pct(r.agenda, r.n)} %) · ${r.buen} buen form · ${r.es} España</span></div>`; }).join('');
   const tot = filas.reduce((t, r) => ({ n: t.n + r.n, buen: t.buen + r.buen, agenda: t.agenda + r.agenda, es: t.es + r.es }), { n: 0, buen: 0, agenda: 0, es: 0 });
   $('eTabla').innerHTML = `<thead><tr><th>Fuente</th><th>Etiqueta</th><th>Leads</th><th>🇪🇸 España</th><th>⭐ Buen form</th><th>📅 Agendados</th><th>% agenda</th></tr></thead><tbody>` +
     (filas.length ? filas.map(r => `<tr><td><b>${esc(r.nombre)}</b></td><td>${esc(r.etiqueta) || '—'}</td><td>${r.n}</td><td>${r.es}</td><td>${r.buen}</td><td>${r.agenda}</td><td><b>${pct(r.agenda, r.n)} %</b></td></tr>`).join('')
@@ -863,6 +888,7 @@ $('rows').addEventListener('keydown', e => {
 // ---------- Filtros ----------
 $('q').addEventListener('input', e => { q = e.target.value.trim(); render(); });
 $('fEstado').addEventListener('change', e => { fEstado = e.target.value; render(); });
+$('fCanal').addEventListener('change', e => { fCanal = e.target.value; render(); });
 $('views').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   vista = b.dataset.v;

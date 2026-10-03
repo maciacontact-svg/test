@@ -41,7 +41,7 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 
 ## Origen y enlaces
 - `/agenda/<fuente>/<etiqueta>` → agendar y `/biblio/<fuente>/<etiqueta>` → landing (`vercel.json`), con utm_source/utm_content. Se guarda en `localStorage['sa-origen']` (script.js, form.js, llamada.js) y llega a Leads.origen (también en reservas sin formulario).
-- CRM: `origenDe(l)`, etiqueta de origen en cada lead, pestaña «Enlaces» (solo maestro): generador, lista (localStorage) y tabla por fuente.
+- CRM: `origenDe(l)` y `canalDe(l)` (▶️ YouTube / 📸 Instagram = ManyChat, bio, setter / Otros / Directo): etiqueta de canal en cada lead, filtro «Todos los canales», resumen por canal en Enlaces, pestaña «Enlaces» (solo maestro): generador, lista (localStorage) y tabla por fuente.
 - `privacidad.html`: titular MASTERFORGE DIGITAL LLC, contacto maciacontact@gmail.com (enlazada en los pies de página; URL para Meta).
 
 ## Otros

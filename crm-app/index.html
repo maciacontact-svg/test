@@ -86,6 +86,7 @@
         <button type="button" data-v="sin">Sin caller</button>
       </div>
       <select id="fEstado" aria-label="Filtrar por estado"><option value="">Todos los estados</option></select>
+      <select id="fCanal" aria-label="Filtrar por canal"><option value="">Todos los canales</option><option value="youtube">▶️ YouTube</option><option value="instagram">📸 Instagram</option><option value="otros">🔗 Otros</option><option value="directo">Directo / sin enlace</option></select>
     </section>
 
     <section class="board">
@@ -207,7 +208,9 @@
       </section>
 
       <section class="k-card">
-        <h3>De dónde vienen los leads</h3>
+        <h3>Por canal</h3>
+        <div class="kpis e-canales" id="eCanales"></div>
+        <h3 style="margin-top:22px">De dónde vienen los leads</h3>
         <p class="k-note">Por fuente y etiqueta, según el enlace por el que entraron. «Agendados» = reservaron llamada.</p>
         <div class="table-wrap"><table class="rank" id="eTabla"></table></div>
       </section>
