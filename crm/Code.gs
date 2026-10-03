@@ -15,6 +15,7 @@
 const TZ = 'Europe/Madrid';
 const HOJA_LEADS = 'Leads';
 const HOJA_AJUSTES = 'Ajustes';
+const HOJA_SETTING = 'Setting';
 
 // Columnas de "Leads". Las 11 primeras son las visibles; el resto van ocultas (datos extra del formulario).
 const COL = {
@@ -42,7 +43,7 @@ const EMBUDO = ['', 'Conversación', 'Oferta llamada'];   // además de Contacta
 const CIERRAN = ['Agendado', 'Perdido', 'Invalid'];       // estados que quitan la hora de volver a llamar
 
 // Celdas de la pestaña "Ajustes"
-const AJ = { callers: 'A2:A', pins: 'B2:B', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8' };
+const AJ = { callers: 'A2:A', pins: 'B2:B', setting: 'C2:C', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8' };
 
 // =====================================================================
 // Web app: el formulario y el dashboard hablan con estas dos funciones
@@ -61,8 +62,10 @@ function doPost(e) {
       case 'agendado': return json(autoagendado(b));
       case 'cuenta': return json(buscarCuenta(b));
       case 'login':  { const u = auth(b); return json({ ok: true, caller: u.nombre, rol: u.rol }); }
-      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol })); }
+      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, setting: settingDe(u) })); }
       case 'update': return json(actualizar(b, auth(b).nombre));
+      case 'setting':   return json(guardarSetting(b, auth(b)));
+      case 'settingOn': return json(activarSetting(b, auth(b)));
     }
     return json({ ok: false, error: 'Acción desconocida' });
   } catch (err) {
@@ -365,6 +368,95 @@ function filaALead(f) {
 }
 
 // =====================================================================
+// KPIs de setting (mensajes por Instagram/WhatsApp). Cada caller apunta sus números del día.
+// Solo el acceso maestro activa o desactiva el setting de cada caller (Ajustes → columna C).
+// Pestaña "Setting": una fila por caller y día.
+// =====================================================================
+const SET_CAMPOS = ['abiertos', 'convos', 'ofertas', 'agendas', 'ofertasBib', 'entradasBib'];
+const SET_CABECERA = ['Día', 'Caller', 'Mensajes abiertos', 'Convos seguidas', 'Ofertas de llamada', 'Agendas',
+  'Ofertas a biblioteca', 'Entradas a biblioteca', 'Actualizado'];
+
+function hojaSetting() {
+  const ss = SpreadsheetApp.getActive();
+  let sh = ss.getSheetByName(HOJA_SETTING);
+  if (!sh) {
+    sh = ss.insertSheet(HOJA_SETTING);
+    sh.getRange(1, 1, 1, SET_CABECERA.length).setValues([SET_CABECERA]);
+    estiloCabecera(sh.getRange(1, 1, 1, SET_CABECERA.length));
+    sh.setFrozenRows(1);
+    sh.getRange('A2:A').setNumberFormat('@');
+  }
+  return sh;
+}
+
+function filasSetting() {
+  const sh = hojaSetting();
+  const n = sh.getLastRow() - 1;
+  if (n < 1) return [];
+  return sh.getRange(2, 1, n, 2 + SET_CAMPOS.length).getDisplayValues().map((f, i) => {
+    const o = { fila: i + 2, dia: String(f[0]).trim(), caller: String(f[1]).trim() };
+    SET_CAMPOS.forEach((k, j) => { o[k] = Number(f[2 + j]) || 0; });
+    return o;
+  }).filter(o => /^\d{4}-\d{2}-\d{2}$/.test(o.dia) && o.caller);
+}
+
+// Lo que recibe el dashboard: el caller, si tiene setting y sus días; el maestro, quién lo tiene y los días de todos
+function settingDe(u) {
+  const eq = equipo();
+  const quita = o => { const c = Object.assign({}, o); delete c.fila; return c; };
+  if (u.rol === 'maestro') {
+    return { on: true, callers: eq.map(p => ({ nombre: p.nombre, on: p.setting })), dias: filasSetting().map(quita) };
+  }
+  const yo = eq.find(p => p.nombre === u.nombre);
+  if (!yo || !yo.setting) return { on: false, dias: [] };
+  return { on: true, dias: filasSetting().filter(o => o.caller.toUpperCase() === u.nombre.toUpperCase()).map(quita) };
+}
+
+function guardarSetting(b, u) {
+  if (u.rol === 'maestro') throw new Error('El setting lo apunta cada caller desde su acceso');
+  const yo = equipo().find(p => p.nombre === u.nombre);
+  if (!yo || !yo.setting) throw new Error('No tienes el setting activado (lo activa Mario)');
+  const dia = String(b.dia || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) throw new Error('Día no válido');
+  const hace7 = Utilities.formatDate(new Date(Date.now() - 7 * 864e5), TZ, 'yyyy-MM-dd');
+  const manana = Utilities.formatDate(new Date(Date.now() + 864e5), TZ, 'yyyy-MM-dd');
+  if (dia < hace7 || dia > manana) throw new Error('Solo puedes apuntar los últimos 7 días');
+  const c = b.cambios || {};
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = hojaSetting();
+    let o = filasSetting().find(x => x.dia === dia && x.caller.toUpperCase() === u.nombre.toUpperCase());
+    if (!o) {
+      o = { fila: Math.max(sh.getLastRow(), 1) + 1, dia: dia, caller: u.nombre };
+      SET_CAMPOS.forEach(k => { o[k] = 0; });
+    }
+    SET_CAMPOS.forEach(k => {
+      if (!(k in c)) return;
+      const x = Math.round(Number(c[k]));
+      if (!(x >= 0 && x <= 9999)) throw new Error('Número no válido');
+      o[k] = x;
+    });
+    sh.getRange(o.fila, 1, 1, SET_CABECERA.length)
+      .setValues([[dia, u.nombre].concat(SET_CAMPOS.map(k => o[k])).concat([new Date()])]);
+    SpreadsheetApp.flush();
+    delete o.fila;
+    return { ok: true, dia: o };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function activarSetting(b, u) {
+  if (u.rol !== 'maestro') throw new Error('Solo el acceso maestro puede activar el setting');
+  const p = equipo().find(x => x.nombre === String(b.para || ''));
+  if (!p) throw new Error('Caller no encontrado');
+  hoja(HOJA_AJUSTES).getRange(p.fila, 3).setValue(!!b.on);
+  SpreadsheetApp.flush();
+  return { ok: true, nombre: p.nombre, on: !!b.on };
+}
+
+// =====================================================================
 // Notas → hora de volver a llamar
 //   "19:00", "19.30", "19h", "a las 7", "mañana a las 10", "en 2 horas", "en 30 min"
 //   "después", "luego", "más tarde", "en un rato" → dentro de 2 h 30 min
@@ -536,10 +628,12 @@ function equipo() {
   const sh = hoja(HOJA_AJUSTES);
   const n = sh.getLastRow() - 1;
   if (n < 1) return [];
+  const on = sh.getRange(2, 3, n, 1).getValues();   // C: casilla «Setting»
   return sh.getRange(2, 1, n, 2).getDisplayValues()
-    .map(r => ({ nombre: String(r[0]).trim(), pin: String(r[1]).trim() }))
+    .map((r, i) => ({ nombre: String(r[0]).trim(), pin: String(r[1]).trim(), fila: i + 2, setting: activo(on[i][0]) }))
     .filter(p => p.nombre);
 }
+const activo = v => v === true || /^(s[ií]|true|verdadero|x|1)$/i.test(String(v).trim());
 
 function estados() {
   const sh = hoja(HOJA_AJUSTES);
@@ -595,8 +689,10 @@ function configurar() {
       ['Mencionar en Slack (ID de miembro del closer, opcional)', ''],
     ]);
   }
-  [aj.getRange('A1:B1'), aj.getRange('D1'), aj.getRange('F1:G1')].forEach(estiloCabecera);
-  aj.setColumnWidth(1, 160); aj.setColumnWidth(2, 220); aj.setColumnWidth(3, 30);
+  aj.getRange('C1').setValue('Setting (KPIs)');
+  aj.getRange(2, 3, Math.max(aj.getMaxRows() - 1, 1), 1).setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build());
+  [aj.getRange('A1:D1'), aj.getRange('F1:G1')].forEach(estiloCabecera);
+  aj.setColumnWidth(1, 160); aj.setColumnWidth(2, 220); aj.setColumnWidth(3, 110);
   if (!aj.getRange('F6').getValue())
     aj.getRange('F6:G6').setValues([['Token de Calendly (opcional: hora de la llamada en el CRM)', '']]);
   if (!aj.getRange('F7').getValue()) {
@@ -605,6 +701,8 @@ function configurar() {
   }
   aj.setColumnWidth(4, 170); aj.setColumnWidth(5, 30); aj.setColumnWidth(6, 260); aj.setColumnWidth(7, 420);
   aj.setFrozenRows(1);
+
+  hojaSetting();
 
   // ---- Leads ----
   let sh = ss.getSheetByName(HOJA_LEADS);

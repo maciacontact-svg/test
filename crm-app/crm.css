@@ -89,7 +89,7 @@ em { font-style: italic; font-weight: 500; }
 .chips button.buen.on { background: var(--ink); border-color: var(--ink); color: #fff; }
 .chips button i { font-style: normal; font-weight: 600; margin-left: 4px; }
 .chips button i:empty { display: none; }
-#fEstado { height: 38px; padding: 0 34px 0 14px; border-radius: 999px; border: 1px solid var(--hair); font-size: 13px; appearance: none; cursor: pointer;
+#fEstado, #sDiaSel { height: 38px; padding: 0 34px 0 14px; border-radius: 999px; border: 1px solid var(--hair); font-size: 13px; appearance: none; cursor: pointer;
   background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23111' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") right 13px center no-repeat; }
 
 /* ----- Tabla ----- */
@@ -267,6 +267,35 @@ em { font-style: italic; font-weight: 500; }
 .rank tr.tot td { font-weight: 600; background: #f3f3f3; }
 
 /* ----- Móvil: cada lead es una tarjeta ----- */
+/* ----- Setting ----- */
+#vSet .k-card { margin-top: 14px; }
+.s-toggles { display: flex; flex-wrap: wrap; gap: 10px; }
+.s-toggle { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 8px 0 16px; border-radius: 999px; background: var(--white); border: 1px solid var(--hair); font-weight: 500; }
+.s-toggle i { width: 40px; height: 24px; border-radius: 999px; background: #d9d9d9; position: relative; transition: background .2s; }
+.s-toggle i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.s-toggle.on i { background: #1f6f43; }
+.s-toggle.on i::after { transform: translateX(16px); }
+.s-hoy-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.s-hoy-head h3 { margin: 0; }
+.s-counters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.s-counter { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 12px; padding: 14px 16px; border-radius: 16px; background: var(--white); border: 1px solid var(--hair); }
+.s-counter small { font-size: 12.5px; color: var(--muted); grid-column: 1 / -1; }
+.s-counter small b { color: var(--ink); font-weight: 600; }
+.s-counter input { width: 100%; min-width: 0; border: 0; background: none; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; outline: none; font-variant-numeric: tabular-nums; }
+.s-counter .step { height: 48px; }
+.s-counter .step button { width: 46px; height: 46px; font-size: 22px; }
+.s-counter.full { grid-column: 1 / -1; }
+.s-flow { display: grid; gap: 12px; }
+.s-ramas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.s-rama { border-radius: 18px; background: var(--white); border: 1px solid var(--hair); padding: 16px 18px; display: grid; gap: 10px; }
+.s-rama h4 { font-size: 14px; font-weight: 600; }
+.s-step { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 2px 10px; }
+.s-step span { font-size: 13px; color: var(--ink-2); }
+.s-step b { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.s-step small { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+.s-step .f-bar { grid-column: 1 / -1; height: 10px; }
+.s-top { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
 @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 760px) {
   .nav { padding: 0 16px; }
@@ -300,6 +329,8 @@ em { font-style: italic; font-weight: 500; }
   .mail a { white-space: normal; }
   .pill { max-width: 100%; width: 100%; }
   .notes textarea { min-width: 0; background: var(--white); border-color: var(--hair); }
+  .s-ramas, .s-top { grid-template-columns: 1fr; }
+  .s-counters { grid-template-columns: 1fr; }
   .leads tr.grupo { display: block; background: none; box-shadow: none; padding: 8px 2px 0; margin-bottom: 8px; }
   .leads tr.grupo td::before { display: none; }
 }

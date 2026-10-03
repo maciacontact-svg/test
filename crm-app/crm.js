@@ -13,12 +13,14 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const slug = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-');
 
 let S = null;                      // sesión { caller, pin }
-let D = { leads: [], callers: [], estados: [], minutos: 5 };
+let D = { leads: [], callers: [], estados: [], minutos: 5, setting: { on: false, dias: [] } };
 let vista = 'todos', fEstado = '', q = '';
 let pestana = 'leads', periodo = 'hoy', kSel = '';   // KPIs: periodo y caller seleccionado (maestro)
 let conocidos = null;              // ids ya vistos (para avisar de leads nuevos)
 let ultimo = 0, timer = 0, pendienteRender = false;
 const pendientes = {};             // id → { campo: valor } mientras se guarda
+let sPer = 'hoy', sSel = '', sDia = '';            // Setting: periodo, caller seleccionado (maestro) y día que se apunta
+const pendSet = {}, timersSet = {};                // día → números del setting que aún se están guardando
 
 // ---------- API ----------
 async function api(action, extra = {}) {
@@ -86,6 +88,8 @@ async function cargar() {
     const r = await api('list');
     // lo que se está guardando manda sobre lo que llega del servidor
     r.leads.forEach(l => Object.assign(l, pendientes[l.id] || {}));
+    r.setting = r.setting || { on: false, dias: [] };
+    Object.keys(pendSet).forEach(dia => Object.assign(diaSet(r.setting, dia), pendSet[dia]));
     const nuevos = conocidos ? r.leads.filter(l => !conocidos.has(l.id)) : [];
     conocidos = new Set(r.leads.map(l => l.id));
     D = r;
@@ -94,6 +98,8 @@ async function cargar() {
     if (!$('fEstado').dataset.ok || $('fEstado').options.length !== D.estados.length + 1) pintarFiltroEstado();
     render();
     if (pestana === 'kpis') pintarKpisVista();
+    pintarTabSetting();
+    if (pestana === 'setting') pintarSetting();
     if (nuevos.length) {
       nuevos.forEach(l => document.querySelector(`tr[data-id="${CSS.escape(l.id)}"]`)?.classList.add('flash'));
       toast(nuevos.length === 1 ? `🔥 Nuevo lead: ${nuevos[0].nombre}` : `🔥 ${nuevos.length} leads nuevos`);
@@ -473,7 +479,147 @@ $('tabs').addEventListener('click', e => {
   $('tabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
   $('vLeads').hidden = pestana !== 'leads';
   $('vKpis').hidden = pestana !== 'kpis';
+  $('vSet').hidden = pestana !== 'setting';
   if (pestana === 'kpis') pintarKpisVista();
+  if (pestana === 'setting') pintarSetting();
+});
+
+// ---------- Setting (mensajes) ----------
+// Mensajes abiertos → convos seguidas → [ofertas de llamada → agendas] y [ofertas a biblioteca → entradas a biblioteca]
+const SET = [
+  ['abiertos', 'Mensajes abiertos'], ['convos', 'Convos seguidas'],
+  ['ofertas', 'Ofertas de llamada'], ['agendas', 'Agendas'],
+  ['ofertasBib', 'Ofertas a biblioteca'], ['entradasBib', 'Entradas a biblioteca'],
+];
+const diaKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const cero = () => Object.fromEntries(SET.map(([k]) => [k, 0]));
+function diaSet(st, dia, caller = S.caller) {
+  let o = st.dias.find(x => x.dia === dia && x.caller.toUpperCase() === caller.toUpperCase());
+  if (!o) { o = { dia, caller, ...cero() }; st.dias.push(o); }
+  return o;
+}
+function sumaSet(dias) { const t = cero(); dias.forEach(d => SET.forEach(([k]) => { t[k] += Number(d[k]) || 0; })); return t; }
+
+function pintarTabSetting() {
+  const ver = S.rol === 'maestro' || D.setting.on;
+  $('tabSet').hidden = !ver;
+  if (!ver && pestana === 'setting') $('tabs').querySelector('[data-t="leads"]').click();
+}
+
+function pintarSetting() {
+  const maestro = S.rol === 'maestro', st = D.setting;
+  const desde = diaKey(desdePeriodo(sPer));
+  const txtPer = { hoy: 'hoy', 7: 'últimos 7 días', 30: 'últimos 30 días', todo: 'desde el principio' }[sPer];
+  $('sTitle').textContent = maestro ? 'Setting del equipo' : `Tu setting · ${S.caller}`;
+  $('sSub').textContent = maestro ? `Solo tú ves esta vista · ${txtPer}` : `Lo que apuntas cada día · ${txtPer}`;
+
+  // Maestro: activar / desactivar por caller
+  $('sCallers').hidden = !maestro;
+  if (maestro) $('sToggles').innerHTML = (st.callers || []).map(c =>
+    `<button type="button" class="s-toggle ${c.on ? 'on' : ''}" data-c="${esc(c.nombre)}" aria-pressed="${c.on}">${esc(c.nombre)}<i></i></button>`).join('') ||
+    '<p class="k-note">Añade callers en la pestaña Ajustes del Sheet.</p>';
+
+  // Caller: apuntar los números del día
+  $('sApuntar').hidden = maestro;
+  if (!maestro) {
+    const hoy = new Date();
+    if (!sDia) sDia = diaKey(hoy);
+    const dias = [...Array(8)].map((_, i) => { const d = new Date(hoy); d.setDate(d.getDate() - i); return d; });
+    const sel = document.activeElement?.id === 'sDiaSel';
+    if (!sel) $('sDia').innerHTML = `<select id="sDiaSel" aria-label="Día">${dias.map((d, i) => {
+      const k = diaKey(d), t = i === 0 ? 'Hoy' : i === 1 ? 'Ayer' : d.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: '2-digit' });
+      return `<option value="${k}"${k === sDia ? ' selected' : ''}>${t}</option>`;
+    }).join('')}</select>`;
+    const o = st.dias.find(x => x.dia === sDia && x.caller.toUpperCase() === S.caller.toUpperCase()) || { ...cero() };
+    const escribiendo = $('sCounters').contains(document.activeElement);
+    if (!escribiendo) $('sCounters').innerHTML = SET.map(([k, label], i) => `
+      <div class="s-counter${i < 2 ? ' full' : ''}" data-k="${k}">
+        <small>${i < 2 ? '' : i < 4 ? '📞 ' : '📚 '}<b>${label}</b></small>
+        <input type="number" inputmode="numeric" min="0" max="9999" value="${o[k] || 0}" aria-label="${label}">
+        <div class="step"><button type="button" data-d="-1" aria-label="Menos">−</button><button type="button" data-d="1" aria-label="Más">+</button></div>
+      </div>`).join('');
+  }
+
+  // Embudo del periodo
+  const mias = st.dias.filter(d => d.dia >= desde && (maestro ? (!sSel || d.caller === sSel) : d.caller.toUpperCase() === S.caller.toUpperCase()));
+  const t = sumaSet(mias);
+  $('sFunnelTitle').textContent = maestro ? `Embudo de setting · ${sSel || 'todo el equipo'}` : 'Tu embudo de setting';
+  const paso = (label, v, base, txt) => `<div class="s-step"><span>${label}</span><b>${v}</b>
+    <span class="f-bar"><i style="width:${base ? Math.min(100, v / base * 100) : 0}%"></i></span><small>${txt}</small></div>`;
+  $('sFunnel').innerHTML = `<div class="s-flow">
+    <div class="s-top">
+      <div class="s-rama">${paso('Mensajes abiertos', t.abiertos, t.abiertos, maestro ? 'Conversaciones abiertas' : 'Conversaciones que has abierto')}</div>
+      <div class="s-rama">${paso('Convos seguidas', t.convos, t.abiertos, `${pct(t.convos, t.abiertos)} % de los mensajes abiertos`)}</div>
+    </div>
+    <div class="s-ramas">
+      <div class="s-rama"><h4>📞 Llamada</h4>
+        ${paso('Ofertas de llamada', t.ofertas, t.convos, `${pct(t.ofertas, t.convos)} % de las convos`)}
+        ${paso('Agendas', t.agendas, t.ofertas, `${pct(t.agendas, t.ofertas)} % de las ofertas · ${pct(t.agendas, t.abiertos)} % de los abiertos`)}</div>
+      <div class="s-rama"><h4>📚 Biblioteca</h4>
+        ${paso('Ofertas a biblioteca', t.ofertasBib, t.convos, `${pct(t.ofertasBib, t.convos)} % de las convos`)}
+        ${paso('Entradas a biblioteca', t.entradasBib, t.ofertasBib, `${pct(t.entradasBib, t.ofertasBib)} % de las ofertas a biblioteca`)}</div>
+    </div></div>`;
+
+  // Maestro: tabla por caller
+  $('sRankCard').hidden = !maestro;
+  if (maestro) {
+    const nombres = [...new Set([...(st.callers || []).filter(c => c.on).map(c => c.nombre), ...st.dias.filter(d => d.dia >= desde).map(d => d.caller)])];
+    const filas = nombres.map(n => ({ n, t: sumaSet(st.dias.filter(d => d.dia >= desde && d.caller === n)) })).sort((a, b) => b.t.agendas - a.t.agendas || b.t.entradasBib - a.t.entradasBib);
+    const eq = sumaSet(st.dias.filter(d => d.dia >= desde));
+    const celdas = x => `<td>${x.abiertos}</td><td>${x.convos}</td><td>${x.ofertas}</td><td>${x.agendas}</td><td>${x.ofertasBib}</td><td>${x.entradasBib}</td>
+      <td><b>${pct(x.convos, x.abiertos)} %</b></td><td><b>${pct(x.agendas, x.ofertas)} %</b></td><td><b>${pct(x.entradasBib, x.ofertasBib)} %</b></td>`;
+    $('sRank').innerHTML = `<thead><tr><th>Caller</th><th>Abiertos</th><th>Convos</th><th>Ofertas llamada</th><th>Agendas</th><th>Ofertas biblio.</th><th>Entradas biblio.</th><th>% convo</th><th>% agenda</th><th>% biblio.</th></tr></thead><tbody>` +
+      filas.map(f => `<tr data-c="${esc(f.n)}" class="${f.n === sSel ? 'on' : ''}"><td><b>${esc(f.n)}</b></td>${celdas(f.t)}</tr>`).join('') +
+      `<tr class="tot" data-c=""><td>Equipo</td>${celdas(eq)}</tr></tbody>`;
+  }
+}
+
+function apuntarSet(k, v) {
+  const o = diaSet(D.setting, sDia);
+  o[k] = Math.max(0, Math.min(9999, Math.round(Number(v)) || 0));
+  const dia = sDia;
+  pendSet[dia] = { ...(pendSet[dia] || {}), [k]: o[k] };
+  clearTimeout(timersSet[dia]);
+  timersSet[dia] = setTimeout(async () => {
+    const cambios = pendSet[dia];
+    try {
+      await api('setting', { dia, cambios });
+      if (pendSet[dia] === cambios) delete pendSet[dia];
+    } catch (err) { toast('No se ha guardado: ' + err.message, true); }
+  }, 700);
+  return o[k];
+}
+$('sCounters').addEventListener('click', e => {
+  const b = e.target.closest('button[data-d]'); if (!b) return;
+  const box = b.closest('.s-counter'), inp = box.querySelector('input');
+  inp.value = apuntarSet(box.dataset.k, Number(inp.value) + Number(b.dataset.d));
+  pintarSetting();
+});
+$('sCounters').addEventListener('change', e => {
+  const box = e.target.closest('.s-counter'); if (!box) return;
+  e.target.value = apuntarSet(box.dataset.k, e.target.value);
+  e.target.blur(); pintarSetting();
+});
+$('sDia').addEventListener('change', e => { sDia = e.target.value; e.target.blur(); pintarSetting(); });
+$('sPeriodo').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  sPer = b.dataset.p;
+  $('sPeriodo').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  pintarSetting();
+});
+$('sRank').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-c]'); if (!tr) return;
+  sSel = tr.dataset.c === sSel ? '' : tr.dataset.c;
+  pintarSetting();
+});
+$('sToggles').addEventListener('click', async e => {
+  const b = e.target.closest('.s-toggle'); if (!b) return;
+  const c = D.setting.callers.find(x => x.nombre === b.dataset.c); if (!c) return;
+  c.on = !c.on; pintarSetting();
+  try {
+    await api('settingOn', { para: c.nombre, on: c.on });
+    toast(`Setting ${c.on ? 'activado' : 'desactivado'} para ${c.nombre}`);
+  } catch (err) { c.on = !c.on; pintarSetting(); toast('No se ha guardado: ' + err.message, true); }
 });
 
 // ---------- Eventos de la tabla ----------
@@ -587,10 +733,23 @@ function demoApi(action, extra) {
       })),
     };
   }
+  if (!window.__demo.setting) {
+    const d = i => { const x = new Date(); x.setDate(x.getDate() - i); return diaKey(x); };
+    window.__demo.setting = { callers: [{ nombre: 'Mario.e', on: true }], dias: [
+      [0, 18, 9, 3, 1, 4, 2], [1, 32, 14, 5, 2, 6, 3], [2, 25, 11, 4, 1, 5, 3], [4, 40, 17, 6, 3, 7, 4],
+    ].map(r => ({ dia: d(r[0]), caller: 'Mario.e', abiertos: r[1], convos: r[2], ofertas: r[3], agendas: r[4], ofertasBib: r[5], entradasBib: r[6] })) };
+  }
   const db = window.__demo;
   const esMaestro = /^mario$/i.test(S.caller || '');
   if (action === 'login') return Promise.resolve({ ok: true, caller: esMaestro ? 'Mario' : (db.callers.find(c => c.toUpperCase() === (S.caller || '').toUpperCase()) || 'Mario.e'), rol: esMaestro ? 'maestro' : 'caller' });
-  if (action === 'list') return Promise.resolve({ ok: true, rol: esMaestro ? 'maestro' : 'caller', ...JSON.parse(JSON.stringify(db)) });
+  if (action === 'list') {
+    const r = JSON.parse(JSON.stringify(db));
+    const yo = db.setting.callers.find(c => c.nombre.toUpperCase() === (S.caller || '').toUpperCase());
+    r.setting = esMaestro ? { on: true, ...r.setting } : yo && yo.on ? { on: true, dias: r.setting.dias.filter(x => x.caller === yo.nombre) } : { on: false, dias: [] };
+    return Promise.resolve({ ok: true, rol: esMaestro ? 'maestro' : 'caller', ...r });
+  }
+  if (action === 'setting') { Object.assign(diaSet(db.setting, extra.dia, S.caller), extra.cambios); return Promise.resolve({ ok: true }); }
+  if (action === 'settingOn') { db.setting.callers.find(c => c.nombre === extra.para).on = extra.on; return Promise.resolve({ ok: true }); }
   if (action === 'update') {
     const l = db.leads.find(x => x.id === extra.id);
     Object.assign(l, extra.cambios);

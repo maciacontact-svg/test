@@ -55,6 +55,7 @@
     <nav class="tabs" id="tabs" aria-label="Secciones">
       <button type="button" data-t="leads" class="on">Leads</button>
       <button type="button" data-t="kpis" id="tabKpis">Mis KPIs</button>
+      <button type="button" data-t="setting" id="tabSet" hidden>Setting</button>
     </nav>
     <div class="nav-right">
       <span class="live" id="live"><i></i><span id="liveText">Conectando…</span></span>
@@ -126,6 +127,47 @@
         </div>
       </section>
       <p class="k-note foot-note">Todo se cuenta sobre los leads <b>asignados</b> a cada caller en el periodo (por la fecha en que se los asignó). Los autoagendados por Calendly no cuentan para ningún caller.</p>
+    </div>
+
+    <!-- KPIs de setting: cada caller apunta sus números del día; solo el maestro lo activa para cada caller -->
+    <div id="vSet" hidden>
+      <section class="k-head">
+        <div>
+          <h2 id="sTitle">Setting</h2>
+          <p id="sSub" class="k-sub"></p>
+        </div>
+        <div class="chips" id="sPeriodo">
+          <button type="button" data-p="hoy" class="on">Hoy</button>
+          <button type="button" data-p="7">7 días</button>
+          <button type="button" data-p="30">30 días</button>
+          <button type="button" data-p="todo">Todo</button>
+        </div>
+      </section>
+
+      <section class="k-card s-callers" id="sCallers" hidden>
+        <h3>Quién hace setting</h3>
+        <p class="k-note">Solo tú puedes activarlo o desactivarlo. A quien lo tenga activado le sale la pestaña «Setting» para apuntar sus números.</p>
+        <div id="sToggles" class="s-toggles"></div>
+      </section>
+
+      <section class="k-card s-hoy" id="sApuntar" hidden>
+        <div class="s-hoy-head">
+          <h3>Apunta tus números</h3>
+          <div class="chips" id="sDia"></div>
+        </div>
+        <div class="s-counters" id="sCounters"></div>
+      </section>
+
+      <section class="k-card">
+        <h3 id="sFunnelTitle">Embudo de setting</h3>
+        <div id="sFunnel"></div>
+      </section>
+
+      <section class="k-card" id="sRankCard" hidden>
+        <h3>Setting por caller</h3>
+        <p class="k-note">Pulsa un caller para ver su embudo.</p>
+        <div class="table-wrap"><table class="rank" id="sRank"></table></div>
+      </section>
     </div>
   </main>
 </div>

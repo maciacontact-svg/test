@@ -91,7 +91,15 @@ El dashboard vive en la carpeta `crm-app/` y se publica como **otro proyecto de 
 - **KPIs**: cada caller ve **solo los suyos**, sobre los leads que **se ha asignado**. Periodo: hoy, 7 días, 30 días o todo.
 - **Acceso maestro** (solo Mario, fundador): Ajustes → **G7** nombre (viene «Mario») y **G8** PIN. Ve los KPIs de todo el equipo y el ranking. No es un caller (el caller es «Mario.e»).
 
-## 8. Uso diario del equipo
+## 8. País, prioridad y setting
+
+- **País por el teléfono**: +34 / 0034, o 9 cifras sin prefijo que empiezan por 6, 7 o 9 → 🇪🇸 España; con otro prefijo → 🌎 LATAM.
+- **🎯 Prioridad** (filtro de la lista): los leads sin cerrar en este orden: España buen form → España → LATAM buen form → LATAM. Dentro de cada grupo, por orden de llegada.
+- **Setting** (mensajes por Instagram/WhatsApp): en Ajustes, columna **C «Setting (KPIs)»** hay una casilla por caller. Mario la activa o desactiva desde el CRM (acceso maestro › pestaña Setting) o marcándola en el Sheet.
+  Quien lo tenga activado ve la pestaña **Setting** y apunta cada día: mensajes abiertos, convos seguidas, y en dos secciones **📞 ofertas de llamada → agendas** y **📚 ofertas a biblioteca → entradas a biblioteca**. Puede corregir los últimos 7 días.
+  Se guarda en la pestaña **«Setting»** del Sheet (una fila por caller y día). Mario ve el embudo de todo el equipo y la tabla por caller.
+
+## 9. Uso diario del equipo
 
 - Entran en la URL del dashboard con **nombre + PIN** (se queda guardado en su navegador hasta que pulsen «Salir»).
 - Arriba: leads de hoy, por llamar, en seguimiento, agendados y tasa de contacto.
