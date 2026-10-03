@@ -47,7 +47,7 @@ const CIERRAN = ['Agendado', 'Perdido', 'Invalid'];       // estados que quitan 
 
 // Celdas de la pestaña "Ajustes"
 const AJ = { callers: 'A2:A', pins: 'B2:B', setting: 'C2:C', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8',
-  igClave: 'G9', igToken: 'G10', igFrases: 'G11', igRenovado: 'G12', setters: 'I2:K' };
+  igClave: 'G9', igToken: 'G10', igFrases: 'G11', igRenovado: 'G12', web: 'G13', setters: 'I2:K' };
 
 // =====================================================================
 // Web app: el formulario y el dashboard hablan con estas dos funciones
@@ -66,7 +66,7 @@ function doPost(e) {
       case 'agendado': return json(autoagendado(b));
       case 'cuenta': return json(buscarCuenta(b));
       case 'login':  { const u = auth(b); return json({ ok: true, caller: u.nombre, rol: u.rol }); }
-      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, setting: settingDe(u), setters: settersDe(u), ig: listarIg(u) })); }
+      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, web: dominiosWeb()[0], setting: settingDe(u), setters: settersDe(u), ig: listarIg(u) })); }
       case 'update': return json(actualizar(b, auth(b).nombre));
       case 'setting':   return json(guardarSetting(b, auth(b)));
       case 'settingOn': return json(activarSetting(b, auth(b)));
@@ -472,7 +472,7 @@ function activarSetting(b, u) {
 // =====================================================================
 // Instagram (DMs de @aleix.ytf): la función de Vercel /api/ig recibe los avisos de Meta y los reenvía aquí.
 //  - Todos escriben como Aleix: cada setter se reconoce por su marca (emoji o coletilla, nunca su nombre) o por su enlace
-//    (systemacademy.es/a/<código> y /b/<código>). Ajustes → I: nombre (igual que en la columna A, o «Mario» para el maestro),
+//    (<dominio de G13>/a/<código> y /b/<código>). Ajustes → I: nombre (igual que en la columna A, o «Mario» para el maestro),
 //    J: marca (varias separadas por comas), K: código del enlace.
 //  - Solo se LEE: nunca se envía nada a Instagram desde aquí.
 //  - Propuesta de llamada: frases de Ajustes → G11 (separadas por comas).
@@ -520,7 +520,7 @@ function paramDe(qs, k) {
 // Quién ha escrito el mensaje: su palabra clave o su enlace
 function setterEnTexto(texto, lista) {
   const t = sinTildes(texto);
-  const l = t.match(/systemacademy\.es\/[ab]\/([a-z0-9-]+)/);
+  const l = t.match(new RegExp(webRe() + '\\/[ab]\\/([a-z0-9-]+)'));
   if (l) { const x = lista.find(y => y.slug === l[1]); if (x) return x.nombre; }
   const tiene = c => new RegExp('(^|[^a-z0-9])' + c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9])').test(t);
   const x = lista.find(y => y.claves.some(tiene));
@@ -531,9 +531,20 @@ function esPropuesta(texto) {
   const fr = String(hoja(HOJA_AJUSTES).getRange(AJ.igFrases).getDisplayValue() || FRASES_DEF).split(',').map(x => sinTildes(x).trim()).filter(Boolean);
   return fr.some(f => t.indexOf(f) >= 0);
 }
-const esEnlaceAgenda = t => /systemacademy\.es\/(a\/|agendar)|calendly\.com/i.test(t);
-const esEnlaceBiblio = t => /systemacademy\.es\/b\//i.test(t);
-const esRecurso = t => /systemacademy\.es/i.test(t) && !esEnlaceAgenda(t) && !esEnlaceBiblio(t);
+// Dominio(s) donde está publicada la web (Ajustes → G13, separados por comas). Los enlaces se reconocen en cualquiera de ellos.
+let WEB_RE = null;
+function dominiosWeb() {
+  const v = String(hoja(HOJA_AJUSTES).getRange(AJ.web).getDisplayValue() || 'systemacademy.es');
+  const l = v.split(',').map(x => x.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')).filter(Boolean);
+  return l.length ? l : ['systemacademy.es'];
+}
+function webRe() {
+  if (!WEB_RE) WEB_RE = '(?:' + dominiosWeb().map(d => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')';
+  return WEB_RE;
+}
+const esEnlaceAgenda = t => new RegExp(webRe() + '\\/(a\\/|agenda\\/|agendar)|calendly\\.com', 'i').test(t);
+const esEnlaceBiblio = t => new RegExp(webRe() + '\\/b\\/', 'i').test(t);
+const esRecurso = t => new RegExp(webRe(), 'i').test(t) && !esEnlaceAgenda(t) && !esEnlaceBiblio(t);
 
 function hojaIg() {
   const ss = SpreadsheetApp.getActive();
@@ -924,6 +935,7 @@ function configurar() {
     ]);
   }
   if (!aj.getRange('F12').getValue()) aj.getRange('F12').setValue('Instagram: estado del token (se renueva solo cada semana)');
+  if (!aj.getRange('F13').getValue()) aj.getRange('F13:G13').setValues([['Dominio de la web para los enlaces (sin https; varios con comas)', 'systemacademy.es']]);
   if (!aj.getRange('I1').getValue()) {
     aj.getRange('I1:K1').setValues([['Setter (nombre del CRM)', 'Marca en sus mensajes (emoji o coletilla, NO su nombre; varias con comas)', 'Código de su enlace']]);
     aj.getRange('I2:K2').setValues([['Mario.e', '', 'mario']]);

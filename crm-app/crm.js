@@ -692,8 +692,8 @@ $('sToggles').addEventListener('click', async e => {
 
 // ---------- Enlaces con seguimiento (solo maestro) ----------
 let ePer = '30';
-const WEB = 'systemacademy.es';
-const enlace = (destino, fuente, etiqueta) => `${WEB}/${destino}/${slugUrl(fuente)}${etiqueta ? '/' + slugUrl(etiqueta) : ''}`;
+const web = () => D.web || 'systemacademy.es';   // dominio de la web: Ajustes → G13
+const enlace = (destino, fuente, etiqueta) => `${web()}/${destino}/${slugUrl(fuente)}${etiqueta ? '/' + slugUrl(etiqueta) : ''}`;
 const slugUrl = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 function misEnlaces() { try { return JSON.parse(localStorage.getItem('sa-crm-enlaces') || '[]'); } catch (e) { return []; } }
 function guardarEnlaces(l) { try { localStorage.setItem('sa-crm-enlaces', JSON.stringify(l)); } catch (e) {} }
@@ -720,8 +720,8 @@ function pintarEnlaces() {
     fijos.map(f => item(...f) + '<span></span></div>').join('') +
     misEnlaces().map((e, i) => item(`${FUENTES[e.fuente] || e.fuente} · ${e.destino === 'agenda' ? 'agenda' : 'biblioteca'}`, e.etiqueta || 'sin etiqueta', enlace(e.destino, e.fuente, e.etiqueta)) +
       `<button type="button" class="ghost e-del" data-del="${i}">Quitar</button></div>`).join('') +
-    D.setters.map(x => item(`🧑‍💻 ${x.nombre} · agenda`, 'Setter (DM de Instagram)', `${WEB}/a/${x.slug}`) + '<span></span></div>' +
-      item(`🧑‍💻 ${x.nombre} · biblioteca`, 'Setter (DM de Instagram)', `${WEB}/b/${x.slug}`) + '<span></span></div>').join('');
+    D.setters.map(x => item(`🧑‍💻 ${x.nombre} · agenda`, 'Setter (DM de Instagram)', `${web()}/a/${x.slug}`) + '<span></span></div>' +
+      item(`🧑‍💻 ${x.nombre} · biblioteca`, 'Setter (DM de Instagram)', `${web()}/b/${x.slug}`) + '<span></span></div>').join('');
   // De dónde vienen
   const desde = desdePeriodo(ePer);
   const g = {};
@@ -797,7 +797,7 @@ function pintarIg() {
     : 'Tus conversaciones de @aleix.ytf (las que llevan tu marca o tu enlace). Se actualizan solas.';
   // enlaces y palabra clave
   const yo = D.setters.filter(x => maestro || mismo(x.nombre, S.caller));
-  const base = 'systemacademy.es';
+  const base = web();
   const copia = url => `<span class="ig-copy"><span>${esc(url)}</span><button type="button" data-copy="https://${esc(url)}">Copiar</button></span>`;
   $('igLinks').innerHTML = `<h3>${maestro ? 'Enlaces y marcas de cada setter' : 'Tus enlaces y tu marca'}</h3>` + (yo.length ? yo.map(x => `
     <div class="ig-set"><div><b>${esc(x.nombre)}</b><small>Tu marca en los mensajes: ${x.clave ? `«${esc(x.clave)}»` : '— (Mario la pone en Ajustes, columna J)'}</small></div>

@@ -1,6 +1,6 @@
 # Instagram → CRM (DMs de @aleix.ytf)
 
-Meta avisa de cada DM (enviado, recibido y visto) a `https://systemacademy.es/api/ig` (función de Vercel, `api/ig.js`),
+Meta avisa de cada DM (enviado, recibido y visto) a `https://<dominio de esta web>/api/ig` (el de Ajustes → G13) (función de Vercel, `api/ig.js`),
 que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la API oficial: no pone en riesgo la cuenta.
 
 ## Qué detecta
@@ -36,7 +36,7 @@ que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la A
 2. [developers.facebook.com](https://developers.facebook.com) › **Crear app** › caso de uso **«Gestionar mensajes y contenido en Instagram»**.
 3. En la app: **Instagram › Configuración de la API con inicio de sesión de Instagram**:
    - **Generar token** → añade @aleix.ytf → copia el token → Sheet **G10**.
-   - **Configurar webhooks**: URL `https://systemacademy.es/api/ig` · token de verificación = el `IG_VERIFY_TOKEN` del paso 3 → Verificar y guardar.
+   - **Configurar webhooks**: URL `https://<dominio de G13>/api/ig` · token de verificación = el `IG_VERIFY_TOKEN` del paso 3 → Verificar y guardar.
    - Suscríbete a **messages** y **messaging_seen**.
 4. *Configuración de la app › Básica* → copia la **clave secreta** (para `IG_APP_SECRET`).
 
