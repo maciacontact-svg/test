@@ -562,7 +562,7 @@ function eventosInstagram(b) {
   if (clave.length < 16 || String(b.clave || '') !== clave) throw new Error('Clave de Instagram incorrecta');
   const todos = (Array.isArray(b.eventos) ? b.eventos : []).slice(0, 200);
   const motivo = e => !e ? 'vacío' : !/^(out|in|seen)$/.test(e.t) ? 'tipo ' + e.t
-    : !/^[A-Za-z0-9_-]{3,64}$/.test(String(e.u || '')) ? 'id raro (' + String(e.u || '').length + ' car.)'
+    : !/^\d{3,40}$/.test(String(e.u || '')) ? 'sin id de usuario (' + String(e.u || '').slice(0, 12) + ')'
     : !(Number(e.ts) > 0) ? 'sin fecha' : '';
   const descartes = todos.map(motivo).filter(Boolean);
   const evs = todos.filter(e => !motivo(e)).map(e => Object.assign({}, e, { ts: Number(e.ts) < 1e11 ? Number(e.ts) * 1000 : Number(e.ts) }))

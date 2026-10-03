@@ -28,21 +28,26 @@ function firmaValida(raw, firma) {
   });
 }
 
-// Del formato de Meta a eventos simples: out (nuestro), in (suyo), seen (lo ha visto)
+// Del formato de Meta a eventos simples: out (nuestro), in (suyo), seen (lo ha visto).
+// Meta usa dos formatos: entry[].messaging[] / standby[] y entry[].changes[] { field, value }.
+const idDe = x => { const v = x && (x.id || x.igsid || x.user_id); return /^\d{3,40}$/.test(String(v || '')) ? String(v) : ''; };
 function eventos(body) {
   const out = [];
   (body.entry || []).forEach(entry => {
     const yo = String(entry.id || '');
-    [...(entry.messaging || []), ...(entry.standby || [])].forEach(m => {
+    const items = [...(entry.messaging || []), ...(entry.standby || []),
+      ...(entry.changes || []).filter(c => /messag/.test(c.field || '') && c.value).map(c => c.value)];
+    items.forEach(m => {
       const ts = Number(m.timestamp) || Number(entry.time) || Date.now();
+      const sender = idDe(m.sender) || idDe(m.from), recipient = idDe(m.recipient) || idDe(m.to);
       if (m.message) {
         if (m.message.is_deleted || m.message.is_unsupported) return;
-        const nuestro = !!m.message.is_echo || String(m.sender && m.sender.id) === yo;
-        const u = String(nuestro ? m.recipient && m.recipient.id : m.sender && m.sender.id);
+        const nuestro = !!m.message.is_echo || (sender && sender === yo);
+        const u = nuestro ? recipient : sender;
         if (!u || u === yo) return;
         out.push({ t: nuestro ? 'out' : 'in', u, ts, txt: String(m.message.text || '').slice(0, 1000), mid: m.message.mid || '' });
       } else if (m.read) {
-        const u = String(m.sender && m.sender.id);
+        const u = sender && sender !== yo ? sender : recipient;
         if (u && u !== yo) out.push({ t: 'seen', u, ts });
       }
     });
