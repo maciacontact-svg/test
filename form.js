@@ -318,13 +318,19 @@ function sendLead(id, buenForm) {
     nombre: c.nombre, telefono: c.whatsapp, correo: c.email, instagram: c.instagram || '',
     punto: answers.punto, objetivo: answers.objetivo, inversion: answers.inversion,
     meta: answers.meta, cuando: answers.cuando,
-    origen: location.search.slice(1),
+    origen: location.search.slice(1), setter: setterDelEnlace(),
   };
   if (!url) { console.log('CRM sin configurar (config.js). Lead:', lead); return; }
   try {
     fetch(url, { method: 'POST', mode: 'no-cors', keepalive: true,
       headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(lead) });
   } catch (e) { console.error(e); }
+}
+
+// Setter que le pasó el enlace por Instagram (systemacademy.es/b/<código> → ?s=<código>); se recuerda para cuando agende
+function setterDelEnlace() {
+  const s = new URLSearchParams(location.search).get('s') || '';
+  try { if (s) localStorage.setItem('sa-setter', s); return s || localStorage.getItem('sa-setter') || ''; } catch (e) { return s; }
 }
 
 // ID aleatorio del lead: la página de llamada lo usa para marcarlo como agendado en el CRM

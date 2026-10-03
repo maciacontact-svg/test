@@ -9,6 +9,10 @@ const $ = id => document.getElementById(id);
 const leer = st => { try { return JSON.parse(st.getItem('sa-lead') || 'null'); } catch (e) { return null; } };
 const lead = leer(sessionStorage) || leer(localStorage) || {};
 
+// Setter que le pasó el enlace por Instagram (systemacademy.es/a/<código> → ?s=<código>)
+let setter = new URLSearchParams(location.search).get('s') || '';
+try { if (setter) localStorage.setItem('sa-setter', setter); else setter = localStorage.getItem('sa-setter') || ''; } catch (e) {}
+
 const nombre = String(lead.nombre || '').trim().split(' ')[0];
 if (nombre && $('hola')) $('hola').textContent = `Enhorabuena, ${nombre}`;
 
@@ -56,7 +60,7 @@ window.addEventListener('message', async e => {
 async function marcarAgendado(evento, invitado) {
   const url = (window.SA_CONFIG || {}).API_URL;
   if (!url || (!lead.id && !invitado)) return;
-  const body = JSON.stringify({ action: 'agendado', id: lead.id || '', evento: evento || '', invitado: invitado || '' });
+  const body = JSON.stringify({ action: 'agendado', id: lead.id || '', evento: evento || '', invitado: invitado || '', setter: setter });
   // reintenta por si el lead aún no se había guardado en el Sheet
   for (let i = 0; i < 3; i++) {
     try {

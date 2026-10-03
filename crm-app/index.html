@@ -56,6 +56,7 @@
       <button type="button" data-t="leads" class="on">Leads</button>
       <button type="button" data-t="kpis" id="tabKpis">Mis KPIs</button>
       <button type="button" data-t="setting" id="tabSet" hidden>Setting</button>
+      <button type="button" data-t="ig" id="tabIg" hidden>Instagram</button>
     </nav>
     <div class="nav-right">
       <span class="live" id="live"><i></i><span id="liveText">Conectando…</span></span>
@@ -152,7 +153,7 @@
 
       <section class="k-card s-hoy" id="sApuntar" hidden>
         <div class="s-hoy-head">
-          <h3>Apunta tus números</h3>
+          <h3>Correcciones a mano <small class="k-sub">lo que el CRM no haya detectado; se suma a lo automático</small></h3>
           <div class="chips" id="sDia"></div>
         </div>
         <div class="s-counters" id="sCounters"></div>
@@ -168,6 +169,32 @@
         <p class="k-note">Pulsa un caller para ver su embudo.</p>
         <div class="table-wrap"><table class="rank" id="sRank"></table></div>
       </section>
+    </div>
+
+    <!-- Instagram: conversaciones de @aleix.ytf con propuesta, enlace o setter (llegan solas desde Meta) -->
+    <div id="vIg" hidden>
+      <section class="k-head">
+        <div>
+          <h2>Instagram <em>· seguimiento</em></h2>
+          <p class="k-sub" id="igSub">Conversaciones de @aleix.ytf con propuesta de llamada o enlace. Se actualizan solas.</p>
+        </div>
+      </section>
+      <section class="k-card ig-links" id="igLinks"></section>
+      <section class="toolbar">
+        <label class="search"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="igQ" type="search" placeholder="Buscar @usuario o nombre"></label>
+        <div class="chips" id="igViews">
+          <button type="button" data-v="todas" class="on">Todas</button>
+          <button type="button" data-v="toca">🔥 Te toca <i id="nToca"></i></button>
+          <button type="button" data-v="follow">⏰ Follow-up pendiente <i id="nFollow"></i></button>
+          <button type="button" data-v="visto">👀 Visto sin responder</button>
+          <button type="button" data-v="enlace">📅 Enlace sin agendar</button>
+          <button type="button" data-v="agendo">✅ Agendaron</button>
+        </div>
+        <select id="igSetter" aria-label="Setter"></select>
+      </section>
+      <section class="ig-list" id="igList"></section>
+      <p class="empty" id="igEmpty" hidden>No hay conversaciones que coincidan.</p>
     </div>
   </main>
 </div>

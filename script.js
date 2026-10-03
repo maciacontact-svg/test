@@ -110,12 +110,15 @@
 })();
 
 
+// ===== Origen (utm de ManyChat, enlace de un setter…): se pasa al formulario para saber de dónde viene =====
+if (location.search) document.querySelectorAll('a[href="empezar.html"]').forEach(a => { a.href = 'empezar.html' + location.search; });
+
 // ===== Cuenta: si ya rellenó el formulario en este navegador, entra directo a la biblioteca =====
 (() => {
   let c = null;
   try { c = JSON.parse(localStorage.getItem('sa-lead') || 'null'); } catch (e) {}
   if (!c || !c.nombre) return;
-  document.querySelectorAll('a.cta[href="empezar.html"]').forEach(a => {
+  document.querySelectorAll('a.cta[href^="empezar.html"]').forEach(a => {
     a.href = 'recursos.html';
     a.textContent = 'Entrar a mi biblioteca';
   });

@@ -16,6 +16,7 @@ const TZ = 'Europe/Madrid';
 const HOJA_LEADS = 'Leads';
 const HOJA_AJUSTES = 'Ajustes';
 const HOJA_SETTING = 'Setting';
+const HOJA_IG = 'Instagram';
 
 // Columnas de "Leads". Las 11 primeras son las visibles; el resto van ocultas (datos extra del formulario).
 const COL = {
@@ -23,12 +24,14 @@ const COL = {
   caller: 7, estado: 8, contacto: 9, intentos: 10, notas: 11,
   id: 12, inversion: 13, meta: 14, cuando: 15, instagram: 16, origen: 17, aviso: 18,
   cualifica: 19, autoagenda: 20, rellamar: 21, rellamarAviso: 22, asignado: 23, embudo: 24,
+  setter: 25, agendadoEl: 26,
 };
 const CABECERA = [
   'Fecha registro', 'Nombre', 'Teléfono', 'En qué punto está', 'Qué quiere conseguir', 'Correo',
   'Caller', 'Estado', 'Contacto', 'Nº intentos', 'Notas',
   'ID', 'Inversión al mes', 'Meta a 3-6 meses', 'Cuándo empieza', 'Instagram', 'Origen', 'Aviso Slack',
   'Buen form', 'Autoagendado (Calendly)', 'Volver a llamar (hora)', 'Aviso rellamada', 'Asignado el', 'Embudo',
+  'Setter (enlace IG)', 'Agendado el',
 ];
 const VISIBLES = 11;
 
@@ -43,7 +46,8 @@ const EMBUDO = ['', 'Conversación', 'Oferta llamada'];   // además de Contacta
 const CIERRAN = ['Agendado', 'Perdido', 'Invalid'];       // estados que quitan la hora de volver a llamar
 
 // Celdas de la pestaña "Ajustes"
-const AJ = { callers: 'A2:A', pins: 'B2:B', setting: 'C2:C', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8' };
+const AJ = { callers: 'A2:A', pins: 'B2:B', setting: 'C2:C', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8',
+  igClave: 'G9', igToken: 'G10', igFrases: 'G11', setters: 'I2:K' };
 
 // =====================================================================
 // Web app: el formulario y el dashboard hablan con estas dos funciones
@@ -62,10 +66,11 @@ function doPost(e) {
       case 'agendado': return json(autoagendado(b));
       case 'cuenta': return json(buscarCuenta(b));
       case 'login':  { const u = auth(b); return json({ ok: true, caller: u.nombre, rol: u.rol }); }
-      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, setting: settingDe(u) })); }
+      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, setting: settingDe(u), setters: setters().map(x => ({ nombre: x.nombre, clave: x.clave, slug: x.slug })), ig: listarIg() })); }
       case 'update': return json(actualizar(b, auth(b).nombre));
       case 'setting':   return json(guardarSetting(b, auth(b)));
       case 'settingOn': return json(activarSetting(b, auth(b)));
+      case 'ig':        return json(eventosInstagram(b));
     }
     return json({ ok: false, error: 'Acción desconocida' });
   } catch (err) {
@@ -94,6 +99,7 @@ function nuevoLead(b) {
     instagram: limpio(b.instagram, 80), origen: limpio(b.origen, 200), aviso: '',
     cualifica: b.cualifica === true ? 'Sí' : 'No', autoagenda: '',
     rellamar: '', rellamarAviso: '', asignado: '', embudo: '',
+    setter: setterDeSlug(b.setter || paramDe(b.origen, 's')), agendadoEl: '',
   };
 
   const fila = new Array(CABECERA.length).fill('');
@@ -138,6 +144,9 @@ function autoagendado(b) {
     sh.getRange(fila, COL.autoagenda).setValue(marca);
     sh.getRange(fila, COL.estado).setValue('Agendado');
     sh.getRange(fila, COL.caller).setValue('');
+    sh.getRange(fila, COL.agendadoEl).setValue(new Date());
+    const st = setterDeSlug(b.setter);
+    if (st && !f[COL.setter - 1]) sh.getRange(fila, COL.setter).setValue(st);
     const notas = String(f[COL.notas - 1] || '');
     sh.getRange(fila, COL.notas).setValue(celda('📅 Autoagendado por Calendly · ' + marca + (notas ? '\n' + notas : '')));
     SpreadsheetApp.flush();
@@ -190,6 +199,7 @@ function leadDesdeCalendly(sh, inv) {
     punto: '', objetivo: '', caller: '', estado: '', contacto: '❌', intentos: 0, notas: '',
     inversion: '', meta: '', cuando: '', instagram: '', origen: 'Calendly (sin formulario)', aviso: '—',
     cualifica: 'No', autoagenda: '', rellamar: '', rellamarAviso: '', asignado: '', embudo: '',
+    setter: '', agendadoEl: '',
   };
   const fila = new Array(CABECERA.length).fill('');
   Object.keys(COL).forEach(k => { fila[COL[k] - 1] = celda(lead[k]); });
@@ -364,6 +374,8 @@ function filaALead(f) {
     rellamar: v('rellamar') instanceof Date ? v('rellamar').toISOString() : '',
     asignado: v('asignado') instanceof Date ? v('asignado').toISOString() : '',
     embudo: String(v('embudo') || ''),
+    setter: String(v('setter') || ''),
+    agendadoEl: v('agendadoEl') instanceof Date ? v('agendadoEl').toISOString() : '',
   };
 }
 
@@ -454,6 +466,178 @@ function activarSetting(b, u) {
   hoja(HOJA_AJUSTES).getRange(p.fila, 3).setValue(!!b.on);
   SpreadsheetApp.flush();
   return { ok: true, nombre: p.nombre, on: !!b.on };
+}
+
+// =====================================================================
+// Instagram (DMs de @aleix.ytf): la función de Vercel /api/ig recibe los avisos de Meta y los reenvía aquí.
+//  - Cada setter se reconoce por su palabra clave o por su enlace (systemacademy.es/a/<código> y /b/<código>).
+//    Tabla en Ajustes → I: nombre (igual que en la columna A, o «Mario» para el maestro), J: palabra clave, K: código del enlace.
+//  - Propuesta de llamada: frases de Ajustes → G11 (separadas por comas).
+//  - Pestaña "Instagram": una fila por conversación.
+// =====================================================================
+const IG = {
+  igsid: 1, usuario: 2, nombre: 3, setter: 4, inicio: 5, asignado: 6, respondio: 7, propuesta: 8,
+  enlaceAgenda: 9, enlaceBiblio: 10, recurso: 11, ultimoOut: 12, ultimoIn: 13, visto: 14,
+  followups: 15, ultimoFollow: 16, ultimo: 17,
+};
+const IG_CABECERA = ['ID Instagram', 'Usuario', 'Nombre', 'Setter', 'Primer mensaje', 'Setter desde', 'Respondió al setter',
+  'Propuesta de llamada', 'Enlace de agenda', 'Enlace de biblioteca', 'Recurso automático', 'Último mensaje nuestro',
+  'Último mensaje suyo', 'Visto', 'Follow-ups', 'Último follow-up', 'Último mensaje'];
+const FRASES_DEF = 'llamada con mi socio, socio de admisiones, tener una llamada, hacer una llamada, una llamadita';
+const FOLLOW_MIN = 120;     // un mensaje nuestro cuenta como follow-up si van 2 h sin respuesta desde el anterior
+
+const sinTildes = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const slugDe = t => sinTildes(t).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+function setters() {
+  const aj = hoja(HOJA_AJUSTES);
+  const n = aj.getLastRow() - 1;
+  if (n < 1) return [];
+  return aj.getRange(2, 9, n, 3).getDisplayValues()
+    .map(r => ({ nombre: String(r[0]).trim(), clave: String(r[1]).trim(), slug: slugDe(r[2] || r[0]) }))
+    .filter(x => x.nombre);
+}
+function setterDeSlug(v) {
+  const s = slugDe(v);
+  if (!s) return '';
+  const x = setters().find(y => y.slug === s);
+  return x ? x.nombre : '';
+}
+function paramDe(qs, k) {
+  const m = String(qs || '').match(new RegExp('(?:^|[?&])' + k + '=([^&]*)'));
+  try { return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; }
+}
+
+// Quién ha escrito el mensaje: su palabra clave o su enlace
+function setterEnTexto(texto, lista) {
+  const t = sinTildes(texto);
+  const l = t.match(/systemacademy\.es\/[ab]\/([a-z0-9-]+)/);
+  if (l) { const x = lista.find(y => y.slug === l[1]); if (x) return x.nombre; }
+  const x = lista.find(y => y.clave && new RegExp('(^|[^a-z0-9])' + sinTildes(y.clave).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9])').test(t));
+  return x ? x.nombre : '';
+}
+function esPropuesta(texto) {
+  const t = sinTildes(texto);
+  const fr = String(hoja(HOJA_AJUSTES).getRange(AJ.igFrases).getDisplayValue() || FRASES_DEF).split(',').map(x => sinTildes(x).trim()).filter(Boolean);
+  return fr.some(f => t.indexOf(f) >= 0);
+}
+const esEnlaceAgenda = t => /systemacademy\.es\/(a\/|agendar)|calendly\.com/i.test(t);
+const esEnlaceBiblio = t => /systemacademy\.es\/b\//i.test(t);
+const esRecurso = t => /systemacademy\.es/i.test(t) && !esEnlaceAgenda(t) && !esEnlaceBiblio(t);
+
+function hojaIg() {
+  const ss = SpreadsheetApp.getActive();
+  let sh = ss.getSheetByName(HOJA_IG);
+  if (!sh) {
+    sh = ss.insertSheet(HOJA_IG);
+    sh.getRange(1, 1, 1, IG_CABECERA.length).setValues([IG_CABECERA]);
+    estiloCabecera(sh.getRange(1, 1, 1, IG_CABECERA.length));
+    sh.setFrozenRows(1);
+    sh.getRange('A2:A').setNumberFormat('@');
+  }
+  return sh;
+}
+
+// b = { action: 'ig', clave, eventos: [{ t: 'out'|'in'|'seen', u: IGSID, ts: ms, txt, mid }] }
+function eventosInstagram(b) {
+  const clave = String(hoja(HOJA_AJUSTES).getRange(AJ.igClave).getDisplayValue()).trim();
+  if (clave.length < 16 || String(b.clave || '') !== clave) throw new Error('Clave de Instagram incorrecta');
+  const evs = (Array.isArray(b.eventos) ? b.eventos : []).slice(0, 200)
+    .filter(e => e && /^(out|in|seen)$/.test(e.t) && /^\d{5,25}$/.test(String(e.u)) && Number(e.ts) > 0)
+    .sort((x, y) => x.ts - y.ts);
+  if (!evs.length) return { ok: true, n: 0 };
+  const cache = CacheService.getScriptCache();
+  const lista = setters();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  let n = 0;
+  try {
+    const sh = hojaIg();
+    const filas = {};      // igsid → { fila, f }
+    evs.forEach(e => {
+      if (e.mid) { const k = 'mid_' + String(e.mid).slice(-60); if (cache.get(k)) return; cache.put(k, '1', 21600); }
+      const u = String(e.u);
+      let c = filas[u];
+      if (!c) {
+        const m = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 1).createTextFinder(u).matchEntireCell(true).findNext() : null;
+        c = filas[u] = m ? { fila: m.getRow(), f: sh.getRange(m.getRow(), 1, 1, IG_CABECERA.length).getValues()[0] }
+          : { fila: 0, f: new Array(IG_CABECERA.length).fill('') };
+        if (!m) { c.f[IG.igsid - 1] = u; c.f[IG.inicio - 1] = new Date(Number(e.ts)); c.f[IG.followups - 1] = 0; }
+      }
+      aplicarEvento(c.f, e, lista);
+      n++;
+    });
+    Object.keys(filas).forEach(u => {
+      const c = filas[u];
+      if (!c.f[IG.usuario - 1]) perfilIg(c.f, cache);
+      const fila = c.fila || Math.max(sh.getLastRow(), 1) + 1;
+      sh.getRange(fila, 1, 1, IG_CABECERA.length).setValues([c.f.map(celda)]);
+    });
+    SpreadsheetApp.flush();
+  } finally {
+    lock.releaseLock();
+  }
+  return { ok: true, n: n };
+}
+
+function aplicarEvento(f, e, lista) {
+  const v = k => f[IG[k] - 1], set = (k, x) => { f[IG[k] - 1] = x; };
+  const ts = new Date(Number(e.ts));
+  const txt = String(e.txt || '').slice(0, 1000);
+  const t = x => (x instanceof Date ? x.getTime() : 0);
+  if (e.t === 'seen') { if (ts > t(v('visto'))) set('visto', ts); return; }
+  if (e.t === 'in') {
+    set('ultimoIn', ts);
+    if (v('setter') && v('asignado') && !v('respondio') && ts >= v('asignado')) set('respondio', ts);
+    set('ultimo', '👤 ' + (txt || '[adjunto]').slice(0, 120));
+    return;
+  }
+  // mensaje nuestro (escrito en la app de Instagram, por ManyChat…)
+  const st = setterEnTexto(txt, lista);
+  if (st) { if (!v('asignado')) set('asignado', ts); set('setter', st); }
+  let marca = false;
+  if (txt && esPropuesta(txt) && !v('propuesta')) { set('propuesta', ts); marca = true; }
+  if (txt && esEnlaceAgenda(txt) && !v('enlaceAgenda')) { set('enlaceAgenda', ts); marca = true; }
+  if (txt && esEnlaceBiblio(txt) && !v('enlaceBiblio')) { set('enlaceBiblio', ts); marca = true; }
+  if (txt && esRecurso(txt) && !v('recurso')) set('recurso', ts);
+  // follow-up: ya se le había propuesto algo, no ha contestado y han pasado 2 h desde nuestro último mensaje
+  const sinRespuesta = t(v('ultimoOut')) > t(v('ultimoIn'));
+  if (!marca && (v('propuesta') || v('enlaceAgenda') || v('enlaceBiblio')) && sinRespuesta && ts - t(v('ultimoOut')) >= FOLLOW_MIN * 60000) {
+    set('followups', (Number(v('followups')) || 0) + 1);
+    set('ultimoFollow', ts);
+  }
+  set('ultimoOut', ts);
+  set('ultimo', '💬 ' + (txt || '[adjunto]').slice(0, 120));
+}
+
+// @usuario y nombre (con el token de Ajustes → G10). Si falla, se reintenta como mucho una vez por hora.
+function perfilIg(f, cache) {
+  const token = String(hoja(HOJA_AJUSTES).getRange(AJ.igToken).getDisplayValue()).trim();
+  const id = String(f[IG.igsid - 1]);
+  if (token.length < 20 || cache.get('perfil_' + id)) return;
+  cache.put('perfil_' + id, '1', 3600);
+  try {
+    const r = UrlFetchApp.fetch('https://graph.instagram.com/v21.0/' + id + '?fields=name,username&access_token=' + encodeURIComponent(token), { muteHttpExceptions: true });
+    if (r.getResponseCode() !== 200) { console.error('Instagram perfil ' + r.getResponseCode() + ': ' + r.getContentText().slice(0, 200)); return; }
+    const j = JSON.parse(r.getContentText());
+    f[IG.usuario - 1] = limpio(j.username, 60);
+    f[IG.nombre - 1] = limpio(j.name, 80);
+  } catch (err) { console.error('Instagram perfil: ' + err); }
+}
+
+// Para el dashboard: solo las conversaciones con setter, propuesta o enlace (las de ManyChat solas no)
+function listarIg() {
+  const ss = SpreadsheetApp.getActive();
+  const sh = ss.getSheetByName(HOJA_IG);
+  if (!sh || sh.getLastRow() < 2) return [];
+  const iso = x => x instanceof Date ? x.toISOString() : '';
+  return sh.getRange(2, 1, sh.getLastRow() - 1, IG_CABECERA.length).getValues()
+    .filter(f => f[0] && (f[IG.setter - 1] || f[IG.propuesta - 1] || f[IG.enlaceAgenda - 1] || f[IG.enlaceBiblio - 1]))
+    .map(f => {
+      const o = {};
+      Object.keys(IG).forEach(k => { const x = f[IG[k] - 1]; o[k] = x instanceof Date ? iso(x) : k === 'followups' ? Number(x) || 0 : String(x); });
+      return o;
+    });
 }
 
 // =====================================================================
@@ -699,10 +883,24 @@ function configurar() {
     aj.getRange('G8').setNumberFormat('@');
     aj.getRange('F7:G8').setValues([['Acceso maestro: nombre (solo tú, ve los KPIs de todos)', 'Mario'], ['Acceso maestro: PIN', pinAleatorio()]]);
   }
+  if (!aj.getRange('F9').getValue()) {
+    aj.getRange('F9:G11').setValues([
+      ['Instagram: clave (la misma que IG_CRM_KEY en Vercel)', Utilities.getUuid().replace(/-/g, '')],
+      ['Instagram: token (para ver @usuario y nombre)', ''],
+      ['Instagram: frases de propuesta de llamada (separadas por comas)', FRASES_DEF],
+    ]);
+  }
+  if (!aj.getRange('I1').getValue()) {
+    aj.getRange('I1:K1').setValues([['Setter (nombre del CRM)', 'Palabra clave en sus mensajes', 'Código de su enlace']]);
+    aj.getRange('I2:K2').setValues([['Mario.e', '', 'mario']]);
+  }
+  estiloCabecera(aj.getRange('I1:K1'));
+  aj.setColumnWidth(8, 30); aj.setColumnWidth(9, 180); aj.setColumnWidth(10, 220); aj.setColumnWidth(11, 170);
   aj.setColumnWidth(4, 170); aj.setColumnWidth(5, 30); aj.setColumnWidth(6, 260); aj.setColumnWidth(7, 420);
   aj.setFrozenRows(1);
 
   hojaSetting();
+  hojaIg();
 
   // ---- Leads ----
   let sh = ss.getSheetByName(HOJA_LEADS);
@@ -720,6 +918,7 @@ function configurar() {
   sh.getRange('A2:A').setNumberFormat('dd/mm/yyyy HH:mm');
   sh.getRange(2, COL.rellamar, sh.getMaxRows() - 1, 1).setNumberFormat('dd/mm HH:mm');
   sh.getRange(2, COL.asignado, sh.getMaxRows() - 1, 1).setNumberFormat('dd/mm/yyyy HH:mm');
+  sh.getRange(2, COL.agendadoEl, sh.getMaxRows() - 1, 1).setNumberFormat('dd/mm/yyyy HH:mm');
   sh.getRange('C2:C').setNumberFormat('@');
   sh.getRange('I2:J').setHorizontalAlignment('center');
   sh.getRange('K2:K').setWrap(true);

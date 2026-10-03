@@ -296,10 +296,46 @@ em { font-style: italic; font-weight: 500; }
 .s-step .f-bar { grid-column: 1 / -1; height: 10px; }
 .s-top { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+/* ----- Instagram ----- */
+#vIg .toolbar { margin-top: 14px; }
+#igSetter { height: 38px; padding: 0 34px 0 14px; border-radius: 999px; border: 1px solid var(--hair); font-size: 13px; appearance: none; cursor: pointer;
+  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23111' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") right 13px center no-repeat; }
+.ig-links h3 { margin-bottom: 10px; }
+.ig-set { display: grid; grid-template-columns: 140px 1fr 1fr; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid #ececec; }
+.ig-set:first-of-type { border-top: 0; }
+.ig-set b { font-weight: 600; }
+.ig-set small { display: block; color: var(--muted); font-size: 12px; }
+.ig-copy { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 40px; padding: 0 6px 0 14px; border-radius: 12px; background: var(--white); border: 1px solid var(--hair); font-size: 13px; min-width: 0; }
+.ig-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ig-copy button { height: 30px; padding: 0 12px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12px; flex: none; }
+.ig-list { display: grid; gap: 10px; margin-top: 14px; }
+.ig-card { background: var(--card); border-radius: 18px; padding: 16px 18px; box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 16px 32px -28px rgba(0,0,0,.4);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; align-items: start; }
+.ig-card.toca { box-shadow: inset 3px 0 0 #e6b422, 0 0 0 1px rgba(0,0,0,.04); }
+.ig-who b { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.ig-who span { color: var(--muted); font-size: 13px; margin-left: 6px; }
+.ig-who .tag { margin-top: 0; vertical-align: middle; margin-left: 6px; }
+.ig-pasos { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.ig-pasos span { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--white); border: 1px solid var(--hair); color: var(--ink-2); }
+.ig-pasos span.no { color: #aaa; border-style: dashed; }
+.ig-last { grid-column: 1 / -1; font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ig-last small { color: var(--muted); margin-left: 6px; }
+.ig-open { height: 36px; padding: 0 14px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; white-space: nowrap; }
+.st { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.st.toca { background: #fff1c2; color: #6b4e00; }
+.st.visto { background: #f8d0cb; color: #a52714; }
+.st.espera { background: #ececec; color: #444; }
+.st.agendo { background: #2f6b4f; color: #e2f4e6; }
+.st.biblio { background: #e8eef9; color: #1b4f8a; }
+.s-counter .auto { font-size: 11.5px; color: #1f6f43; font-weight: 600; }
+
 @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 760px) {
   .nav { padding: 0 16px; }
-  .tabs button { padding: 0 10px; font-size: 12.5px; }
+  .tabs { min-width: 0; flex: 0 1 auto; overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { padding: 0 9px; font-size: 12px; white-space: nowrap; flex: none; }
+  .nav-right .me { display: none; }
   .live { display: none; }
   .f-row { grid-template-columns: 1fr 44px; gap: 4px 10px; }
   .f-row .f-bar { grid-column: 1 / -1; order: 3; height: 18px; }
@@ -330,6 +366,7 @@ em { font-style: italic; font-weight: 500; }
   .pill { max-width: 100%; width: 100%; }
   .notes textarea { min-width: 0; background: var(--white); border-color: var(--hair); }
   .s-ramas, .s-top { grid-template-columns: 1fr; }
+  .ig-set { grid-template-columns: 1fr; }
   .s-counters { grid-template-columns: 1fr; }
   .leads tr.grupo { display: block; background: none; box-shadow: none; padding: 8px 2px 0; margin-bottom: 8px; }
   .leads tr.grupo td::before { display: none; }

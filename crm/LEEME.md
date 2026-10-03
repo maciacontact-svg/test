@@ -99,6 +99,8 @@ El dashboard vive en la carpeta `crm-app/` y se publica como **otro proyecto de 
   Quien lo tenga activado ve la pestaña **Setting** y apunta cada día: mensajes abiertos, convos seguidas, y en dos secciones **📞 ofertas de llamada → agendas** y **📚 ofertas a biblioteca → entradas a biblioteca**. Puede corregir los últimos 7 días.
   Se guarda en la pestaña **«Setting»** del Sheet (una fila por caller y día). Mario ve el embudo de todo el equipo y la tabla por caller.
 
+- **Instagram** (automático): ver `crm/INSTAGRAM.md`. Pestaña **Instagram** del CRM con cada convo con propuesta o enlace (visto, follow-ups, agendó…) y el Setting se rellena solo; las tarjetas − / + quedan para correcciones.
+
 ## 9. Uso diario del equipo
 
 - Entran en la URL del dashboard con **nombre + PIN** (se queda guardado en su navegador hasta que pulsen «Salir»).

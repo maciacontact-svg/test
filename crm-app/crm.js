@@ -89,6 +89,7 @@ async function cargar() {
     // lo que se está guardando manda sobre lo que llega del servidor
     r.leads.forEach(l => Object.assign(l, pendientes[l.id] || {}));
     r.setting = r.setting || { on: false, dias: [] };
+    r.ig = r.ig || []; r.setters = r.setters || [];
     Object.keys(pendSet).forEach(dia => Object.assign(diaSet(r.setting, dia), pendSet[dia]));
     const nuevos = conocidos ? r.leads.filter(l => !conocidos.has(l.id)) : [];
     conocidos = new Set(r.leads.map(l => l.id));
@@ -100,6 +101,7 @@ async function cargar() {
     if (pestana === 'kpis') pintarKpisVista();
     pintarTabSetting();
     if (pestana === 'setting') pintarSetting();
+    if (pestana === 'ig') pintarIg();
     if (nuevos.length) {
       nuevos.forEach(l => document.querySelector(`tr[data-id="${CSS.escape(l.id)}"]`)?.classList.add('flash'));
       toast(nuevos.length === 1 ? `🔥 Nuevo lead: ${nuevos[0].nombre}` : `🔥 ${nuevos.length} leads nuevos`);
@@ -297,7 +299,9 @@ function fila(l) {
   const id = esc(l.id);
   const e = etapa(l);
   const pf = prefijo(l.telefono);
-  const tags = (pf === '34' ? '<span class="tag es">🇪🇸 España</span>' : `<span class="tag latam" title="Fuera de España">🌎 ${pf ? '+' + pf : 'LATAM'}</span>`) +
+  const tags = (l.setter ? `<span class="tag etapa" title="Entró con el enlace de este setter">📸 ${esc(l.setter)}</span>` : '') +
+    (/manychat/i.test(l.origen) ? '<span class="tag latam">🤖 ManyChat</span>' : '') +
+    (pf === '34' ? '<span class="tag es">🇪🇸 España</span>' : `<span class="tag latam" title="Fuera de España">🌎 ${pf ? '+' + pf : 'LATAM'}</span>`) +
     (l.autoagenda ? '<span class="tag auto">📅 Autoagendado</span>' : '') +
     (buenForm(l) ? '<span class="tag buen">⭐ Buen form</span>' : '') +
     (!l.autoagenda && e === 3 ? '<span class="tag etapa">💬 Conversación</span>' : '') +
@@ -480,15 +484,17 @@ $('tabs').addEventListener('click', e => {
   $('vLeads').hidden = pestana !== 'leads';
   $('vKpis').hidden = pestana !== 'kpis';
   $('vSet').hidden = pestana !== 'setting';
+  $('vIg').hidden = pestana !== 'ig';
   if (pestana === 'kpis') pintarKpisVista();
   if (pestana === 'setting') pintarSetting();
+  if (pestana === 'ig') pintarIg();
 });
 
 // ---------- Setting (mensajes) ----------
 // Mensajes abiertos → convos seguidas → [ofertas de llamada → agendas] y [ofertas a biblioteca → entradas a biblioteca]
 const SET = [
   ['abiertos', 'Mensajes abiertos'], ['convos', 'Convos seguidas'],
-  ['ofertas', 'Ofertas de llamada'], ['agendas', 'Agendas'],
+  ['ofertas', 'Propuestas de llamada'], ['agendas', 'Agendas'],
   ['ofertasBib', 'Ofertas a biblioteca'], ['entradasBib', 'Entradas a biblioteca'],
 ];
 const diaKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -502,9 +508,34 @@ function sumaSet(dias) { const t = cero(); dias.forEach(d => SET.forEach(([k]) =
 
 function pintarTabSetting() {
   const ver = S.rol === 'maestro' || D.setting.on;
+  const verIg = ver || esSetter(S.caller);
   $('tabSet').hidden = !ver;
-  if (!ver && pestana === 'setting') $('tabs').querySelector('[data-t="leads"]').click();
+  $('tabIg').hidden = !verIg;
+  if ((!ver && pestana === 'setting') || (!verIg && pestana === 'ig')) $('tabs').querySelector('[data-t="leads"]').click();
 }
+const mismo = (a, b) => String(a || '').toUpperCase() === String(b || '').toUpperCase();
+const esSetter = n => D.setters.some(x => mismo(x.nombre, n));
+
+// Lo que llega solo (Instagram + enlaces de cada setter), por día, para un setter (o todos si no se indica)
+const diaDe = iso => iso ? diaKey(new Date(iso)) : '';
+function autoSet(nombre, desde) {
+  const t = { ...cero(), enlaces: 0 };
+  const suyo = x => x.setter && (!nombre || mismo(x.setter, nombre));
+  const en = iso => iso && diaDe(iso) >= desde;
+  D.ig.filter(suyo).forEach(c => {
+    if (en(c.asignado)) t.abiertos++;
+    if (en(c.respondio)) t.convos++;
+    if (en(c.propuesta)) t.ofertas++;
+    if (en(c.enlaceAgenda)) t.enlaces++;
+    if (en(c.enlaceBiblio)) t.ofertasBib++;
+  });
+  D.leads.filter(suyo).forEach(l => {
+    if (l.autoagenda && en(l.agendadoEl || l.fecha)) t.agendas++;
+    if (/(^|&)s=/.test(l.origen) && en(l.fecha)) t.entradasBib++;
+  });
+  return t;
+}
+const sumar = (a, b) => { const t = { ...a }; Object.keys(b).forEach(k => { t[k] = (t[k] || 0) + (b[k] || 0); }); return t; };
 
 function pintarSetting() {
   const maestro = S.rol === 'maestro', st = D.setting;
@@ -531,10 +562,12 @@ function pintarSetting() {
       return `<option value="${k}"${k === sDia ? ' selected' : ''}>${t}</option>`;
     }).join('')}</select>`;
     const o = st.dias.find(x => x.dia === sDia && x.caller.toUpperCase() === S.caller.toUpperCase()) || { ...cero() };
+    const au = autoSet(S.caller, sDia), auHasta = autoSet(S.caller, diaKey(new Date(new Date(sDia).getTime() + 864e5 * 1.5)));
+    Object.keys(au).forEach(k => { au[k] -= auHasta[k]; });   // solo ese día
     const escribiendo = $('sCounters').contains(document.activeElement);
     if (!escribiendo) $('sCounters').innerHTML = SET.map(([k, label], i) => `
       <div class="s-counter${i < 2 ? ' full' : ''}" data-k="${k}">
-        <small>${i < 2 ? '' : i < 4 ? '📞 ' : '📚 '}<b>${label}</b></small>
+        <small>${i < 2 ? '' : i < 4 ? '📞 ' : '📚 '}<b>${label}</b> · <span class="auto">automático: ${au[k]}</span></small>
         <input type="number" inputmode="numeric" min="0" max="9999" value="${o[k] || 0}" aria-label="${label}">
         <div class="step"><button type="button" data-d="-1" aria-label="Menos">−</button><button type="button" data-d="1" aria-label="Más">+</button></div>
       </div>`).join('');
@@ -542,7 +575,7 @@ function pintarSetting() {
 
   // Embudo del periodo
   const mias = st.dias.filter(d => d.dia >= desde && (maestro ? (!sSel || d.caller === sSel) : d.caller.toUpperCase() === S.caller.toUpperCase()));
-  const t = sumaSet(mias);
+  const t = sumar(sumaSet(mias), autoSet(maestro ? sSel : S.caller, desde));
   $('sFunnelTitle').textContent = maestro ? `Embudo de setting · ${sSel || 'todo el equipo'}` : 'Tu embudo de setting';
   const paso = (label, v, base, txt) => `<div class="s-step"><span>${label}</span><b>${v}</b>
     <span class="f-bar"><i style="width:${base ? Math.min(100, v / base * 100) : 0}%"></i></span><small>${txt}</small></div>`;
@@ -553,8 +586,9 @@ function pintarSetting() {
     </div>
     <div class="s-ramas">
       <div class="s-rama"><h4>📞 Llamada</h4>
-        ${paso('Ofertas de llamada', t.ofertas, t.convos, `${pct(t.ofertas, t.convos)} % de las convos`)}
-        ${paso('Agendas', t.agendas, t.ofertas, `${pct(t.agendas, t.ofertas)} % de las ofertas · ${pct(t.agendas, t.abiertos)} % de los abiertos`)}</div>
+        ${paso('Propuestas de llamada', t.ofertas, t.convos, `${pct(t.ofertas, t.convos)} % de las convos`)}
+        ${paso('Enlaces de agenda', t.enlaces, t.ofertas, `${pct(t.enlaces, t.ofertas)} % de las propuestas`)}
+        ${paso('Agendas', t.agendas, t.ofertas, `${pct(t.agendas, t.ofertas)} % de las propuestas · ${pct(t.agendas, t.abiertos)} % de los abiertos`)}</div>
       <div class="s-rama"><h4>📚 Biblioteca</h4>
         ${paso('Ofertas a biblioteca', t.ofertasBib, t.convos, `${pct(t.ofertasBib, t.convos)} % de las convos`)}
         ${paso('Entradas a biblioteca', t.entradasBib, t.ofertasBib, `${pct(t.entradasBib, t.ofertasBib)} % de las ofertas a biblioteca`)}</div>
@@ -563,12 +597,12 @@ function pintarSetting() {
   // Maestro: tabla por caller
   $('sRankCard').hidden = !maestro;
   if (maestro) {
-    const nombres = [...new Set([...(st.callers || []).filter(c => c.on).map(c => c.nombre), ...st.dias.filter(d => d.dia >= desde).map(d => d.caller)])];
-    const filas = nombres.map(n => ({ n, t: sumaSet(st.dias.filter(d => d.dia >= desde && d.caller === n)) })).sort((a, b) => b.t.agendas - a.t.agendas || b.t.entradasBib - a.t.entradasBib);
-    const eq = sumaSet(st.dias.filter(d => d.dia >= desde));
+    const nombres = [...new Set([...(st.callers || []).filter(c => c.on).map(c => c.nombre), ...D.setters.map(x => x.nombre), ...st.dias.filter(d => d.dia >= desde).map(d => d.caller)])];
+    const filas = nombres.map(n => ({ n, t: sumar(sumaSet(st.dias.filter(d => d.dia >= desde && d.caller === n)), autoSet(n, desde)) })).sort((a, b) => b.t.agendas - a.t.agendas || b.t.entradasBib - a.t.entradasBib);
+    const eq = sumar(sumaSet(st.dias.filter(d => d.dia >= desde)), autoSet('', desde));
     const celdas = x => `<td>${x.abiertos}</td><td>${x.convos}</td><td>${x.ofertas}</td><td>${x.agendas}</td><td>${x.ofertasBib}</td><td>${x.entradasBib}</td>
       <td><b>${pct(x.convos, x.abiertos)} %</b></td><td><b>${pct(x.agendas, x.ofertas)} %</b></td><td><b>${pct(x.entradasBib, x.ofertasBib)} %</b></td>`;
-    $('sRank').innerHTML = `<thead><tr><th>Caller</th><th>Abiertos</th><th>Convos</th><th>Ofertas llamada</th><th>Agendas</th><th>Ofertas biblio.</th><th>Entradas biblio.</th><th>% convo</th><th>% agenda</th><th>% biblio.</th></tr></thead><tbody>` +
+    $('sRank').innerHTML = `<thead><tr><th>Caller</th><th>Abiertos</th><th>Convos</th><th>Propuestas</th><th>Agendas</th><th>Ofertas biblio.</th><th>Entradas biblio.</th><th>% convo</th><th>% agenda</th><th>% biblio.</th></tr></thead><tbody>` +
       filas.map(f => `<tr data-c="${esc(f.n)}" class="${f.n === sSel ? 'on' : ''}"><td><b>${esc(f.n)}</b></td>${celdas(f.t)}</tr>`).join('') +
       `<tr class="tot" data-c=""><td>Equipo</td>${celdas(eq)}</tr></tbody>`;
   }
@@ -620,6 +654,79 @@ $('sToggles').addEventListener('click', async e => {
     await api('settingOn', { para: c.nombre, on: c.on });
     toast(`Setting ${c.on ? 'activado' : 'desactivado'} para ${c.nombre}`);
   } catch (err) { c.on = !c.on; pintarSetting(); toast('No se ha guardado: ' + err.message, true); }
+});
+
+// ---------- Instagram (seguimiento de DMs) ----------
+let igVista = 'todas', igQ = '', igSetter = null;
+const ms = iso => iso ? new Date(iso).getTime() : 0;
+const igNorm = u => String(u || '').trim().replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/.*$/, '').toLowerCase();
+function igEstado(c, lead) {
+  if (lead && lead.autoagenda) return { k: 'agendo', t: '✅ Agendó' };
+  if (ms(c.ultimoIn) > ms(c.ultimoOut)) return { k: 'toca', t: `🔥 Te ha respondido · ${hace(c.ultimoIn)}` };
+  if (ms(c.visto) >= ms(c.ultimoOut) && c.ultimoOut) return { k: 'visto', t: `👀 Visto sin responder · ${hace(c.ultimoOut)}` };
+  return { k: 'espera', t: `📭 Sin ver · ${hace(c.ultimoOut)}` };
+}
+function igDatos() {
+  const porIg = {};
+  D.leads.forEach(l => { const u = igNorm(l.instagram); if (u) porIg[u] = l; });
+  return D.ig.map(c => {
+    const lead = porIg[igNorm(c.usuario)];
+    const e = igEstado(c, lead);
+    const follow = (e.k === 'visto' || e.k === 'espera') && Date.now() - ms(c.ultimoOut) > 24 * 3600e3;
+    return { c, lead, e, follow, act: Math.max(ms(c.ultimoIn), ms(c.ultimoOut)) };
+  });
+}
+function pintarIg() {
+  const maestro = S.rol === 'maestro';
+  if (igSetter === null) igSetter = !maestro && esSetter(S.caller) ? D.setters.find(x => mismo(x.nombre, S.caller)).nombre : '';
+  // enlaces y palabra clave
+  const yo = D.setters.filter(x => maestro || mismo(x.nombre, S.caller));
+  const base = 'systemacademy.es';
+  const copia = url => `<span class="ig-copy"><span>${esc(url)}</span><button type="button" data-copy="https://${esc(url)}">Copiar</button></span>`;
+  $('igLinks').innerHTML = `<h3>${maestro ? 'Enlaces y palabras clave de cada setter' : 'Tus enlaces y tu palabra clave'}</h3>` + (yo.length ? yo.map(x => `
+    <div class="ig-set"><div><b>${esc(x.nombre)}</b><small>Palabra clave: ${x.clave ? `«${esc(x.clave)}»` : '— (ponla en Ajustes, columna J)'}</small></div>
+      <div><small>📅 Agenda</small>${copia(`${base}/a/${x.slug}`)}</div><div><small>📚 Biblioteca</small>${copia(`${base}/b/${x.slug}`)}</div></div>`).join('')
+    : '<p class="k-note">Aún no tienes enlace: pídele a Mario que te añada en Ajustes (columnas I–K).</p>');
+  // filtro de setter
+  const sel = $('igSetter');
+  sel.innerHTML = '<option value="">Todos los setters</option><option value="__sin">Sin setter</option>' + D.setters.map(x => `<option${x.nombre === igSetter ? ' selected' : ''}>${esc(x.nombre)}</option>`).join('');
+  sel.value = igSetter;
+
+  const n = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const qq = n(igQ);
+  const todos = igDatos().filter(x => !igSetter || (igSetter === '__sin' ? !x.c.setter : mismo(x.c.setter, igSetter)));
+  $('nToca').textContent = todos.filter(x => x.e.k === 'toca').length || '';
+  $('nFollow').textContent = todos.filter(x => x.follow).length || '';
+  const ls = todos
+    .filter(x => igVista === 'todas' || (igVista === 'follow' ? x.follow : igVista === 'enlace' ? x.c.enlaceAgenda && x.e.k !== 'agendo' : x.e.k === igVista))
+    .filter(x => !qq || n([x.c.usuario, x.c.nombre, x.lead && x.lead.nombre].join(' ')).includes(qq))
+    .sort((a, b) => igVista === 'follow' ? ms(a.c.ultimoOut) - ms(b.c.ultimoOut) : b.act - a.act);
+  const paso = (iso, txt) => iso ? `<span title="${fecha(iso)}">${txt} · ${hace(iso)}</span>` : `<span class="no">${txt}</span>`;
+  $('igList').innerHTML = ls.map(({ c, lead, e }) => {
+    const u = igNorm(c.usuario);
+    return `<article class="ig-card ${e.k}">
+      <div class="ig-who"><b>${u ? '@' + esc(u) : 'Sin usuario'}</b><span>${esc(c.nombre)}</span>${c.setter ? `<span class="tag etapa">${esc(c.setter)}</span>` : ''}
+        <div style="margin-top:6px"><span class="st ${e.k}">${e.t}</span>${lead && !lead.autoagenda ? ' <span class="st biblio">📚 En la biblioteca</span>' : ''}</div></div>
+      <a class="ig-open" href="${u ? 'https://ig.me/m/' + encodeURIComponent(u) : 'https://www.instagram.com/direct/inbox/'}" target="_blank" rel="noopener">Abrir chat</a>
+      <div class="ig-pasos">${paso(c.propuesta, '📞 Propuesta')}${paso(c.enlaceAgenda, '📅 Enlace agenda')}${paso(c.enlaceBiblio, '📚 Enlace biblioteca')}
+        <span class="${c.followups ? '' : 'no'}">🔁 ${c.followups} follow-up${c.followups === 1 ? '' : 's'}${c.ultimoFollow ? ' · último ' + hace(c.ultimoFollow) : ''}</span></div>
+      <div class="ig-last">${esc(c.ultimo)}<small>${hace(Math.max(ms(c.ultimoIn), ms(c.ultimoOut)) ? new Date(Math.max(ms(c.ultimoIn), ms(c.ultimoOut))).toISOString() : '')}</small></div>
+    </article>`;
+  }).join('');
+  $('igEmpty').hidden = ls.length > 0;
+  $('igEmpty').textContent = D.ig.length ? 'No hay conversaciones que coincidan.' : 'Aún no ha llegado ninguna conversación de Instagram (ver crm/INSTAGRAM.md para conectarlo).';
+}
+$('igViews').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  igVista = b.dataset.v;
+  $('igViews').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  pintarIg();
+});
+$('igQ').addEventListener('input', e => { igQ = e.target.value.trim(); pintarIg(); });
+$('igSetter').addEventListener('change', e => { igSetter = e.target.value; pintarIg(); });
+$('igLinks').addEventListener('click', async e => {
+  const b = e.target.closest('[data-copy]'); if (!b) return;
+  try { await navigator.clipboard.writeText(b.dataset.copy); toast('Enlace copiado'); } catch (err) { toast(b.dataset.copy); }
 });
 
 // ---------- Eventos de la tabla ----------
@@ -738,6 +845,18 @@ function demoApi(action, extra) {
     window.__demo.setting = { callers: [{ nombre: 'Mario.e', on: true }], dias: [
       [0, 18, 9, 3, 1, 4, 2], [1, 32, 14, 5, 2, 6, 3], [2, 25, 11, 4, 1, 5, 3], [4, 40, 17, 6, 3, 7, 4],
     ].map(r => ({ dia: d(r[0]), caller: 'Mario.e', abiertos: r[1], convos: r[2], ofertas: r[3], agendas: r[4], ofertasBib: r[5], entradasBib: r[6] })) };
+  }
+  if (!window.__demo.ig) {
+    const h = x => new Date(Date.now() - x * 3600e3).toISOString();
+    window.__demo.setters = [{ nombre: 'Mario.e', clave: 'Mario', slug: 'mario' }];
+    window.__demo.leads[0].instagram = '@laura.gz';
+    window.__demo.leads[3].instagram = 'alainmartin'; window.__demo.leads[3].setter = 'Mario.e'; window.__demo.leads[3].agendadoEl = h(2);
+    window.__demo.ig = [
+      { igsid: '1', usuario: 'laura.gz', nombre: 'Laura Gómez', setter: 'Mario.e', asignado: h(30), respondio: h(29), propuesta: h(26), enlaceAgenda: '', enlaceBiblio: h(26), ultimoOut: h(26), ultimoIn: h(0.2), visto: h(0.2), followups: 0, ultimoFollow: '', ultimo: '👤 Vale, ya he entrado. ¿Y la llamada cuándo sería?' },
+      { igsid: '2', usuario: 'ivan_c.yt', nombre: 'Iván', setter: 'Mario.e', asignado: h(50), respondio: h(49), propuesta: h(47), enlaceAgenda: h(46), enlaceBiblio: '', ultimoOut: h(30), ultimoIn: h(46), visto: h(29), followups: 1, ultimoFollow: h(30), ultimo: '💬 ¿Has podido agendar la llamada? Te dejo el enlace otra vez' },
+      { igsid: '3', usuario: 'carla.faceless', nombre: 'Carla', setter: 'Mario.e', asignado: h(6), respondio: h(5), propuesta: h(4), enlaceAgenda: '', enlaceBiblio: '', ultimoOut: h(4), ultimoIn: h(5), visto: '', followups: 0, ultimoFollow: '', ultimo: '💬 Mario por aquí 🙌 ¿Te parecería bien tener una llamada con mi socio de admisiones?' },
+      { igsid: '4', usuario: 'alainmartin', nombre: 'Alain Martin', setter: 'Mario.e', asignado: h(20), respondio: h(19), propuesta: h(18), enlaceAgenda: h(17), enlaceBiblio: '', ultimoOut: h(17), ultimoIn: h(3), visto: h(3), followups: 0, ultimoFollow: '', ultimo: '👤 Hecho, el jueves a las 18:00' },
+    ];
   }
   const db = window.__demo;
   const esMaestro = /^mario$/i.test(S.caller || '');
