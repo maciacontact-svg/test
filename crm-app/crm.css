@@ -126,6 +126,14 @@ em { font-style: italic; font-weight: 500; }
 .tag { display: inline-block; margin-top: 5px; margin-right: 4px; font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
 .tag.buen { background: #fff1c2; color: #6b4e00; }
 .tag.auto { background: #2f6b4f; color: #e2f4e6; }
+.tag.es { background: #fde7e3; color: #8a1f12; }
+.tag.latam { background: #ececec; color: #555; }
+.chips button.prio { border-color: #111; }
+/* Vista «Prioridad»: separador de cada grupo */
+.leads tr.grupo td { background: #f3f3f3 !important; padding: 14px 10px 8px; font-weight: 600; font-size: 13px; position: static; box-shadow: none; }
+.leads tr.grupo td b { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 8px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 11.5px; }
+.leads tr.grupo.g3 td b, .leads tr.grupo.g4 td b { background: #888; }
+.leads tr.grupo td small { margin-left: 6px; color: var(--muted); font-weight: 500; }
 .leads tr.buen td:first-child { box-shadow: inset 3px 0 0 #e6b422; }
 .pill.locked { display: inline-flex; align-items: center; cursor: not-allowed; padding: 0 8px; font-size: 10.5px; letter-spacing: 0; background-image: none; background-color: #2f6b4f; color: #e2f4e6; }
 .phone { white-space: nowrap; }
@@ -292,6 +300,8 @@ em { font-style: italic; font-weight: 500; }
   .mail a { white-space: normal; }
   .pill { max-width: 100%; width: 100%; }
   .notes textarea { min-width: 0; background: var(--white); border-color: var(--hair); }
+  .leads tr.grupo { display: block; background: none; box-shadow: none; padding: 8px 2px 0; margin-bottom: 8px; }
+  .leads tr.grupo td::before { display: none; }
 }
 
 /* ----- App instalada (iPhone / Android): notch, barra de inicio y aviso de instalación ----- */

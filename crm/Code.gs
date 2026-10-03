@@ -584,7 +584,7 @@ function configurar() {
   aj.getRange('B:B').setNumberFormat('@');
   if (!aj.getRange('A1').getValue()) {
     aj.getRange('A1:B1').setValues([['Caller', 'PIN (para entrar al dashboard)']]);
-    aj.getRange('A2:B3').setValues([['DAVID', pinAleatorio()], ['MARIO', pinAleatorio()]]);
+    aj.getRange('A2:B2').setValues([['MARIO', pinAleatorio()]]);
     aj.getRange('D1').setValue('Estados');
     aj.getRange(2, 4, ESTADOS.length, 1).setValues(ESTADOS.map(e => [e]));
     aj.getRange('F1:G1').setValues([['Ajuste', 'Valor']]);

@@ -28,7 +28,7 @@ Formulario de la web ──► Google Sheet (solo tú) ──► Dashboard del e
 
 | Qué | Dónde | Notas |
 |---|---|---|
-| **Callers y su PIN** | Columnas A y B | Añade o quita filas cuando quieras. El desplegable de «Caller» y el acceso al dashboard se actualizan solos. Ya vienen DAVID y MARIO con un PIN aleatorio: cámbialo y pásaselo a cada uno. |
+| **Callers y su PIN** | Columnas A y B | Añade o quita filas cuando quieras. El desplegable de «Caller» y el acceso al dashboard se actualizan solos. Ya viene MARIO con un PIN aleatorio: cámbialo y pásaselo a cada uno. |
 | **Estados** | Columna D | Contactado, Volver a llamar, Seguimiento, Perdido, Nutricion, Agendado, Invalid. Puedes añadir más. |
 | **Webhook de Slack** | G2 | Paso 3. |
 | **URL del dashboard** | G3 | la URL del dashboard, por ejemplo `https://crm-system-academy.vercel.app` (añade un botón «Abrir CRM» en Slack). |

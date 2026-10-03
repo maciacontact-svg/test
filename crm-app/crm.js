@@ -164,6 +164,26 @@ function chipRellamar(l) {
 // "Buen form no agendado": cualificó en el formulario, no reservó en Calendly y aún no está cerrado → prioridad
 const buenForm = l => l.cualifica && !l.autoagenda && !['Agendado', 'Perdido', 'Invalid'].includes(l.estado);
 
+// ---------- España / LATAM ----------
+// España: +34 / 0034, o 9 cifras sin prefijo que empiezan por 6, 7 (móvil) o 9 (fijo). El resto (+52, +57…) = LATAM/otros.
+const PREFIJOS = ['1', '51', '52', '53', '54', '55', '56', '57', '58', '591', '593', '595', '598', '502', '503', '504', '505', '506', '507', '509',
+  '351', '33', '39', '44', '49', '41', '32', '31', '212', '240'];
+function prefijo(t) {
+  const raw = String(t || '').trim();
+  let d = raw.replace(/\D/g, '');
+  const intl = raw.startsWith('+') || d.startsWith('00');
+  if (d.startsWith('00')) d = d.slice(2);
+  if (!intl && d.length === 9 && /^[679]/.test(d)) return '34';
+  if (/^34[679]\d{8}$/.test(d)) return '34';
+  if (!intl) return '';
+  return PREFIJOS.filter(p => d.startsWith(p)).sort((x, y) => y.length - x.length)[0] || '';
+}
+const espana = l => prefijo(l.telefono) === '34';
+// Orden para llamar: 1 España + buen form · 2 España · 3 LATAM + buen form · 4 LATAM resto
+const PRIOS = ['', '🇪🇸 España · buen form', '🇪🇸 España', '🌎 LATAM · buen form', '🌎 LATAM'];
+const prioridad = l => (espana(l) ? 1 : 3) + (l.cualifica ? 0 : 1);
+const cerrado = l => l.autoagenda || ['Agendado', 'Perdido', 'Invalid'].includes(l.estado);
+
 // Aviso de "llámale ya": cuenta atrás de los minutos configurados y luego "tarde"
 function urgencia(l) {
   const rl = chipRellamar(l);
@@ -185,6 +205,8 @@ function filtrados() {
   return D.leads
     .filter(l => vista !== 'buen' || buenForm(l))
     .filter(l => vista !== 'rellamar' || l.rellamar)
+    .filter(l => vista !== 'prio' || !cerrado(l))
+    .filter(l => vista !== 'espana' || espana(l))
     .filter(l => vista !== 'llamar' || (l.contacto !== '✅' && !l.autoagenda && l.estado !== 'Agendado'))
     .filter(l => vista !== 'mios' || l.caller.toUpperCase() === S.caller.toUpperCase())
     .filter(l => vista !== 'sin' || !l.caller)
@@ -193,6 +215,7 @@ function filtrados() {
     .sort((a, b) => {
       // primero los que piden que les llamen ya (por hora), luego por fecha de registro
       if (vista === 'rellamar') return rellamarEn(a) - rellamarEn(b);
+      if (vista === 'prio' && prioridad(a) !== prioridad(b)) return prioridad(a) - prioridad(b);
       const ta = tocaLlamar(a), tb = tocaLlamar(b);
       if (ta !== tb) return ta ? -1 : 1;
       if (ta && tb) return rellamarEn(a) - rellamarEn(b);
@@ -207,7 +230,14 @@ function render() {
   pendienteRender = false;
   pintarKpis();
   const ls = filtrados();
-  $('rows').innerHTML = ls.map(fila).join('');
+  // en «Prioridad», un separador por grupo (España buen form → España → LATAM buen form → LATAM)
+  const cuenta = {}; ls.forEach(l => { const p = prioridad(l); cuenta[p] = (cuenta[p] || 0) + 1; });
+  let g = 0;
+  $('rows').innerHTML = ls.map(l => {
+    if (vista !== 'prio' || prioridad(l) === g) return fila(l);
+    g = prioridad(l);
+    return `<tr class="grupo g${g}"><td colspan="11"><b>${g}</b>${PRIOS[g]} <small>${cuenta[g]}</small></td></tr>` + fila(l);
+  }).join('');
   $('empty').hidden = ls.length > 0;
   document.querySelectorAll('#rows textarea').forEach(autoalto);
 }
@@ -217,6 +247,7 @@ function pintarKpis() {
   const L = D.leads;
   const deHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy).length;
   const ultimaHora = L.filter(l => Date.now() - new Date(l.fecha) < 3600e3).length;
+  const espHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy && espana(l)).length;
   const porLlamar = L.filter(l => l.contacto !== '✅' && !l.autoagenda && l.estado !== 'Agendado').length;
   const buenos = L.filter(buenForm).length;
   const buenosSin = L.filter(l => buenForm(l) && !llamado(l)).length;
@@ -231,8 +262,10 @@ function pintarKpis() {
   const nR = $('nRell'); if (nR) nR.textContent = L.filter(tocaLlamar).length || '';
   const k = (label, val, sub, cls = '') => `<div class="kpi ${cls}"><small>${label}</small><b>${val}</b><span>${sub}</span></div>`;
   const n = $('nBuen'); if (n) n.textContent = buenos || '';
+  const nP = $('nPrio'); if (nP) nP.textContent = L.filter(l => !cerrado(l) && prioridad(l) === 1).length || '';
+  const nE = $('nEsp'); if (nE) nE.textContent = L.filter(espana).length || '';
   $('kpis').innerHTML =
-    k('Leads hoy', deHoy, `${ultimaHora} en la última hora`) +
+    k('Leads hoy', deHoy, `🇪🇸 ${espHoy} de España · ${ultimaHora} en la última hora`) +
     k('⭐ Buen form no agendado', buenos, buenosSin ? `${buenosSin} sin llamar todavía` : 'Todos llamados', buenosSin ? 'hot' : '') +
     k('Por llamar', porLlamar, urgentes ? `${urgentes} en la última hora sin llamar` : 'Ninguno urgente', urgentes ? 'hot' : '') +
     k('En seguimiento', seg, 'Seguimiento y volver a llamar') +
@@ -257,7 +290,9 @@ function opciones(lista, actual, vacio) {
 function fila(l) {
   const id = esc(l.id);
   const e = etapa(l);
-  const tags = (l.autoagenda ? '<span class="tag auto">📅 Autoagendado</span>' : '') +
+  const pf = prefijo(l.telefono);
+  const tags = (pf === '34' ? '<span class="tag es">🇪🇸 España</span>' : `<span class="tag latam" title="Fuera de España">🌎 ${pf ? '+' + pf : 'LATAM'}</span>`) +
+    (l.autoagenda ? '<span class="tag auto">📅 Autoagendado</span>' : '') +
     (buenForm(l) ? '<span class="tag buen">⭐ Buen form</span>' : '') +
     (!l.autoagenda && e === 3 ? '<span class="tag etapa">💬 Conversación</span>' : '') +
     (!l.autoagenda && e === 4 ? '<span class="tag etapa">📞 Oferta de llamada</span>' : '');
@@ -305,6 +340,8 @@ function abrirFicha(id) {
     ${row('En qué punto está', l.punto)}${row('Qué quiere conseguir', l.objetivo)}
     ${row('Inversión al mes', l.inversion)}${row('Dónde quiere estar en 3-6 meses', l.meta)}
     ${row('Cuándo se pone en marcha', l.cuando)}${row('Instagram', l.instagram)}
+    ${row('País (por el teléfono)', espana(l) ? '🇪🇸 España' : `🌎 Fuera de España${prefijo(l.telefono) ? ' (+' + prefijo(l.telefono) + ')' : ''}`)}
+    ${row('Prioridad para llamar', `${prioridad(l)} de 4 · ${PRIOS[prioridad(l)]}`)}
     ${row('Buen form', l.cualifica ? 'Sí: encaja con el perfil (se le ofreció agendar)' : '')}
     ${row('Autoagendado por Calendly', l.autoagenda)}
     ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' : l.caller)}${row('Estado', l.estado || 'Nuevo')}${row('Notas', l.notas)}
@@ -525,16 +562,16 @@ function demoApi(action, extra) {
     const base = [
       ['Laura Gómez', '+34 634 21 88 90', 'laura.gomez@gmail.com', 1.5, '', '', '❌', 0, ''],
       ['Iván Castro', '612 448 301', 'ivancastro@hotmail.com', 9, '', '', '❌', 0, ''],
-      ['Brayan Ruiz', '612290125', 'colombiaa0220@gmail.com', 45, 'DAVID', 'Seguimiento', '✅', 1, 'Contactar 24/08. Le interesa el nicho de historia.'],
+      ['Brayan Ruiz', '+57 312 290 1250', 'colombiaa0220@gmail.com', 45, 'Mario.e', 'Seguimiento', '✅', 1, 'Contactar 24/08. Le interesa el nicho de historia.'],
       ['Alain Martin', '695300210', 'amartin990@gmail.com', 180, '', 'Agendado', '❌', 0, '📅 Autoagendado por Calendly · Llamada 03/10 18:00'],
       ['Sara Cortés', '611491664', 'saracortesochoa07@gmail.com', 300, 'Mario.e', 'Volver a llamar', '✅', 1, 'Ahora no puede, llamar a las 19:00'],
-      ['Juan David Ospina', '642605004', 'juan.ospina.ruda@gmail.com', 1500, 'DAVID', 'Perdido', '✅', 1, 'No tiene dinero'],
+      ['Juan David Ospina', '+52 55 4260 5004', 'juan.ospina.ruda@gmail.com', 1500, 'Mario.e', 'Perdido', '✅', 1, 'No tiene dinero'],
       ['Mikel Portera', '+34 603 31 19 51', 'porteraso44@gmail.com', 2000, 'Mario.e', 'Volver a llamar', '✅', 1, 'Me dice que le llame después'],
       ['Ignacio Benjumea', '+34 608 17 36 57', 'nbenjumealozano@gmail.com', 300, 'Mario.e', 'Agendado', '✅', 2, 'Llamada con el closer el jueves'],
-      ['Amparo Malo', '622918365', 'amparomalo1965@gmail.com', 4400, 'DAVID', 'Contactado', '❌', 2, ''],
+      ['Amparo Malo', '622918365', 'amparomalo1965@gmail.com', 4400, 'Mario.e', 'Contactado', '❌', 2, ''],
     ];
     window.__demo = {
-      callers: ['DAVID', 'Mario.e'],
+      callers: ['Mario.e'],
       estados: ['Contactado', 'Volver a llamar', 'Seguimiento', 'Perdido', 'Nutricion', 'Agendado', 'Invalid'],
       minutos: 5,
       leads: base.map((b, i) => ({
@@ -552,7 +589,7 @@ function demoApi(action, extra) {
   }
   const db = window.__demo;
   const esMaestro = /^mario$/i.test(S.caller || '');
-  if (action === 'login') return Promise.resolve({ ok: true, caller: esMaestro ? 'Mario' : (db.callers.find(c => c.toUpperCase() === (S.caller || '').toUpperCase()) || 'DAVID'), rol: esMaestro ? 'maestro' : 'caller' });
+  if (action === 'login') return Promise.resolve({ ok: true, caller: esMaestro ? 'Mario' : (db.callers.find(c => c.toUpperCase() === (S.caller || '').toUpperCase()) || 'Mario.e'), rol: esMaestro ? 'maestro' : 'caller' });
   if (action === 'list') return Promise.resolve({ ok: true, rol: esMaestro ? 'maestro' : 'caller', ...JSON.parse(JSON.stringify(db)) });
   if (action === 'update') {
     const l = db.leads.find(x => x.id === extra.id);
@@ -564,7 +601,7 @@ function demoApi(action, extra) {
 
 // ---------- Arranque ----------
 S = leerSesion();
-if (DEMO && !S) S = { caller: 'DAVID', pin: 'demo' };
+if (DEMO && !S) S = { caller: 'Mario.e', pin: 'demo' };
 if (S) entrar(); else mostrarLogin();
 
 // ---------- App instalable (PWA) ----------

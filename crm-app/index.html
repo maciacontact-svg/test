@@ -34,7 +34,7 @@
     </div>
     <h1>CRM de <em>System Academy</em></h1>
     <p class="sub">Entra con tu nombre y tu PIN.</p>
-    <label class="fld"><span>Nombre</span><input name="caller" id="lgName" autocomplete="username" placeholder="DAVID" required></label>
+    <label class="fld"><span>Nombre</span><input name="caller" id="lgName" autocomplete="username" placeholder="Mario.e" required></label>
     <label class="fld"><span>PIN</span><input name="pin" id="lgPin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••••" required></label>
     <p class="login-err" id="lgErr" role="alert"></p>
     <button class="btn" type="submit" id="lgBtn">Entrar</button>
@@ -74,8 +74,10 @@
         <input id="q" type="search" placeholder="Buscar nombre, teléfono, correo o notas"></label>
       <div class="chips" id="views">
         <button type="button" data-v="todos" class="on">Todos</button>
+        <button type="button" data-v="prio" class="prio" title="Sin cerrar, en este orden: España buen form → España → LATAM buen form → LATAM">🎯 Prioridad <i id="nPrio"></i></button>
         <button type="button" data-v="buen" class="buen">⭐ Buen form no agendado <i id="nBuen"></i></button>
         <button type="button" data-v="rellamar">📞 Rellamadas <i id="nRell"></i></button>
+        <button type="button" data-v="espana">🇪🇸 España <i id="nEsp"></i></button>
         <button type="button" data-v="llamar">Por llamar</button>
         <button type="button" data-v="mios">Mis leads</button>
         <button type="button" data-v="sin">Sin caller</button>
