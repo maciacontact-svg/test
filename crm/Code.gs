@@ -560,10 +560,14 @@ function hojaIg() {
 function eventosInstagram(b) {
   const clave = String(ajCelda(AJ.igClave)).trim();
   if (clave.length < 16 || String(b.clave || '') !== clave) throw new Error('Clave de Instagram incorrecta');
-  const evs = (Array.isArray(b.eventos) ? b.eventos : []).slice(0, 200)
-    .filter(e => e && /^(out|in|seen)$/.test(e.t) && /^\d{5,25}$/.test(String(e.u)) && Number(e.ts) > 0)
+  const todos = (Array.isArray(b.eventos) ? b.eventos : []).slice(0, 200);
+  const motivo = e => !e ? 'vacío' : !/^(out|in|seen)$/.test(e.t) ? 'tipo ' + e.t
+    : !/^[A-Za-z0-9_-]{3,64}$/.test(String(e.u || '')) ? 'id raro (' + String(e.u || '').length + ' car.)'
+    : !(Number(e.ts) > 0) ? 'sin fecha' : '';
+  const descartes = todos.map(motivo).filter(Boolean);
+  const evs = todos.filter(e => !motivo(e)).map(e => Object.assign({}, e, { ts: Number(e.ts) < 1e11 ? Number(e.ts) * 1000 : Number(e.ts) }))
     .sort((x, y) => x.ts - y.ts);
-  if (!evs.length) return { ok: true, n: 0 };
+  if (!evs.length) return { ok: true, n: 0, descartes: descartes.join(', ') };
   const cache = CacheService.getScriptCache();
   const lista = setters();
   const lock = LockService.getScriptLock();
@@ -573,7 +577,7 @@ function eventosInstagram(b) {
     const sh = hojaIg();
     const filas = {};      // igsid → { fila, f }
     evs.forEach(e => {
-      if (e.mid) { const k = 'mid_' + String(e.mid).slice(-60); if (cache.get(k)) return; cache.put(k, '1', 21600); }
+      if (e.mid) { const k = 'mid_' + String(e.mid).slice(-60); if (cache.get(k)) { descartes.push('repetido'); return; } cache.put(k, '1', 21600); }
       const u = String(e.u);
       let c = filas[u];
       if (!c) {
@@ -595,7 +599,7 @@ function eventosInstagram(b) {
   } finally {
     lock.releaseLock();
   }
-  return { ok: true, n: n };
+  return { ok: true, n: n, descartes: descartes.join(', ') };
 }
 
 function aplicarEvento(f, e, lista) {

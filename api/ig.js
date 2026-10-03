@@ -94,6 +94,13 @@ module.exports = async (req, res) => {
   let body;
   try { body = JSON.parse(raw.toString('utf8')); } catch (e) { res.statusCode = 400; return res.end(); }
   const evs = eventos(body);
+  // forma de lo que manda Meta (sin textos), para diagnosticar
+  console.log('Meta:', JSON.stringify((body.entry || []).map(e => ({
+    id: String(e.id || '').length + 'd',
+    items: [...(e.messaging || []).map(m => ['messaging', m]), ...(e.standby || []).map(m => ['standby', m]), ...(e.changes || []).map(m => ['changes', m])]
+      .map(([k, m]) => k + ':' + Object.keys(m).join('+') + (m.sender ? ' sender=' + String(m.sender.id).length + 'd' : '') +
+        (m.message ? ' echo=' + !!m.message.is_echo : '') + (m.field ? ' field=' + m.field : '')),
+  }))));
   if (evs.length && process.env.CRM_API_URL) {
     try {
       const r = await fetch(process.env.CRM_API_URL, {
@@ -105,7 +112,7 @@ module.exports = async (req, res) => {
       if (!j.ok) console.error('CRM:', j.error || r.status);
       else {
         const tipos = { in: 'recibido', out: 'enviado', seen: 'visto' };
-        console.log(`OK: ${evs.map(e => tipos[e.t]).join(', ')} → ${j.n} guardado(s) en el CRM`);
+        console.log(`OK: ${evs.map(e => tipos[e.t]).join(', ') || 'nada útil'} → ${j.n} guardado(s) en el CRM` + (j.descartes ? ' · descartados: ' + j.descartes : ''));
       }
     } catch (err) { console.error('CRM:', err); }
   }
