@@ -103,7 +103,10 @@ module.exports = async (req, res) => {
       });
       const j = await r.json().catch(() => ({}));
       if (!j.ok) console.error('CRM:', j.error || r.status);
-      else console.log(`OK: ${evs.length} evento(s) guardados en el CRM`);
+      else {
+        const tipos = { in: 'recibido', out: 'enviado', seen: 'visto' };
+        console.log(`OK: ${evs.map(e => tipos[e.t]).join(', ')} → ${j.n} guardado(s) en el CRM`);
+      }
     } catch (err) { console.error('CRM:', err); }
   }
   // siempre 200: si no, Meta reintenta y acaba desactivando el webhook
