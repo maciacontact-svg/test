@@ -9,7 +9,7 @@
     { "source": "/b/:setter", "destination": "/empezar?s=:setter&utm_source=ig_dm", "permanent": false },
     { "source": "/agenda/:fuente", "destination": "/agendar?utm_source=:fuente", "permanent": false },
     { "source": "/agenda/:fuente/:etiqueta", "destination": "/agendar?utm_source=:fuente&utm_content=:etiqueta", "permanent": false },
-    { "source": "/biblio/:fuente", "destination": "/?utm_source=:fuente", "permanent": false },
-    { "source": "/biblio/:fuente/:etiqueta", "destination": "/?utm_source=:fuente&utm_content=:etiqueta", "permanent": false }
+    { "source": "/biblio/:fuente", "destination": "/empezar?utm_source=:fuente", "permanent": false },
+    { "source": "/biblio/:fuente/:etiqueta", "destination": "/empezar?utm_source=:fuente&utm_content=:etiqueta", "permanent": false }
   ]
 }

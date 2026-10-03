@@ -27,7 +27,7 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 
 ## CRM
 - `crm/Code.gs` = Apps Script dentro del Google Sheet (pestañas Leads y Ajustes). Acciones: lead, agendado, cuenta, login, list, update, setting, settingOn, ig.
-  Columnas A–K visibles (orden fijado por el cliente), L–Z ocultas (ver `COL`). Ajustes: A/B callers+PIN, C casilla Setting, D estados, G2 Slack, G3 URL CRM, G4 minutos, G5 menciones, G6 token Calendly, G7/G8 acceso maestro (Mario), G9 clave IG, G10 token IG, G11 frases de propuesta, I–K setters (nombre, palabra clave, código de enlace).
+  Columnas A–K visibles (orden fijado por el cliente), L–Z ocultas (ver `COL`). Ajustes: A/B callers+PIN, C casilla Setting, D estados, G2 Slack, G3 URL CRM, G4 minutos, G5 menciones, G6 token Calendly, G7/G8 acceso maestro (Mario), G9 clave IG, G10 token IG (se renueva solo cada semana: `renovarTokenInstagram`, estado en G12), G11 frases de propuesta, I–K setters (nombre, palabra clave, código de enlace).
 - Si cambia `Code.gs`, el usuario debe: copiar el archivo (GitHub «Copy raw file») → pegar en Apps Script → ejecutar `configurar` → Implementar › Gestionar › Nueva versión. Avisarle siempre.
 - `crm-app/` = dashboard (login nombre+PIN, rol caller/maestro, rellamadas desde notas, embudo por lead, KPIs por caller).
   Pestaña «Setting» (hoja Setting: día+caller → abiertos, convos, ofertas, agendas, ofertasBib, entradasBib); solo el maestro la activa por caller.
@@ -40,7 +40,7 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 - Hoja «Instagram» (una fila por convo, ver `IG`). CRM: pestaña Instagram (seguimiento) y Setting = automático + correcciones a mano.
 
 ## Origen y enlaces
-- `/agenda/<fuente>/<etiqueta>` → agendar y `/biblio/<fuente>/<etiqueta>` → landing (`vercel.json`), con utm_source/utm_content. Se guarda en `localStorage['sa-origen']` (script.js, form.js, llamada.js) y llega a Leads.origen (también en reservas sin formulario).
+- `/agenda/<fuente>/<etiqueta>` → agendar y `/biblio/<fuente>/<etiqueta>` → empezar (formulario de la biblioteca) (`vercel.json`), con utm_source/utm_content. Se guarda en `localStorage['sa-origen']` (script.js, form.js, llamada.js) y llega a Leads.origen (también en reservas sin formulario).
 - CRM: `origenDe(l)` y `canalDe(l)` (▶️ YouTube / 📸 Instagram = ManyChat, bio, setter / Otros / Directo): etiqueta de canal en cada lead, filtro «Todos los canales», resumen por canal en Enlaces, pestaña «Enlaces» (solo maestro): generador, lista (localStorage) y tabla por fuente.
 - `privacidad.html`: titular MASTERFORGE DIGITAL LLC, contacto maciacontact@gmail.com (enlazada en los pies de página; URL para Meta).
 

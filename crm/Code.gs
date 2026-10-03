@@ -47,7 +47,7 @@ const CIERRAN = ['Agendado', 'Perdido', 'Invalid'];       // estados que quitan 
 
 // Celdas de la pestaña "Ajustes"
 const AJ = { callers: 'A2:A', pins: 'B2:B', setting: 'C2:C', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8',
-  igClave: 'G9', igToken: 'G10', igFrases: 'G11', setters: 'I2:K' };
+  igClave: 'G9', igToken: 'G10', igFrases: 'G11', igRenovado: 'G12', setters: 'I2:K' };
 
 // =====================================================================
 // Web app: el formulario y el dashboard hablan con estas dos funciones
@@ -635,6 +635,27 @@ function perfilIg(f, cache) {
   } catch (err) { console.error('Instagram perfil: ' + err); }
 }
 
+// El token de Instagram dura 60 días: se renueva solo cada semana (activador creado por configurar).
+// Ejecuta → renovarTokenInstagram para probarlo a mano.
+function renovarTokenInstagram() {
+  const aj = hoja(HOJA_AJUSTES);
+  const token = String(aj.getRange(AJ.igToken).getDisplayValue()).trim();
+  if (token.length < 20) return;
+  const r = UrlFetchApp.fetch('https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=' + encodeURIComponent(token), { muteHttpExceptions: true });
+  let j = {};
+  try { j = JSON.parse(r.getContentText()); } catch (e) {}
+  if (r.getResponseCode() === 200 && j.access_token) {
+    aj.getRange(AJ.igToken).setValue(j.access_token);
+    const caduca = new Date(Date.now() + (Number(j.expires_in) || 5184000) * 1000);
+    aj.getRange(AJ.igRenovado).setValue('Renovado ' + Utilities.formatDate(new Date(), TZ, 'dd/MM/yyyy') + ' · caduca ' + Utilities.formatDate(caduca, TZ, 'dd/MM/yyyy'));
+    return;
+  }
+  const msg = (j.error && j.error.message) || ('HTTP ' + r.getResponseCode());
+  aj.getRange(AJ.igRenovado).setValue('❌ No se pudo renovar (' + Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm') + '): ' + msg);
+  console.error('Token Instagram: ' + msg);
+  try { enviarSlack({ text: '⚠️ No se ha podido renovar el token de Instagram (Ajustes → G10): ' + msg + '. Genera uno nuevo en Meta y pégalo en G10.' }); } catch (e) {}
+}
+
 // Para el dashboard: solo las conversaciones con setter, propuesta o enlace (las de ManyChat solas no).
 // Cada setter recibe SOLO las suyas (se filtra aquí, no en el navegador); el maestro, todas.
 function listarIg(u) {
@@ -902,6 +923,7 @@ function configurar() {
       ['Instagram: frases de propuesta de llamada (separadas por comas)', FRASES_DEF],
     ]);
   }
+  if (!aj.getRange('F12').getValue()) aj.getRange('F12').setValue('Instagram: estado del token (se renueva solo cada semana)');
   if (!aj.getRange('I1').getValue()) {
     aj.getRange('I1:K1').setValues([['Setter (nombre del CRM)', 'Marca en sus mensajes (emoji o coletilla, NO su nombre; varias con comas)', 'Código de su enlace']]);
     aj.getRange('I2:K2').setValues([['Mario.e', '', 'mario']]);
@@ -963,6 +985,8 @@ function configurar() {
 
   // Activador: revisar cada minuto si hay leads sin llamar
   ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'revisarAvisos').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'renovarTokenInstagram').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('renovarTokenInstagram').timeBased().everyDays(7).atHour(4).create();
   ScriptApp.newTrigger('revisarAvisos').timeBased().everyMinutes(1).create();
 
   ss.setActiveSheet(sh);

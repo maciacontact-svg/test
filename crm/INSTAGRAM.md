@@ -21,6 +21,7 @@ que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la A
 
 - **G9** clave de Instagram: se genera sola. Cópiala para Vercel (paso 3).
 - **G10** token de Instagram (paso 2): sirve para ver el @usuario y el nombre de cada lead.
+  Dura 60 días, pero **se renueva solo cada semana** (activador de `configurar`). En **G12** se ve cuándo se renovó; si falla, aviso por Slack y hay que pegar uno nuevo.
 - **G11** frases de propuesta, separadas por comas. Añade las que uséis de verdad.
 - **Columnas I–K**, una fila por setter:
   - **I** nombre: el mismo que en la columna A (o «Mario» para el acceso maestro).
