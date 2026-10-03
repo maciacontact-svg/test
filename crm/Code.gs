@@ -667,6 +667,25 @@ function renovarTokenInstagram() {
   try { enviarSlack({ text: '⚠️ No se ha podido renovar el token de Instagram (Ajustes → G10): ' + msg + '. Genera uno nuevo en Meta y pégalo en G10.' }); } catch (e) {}
 }
 
+// Suscribe la cuenta de Instagram (la del token de G10) a los avisos de mensajes y vistos.
+// Ejecuta → conectarInstagram una vez después de configurar el webhook en Meta. El resultado sale en Ajustes → G14.
+function conectarInstagram() {
+  const aj = hoja(HOJA_AJUSTES);
+  const token = String(aj.getRange(AJ.igToken).getDisplayValue()).trim();
+  if (!aj.getRange('F14').getValue()) aj.getRange('F14').setValue('Instagram: conexión de avisos (conectarInstagram)');
+  const marca = t => aj.getRange('G14').setValue(Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm') + ' · ' + t);
+  if (token.length < 20) return marca('❌ Falta el token en G10');
+  const base = 'https://graph.instagram.com/v21.0/me/subscribed_apps';
+  const r = UrlFetchApp.fetch(base + '?subscribed_fields=messages,messaging_seen&access_token=' + encodeURIComponent(token), { method: 'post', muteHttpExceptions: true });
+  let j = {};
+  try { j = JSON.parse(r.getContentText()); } catch (e) {}
+  if (r.getResponseCode() !== 200 || !j.success) return marca('❌ ' + ((j.error && j.error.message) || ('HTTP ' + r.getResponseCode())));
+  const g = UrlFetchApp.fetch(base + '?access_token=' + encodeURIComponent(token), { muteHttpExceptions: true });
+  let campos = '';
+  try { campos = (JSON.parse(g.getContentText()).data || []).map(x => (x.subscribed_fields || []).join(', ')).join(' | '); } catch (e) {}
+  marca('✅ Conectada' + (campos ? ' (' + campos + ')' : ''));
+}
+
 // Para el dashboard: solo las conversaciones con setter, propuesta o enlace (las de ManyChat solas no).
 // Cada setter recibe SOLO las suyas (se filtra aquí, no en el navegador); el maestro, todas.
 function listarIg(u) {

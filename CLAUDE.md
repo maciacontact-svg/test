@@ -27,7 +27,7 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 
 ## CRM
 - `crm/Code.gs` = Apps Script dentro del Google Sheet (pestañas Leads y Ajustes). Acciones: lead, agendado, cuenta, login, list, update, setting, settingOn, ig.
-  Columnas A–K visibles (orden fijado por el cliente), L–Z ocultas (ver `COL`). Ajustes: A/B callers+PIN, C casilla Setting, D estados, G2 Slack, G3 URL CRM, G4 minutos, G5 menciones, G6 token Calendly, G7/G8 acceso maestro (Mario), G9 clave IG, G10 token IG (se renueva solo cada semana: `renovarTokenInstagram`, estado en G12), G11 frases de propuesta, G13 dominio de la web para enlaces, I–K setters (nombre, palabra clave, código de enlace).
+  Columnas A–K visibles (orden fijado por el cliente), L–Z ocultas (ver `COL`). Ajustes: A/B callers+PIN, C casilla Setting, D estados, G2 Slack, G3 URL CRM, G4 minutos, G5 menciones, G6 token Calendly, G7/G8 acceso maestro (Mario), G9 clave IG, G10 token IG (se renueva solo cada semana: `renovarTokenInstagram`, estado en G12), G11 frases de propuesta, G13 dominio de la web para enlaces, G14 estado de `conectarInstagram` (suscribe la cuenta a messages/messaging_seen), I–K setters (nombre, palabra clave, código de enlace).
 - Si cambia `Code.gs`, el usuario debe: copiar el archivo (GitHub «Copy raw file») → pegar en Apps Script → ejecutar `configurar` → Implementar › Gestionar › Nueva versión. Avisarle siempre.
 - `crm-app/` = dashboard (login nombre+PIN, rol caller/maestro, rellamadas desde notas, embudo por lead, KPIs por caller).
   Pestaña «Setting» (hoja Setting: día+caller → abiertos, convos, ofertas, agendas, ofertasBib, entradasBib); solo el maestro la activa por caller.
