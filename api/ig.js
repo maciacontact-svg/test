@@ -54,6 +54,26 @@ module.exports = async (req, res) => {
   // 1) Meta comprueba la URL al configurar el webhook
   if (req.method === 'GET') {
     const q = new URL(req.url, 'https://x').searchParams;
+    // Diagnóstico: /api/ig?diag=<IG_VERIFY_TOKEN> → comprueba la configuración sin enseñar ninguna clave
+    if (q.get('diag') && process.env.IG_VERIFY_TOKEN && q.get('diag') === process.env.IG_VERIFY_TOKEN) {
+      const d = {
+        IG_APP_SECRET: String(process.env.IG_APP_SECRET || '').split(',').filter(x => x.trim()).length + ' clave(s)',
+        IG_VERIFY_TOKEN: 'ok',
+        IG_CRM_KEY: process.env.IG_CRM_KEY ? process.env.IG_CRM_KEY.length + ' caracteres' : 'FALTA',
+        CRM_API_URL: /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(process.env.CRM_API_URL || '') ? 'ok' : 'FALTA o no termina en /exec',
+      };
+      try {
+        const r = await fetch(process.env.CRM_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'ig', clave: process.env.IG_CRM_KEY || '', eventos: [] }) });
+        const t = await r.text();
+        let j = null; try { j = JSON.parse(t); } catch (e) {}
+        d.apps_script = j ? (j.ok ? 'ok: la clave coincide con G9' : 'responde con error: ' + j.error)
+          : 'no devuelve JSON (HTTP ' + r.status + '): ¿la implementación es «Cualquier usuario» y está en la versión nueva?';
+      } catch (err) { d.apps_script = 'no se puede conectar: ' + err.message; }
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.statusCode = 200;
+      return res.end(JSON.stringify(d, null, 2));
+    }
     if (q.get('hub.mode') === 'subscribe' && process.env.IG_VERIFY_TOKEN && q.get('hub.verify_token') === process.env.IG_VERIFY_TOKEN) {
       res.statusCode = 200;
       return res.end(q.get('hub.challenge') || '');
