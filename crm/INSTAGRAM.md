@@ -1,6 +1,6 @@
 # Instagram → CRM (DMs de @aleix.ytf)
 
-Meta avisa de cada DM (enviado, recibido y visto) a `https://go.systemacademy.es/api/ig` (el de Ajustes → G13) (función de Vercel, `api/ig.js`),
+Meta avisa de cada DM (enviado, recibido y visto) a `https://biblioteca.systemacademy.es/api/ig` (el de Ajustes → G13) (función de Vercel, `api/ig.js`),
 que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la API oficial: no pone en riesgo la cuenta.
 
 ## Qué detecta
@@ -11,8 +11,8 @@ que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la A
 | **Mensaje abierto** | El primer mensaje con la marca o el enlace del setter |
 | **Convo seguida** | El lead contesta después de eso |
 | **Propuesta de llamada** | Frases de Ajustes → **G11** (p. ej. «llamada con mi socio») |
-| **Enlace de agenda** | `go.systemacademy.es/a/<código>` (o un enlace de Calendly) |
-| **Enlace de biblioteca** | `go.systemacademy.es/b/<código>` (el de ManyChat cuenta aparte, como «recurso automático») |
+| **Enlace de agenda** | `biblioteca.systemacademy.es/a/<código>` (o un enlace de Calendly) |
+| **Enlace de biblioteca** | `biblioteca.systemacademy.es/b/<código>` (el de ManyChat cuenta aparte, como «recurso automático») |
 | **Visto / sin ver** | Aviso de lectura de Instagram (si el lead no lo tiene desactivado) |
 | **Follow-up** | Mensaje nuestro tras una propuesta o enlace, sin respuesta y 2 h o más después del anterior |
 | **Agendó / entró en la biblioteca** | Reserva o formulario que llegan con el enlace del setter (`?s=<código>`); en la pestaña Instagram se unen por el usuario de Instagram del formulario |
@@ -28,7 +28,7 @@ que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la A
   - **J** marca: como todos escriben **como Aleix**, nunca su nombre. Un emoji o una coletilla natural que solo use ese setter
     en su primer mensaje, p. ej. `🙌🏼` (Mario.e) y `💯` (otro). Puede tener varias separadas por comas: `🙌🏼, de locos crack`.
     Que no la use nadie más ni ManyChat en sus flujos (si no, le asignaría convos que no son suyas).
-  - **K** código del enlace: `mario` → `go.systemacademy.es/a/mario` (agenda) y `go.systemacademy.es/b/mario` (biblioteca).
+  - **K** código del enlace: `mario` → `biblioteca.systemacademy.es/a/mario` (agenda) y `biblioteca.systemacademy.es/b/mario` (biblioteca).
 
 ## 2. App de Meta (una vez, ~20 min)
 
@@ -36,7 +36,7 @@ que comprueba que viene de Meta y lo pasa al Apps Script (acción `ig`). Es la A
 2. [developers.facebook.com](https://developers.facebook.com) › **Crear app** › caso de uso **«Gestionar mensajes y contenido en Instagram»**.
 3. En la app: **Instagram › Configuración de la API con inicio de sesión de Instagram**:
    - **Generar token** → añade @aleix.ytf → copia el token → Sheet **G10**.
-   - **Configurar webhooks**: URL `https://go.systemacademy.es/api/ig` · token de verificación = el `IG_VERIFY_TOKEN` del paso 3 → Verificar y guardar.
+   - **Configurar webhooks**: URL `https://biblioteca.systemacademy.es/api/ig` · token de verificación = el `IG_VERIFY_TOKEN` del paso 3 → Verificar y guardar.
    - Suscríbete a **messages** y **messaging_seen**.
 4. *Configuración de la app › Básica* → copia la **clave secreta** (para `IG_APP_SECRET`).
 
@@ -75,7 +75,7 @@ Manda desde @aleix.ytf un DM con la marca de un setter a otra cuenta, contesta d
 - Datos mínimos: @usuario, nombre, fechas de cada paso y un trozo del último mensaje (120 caracteres). No se guardan las conversaciones.
   Solo para el seguimiento interno: no se venden ni se ceden, ni se usan para anuncios.
 - Para activar la app, Meta pide una **URL de política de privacidad** y cómo pedir el **borrado de datos**:
-  `https://go.systemacademy.es/privacidad` (borrado: `https://go.systemacademy.es/privacidad#borrado`). Titular: MASTERFORGE DIGITAL LLC.
+  `https://biblioteca.systemacademy.es/privacidad` (borrado: `https://biblioteca.systemacademy.es/privacidad#borrado`). Titular: MASTERFORGE DIGITAL LLC.
 - Si alguien pide que se borren sus datos: borra su fila en la hoja «Instagram» (y en «Leads» si está).
 - Los tokens y claves solo van en el Sheet y en las variables de Vercel, nunca en el repo.
 

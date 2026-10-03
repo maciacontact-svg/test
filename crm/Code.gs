@@ -534,9 +534,9 @@ function esPropuesta(texto) {
 // Dominio(s) donde está publicada la web (Ajustes → G13, separados por comas). Los enlaces se reconocen en cualquiera de ellos.
 let WEB_RE = null;
 function dominiosWeb() {
-  const v = String(hoja(HOJA_AJUSTES).getRange(AJ.web).getDisplayValue() || 'go.systemacademy.es');
+  const v = String(hoja(HOJA_AJUSTES).getRange(AJ.web).getDisplayValue() || 'biblioteca.systemacademy.es');
   const l = v.split(',').map(x => x.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')).filter(Boolean);
-  return l.length ? l : ['go.systemacademy.es'];
+  return l.length ? l : ['biblioteca.systemacademy.es'];
 }
 function webRe() {
   if (!WEB_RE) WEB_RE = '(?:' + dominiosWeb().map(d => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')';
@@ -935,7 +935,7 @@ function configurar() {
     ]);
   }
   if (!aj.getRange('F12').getValue()) aj.getRange('F12').setValue('Instagram: estado del token (se renueva solo cada semana)');
-  if (!aj.getRange('F13').getValue()) aj.getRange('F13:G13').setValues([['Dominio de la web para los enlaces (sin https; varios con comas)', 'go.systemacademy.es']]);
+  if (!aj.getRange('F13').getValue()) aj.getRange('F13:G13').setValues([['Dominio de la web para los enlaces (sin https; varios con comas)', 'biblioteca.systemacademy.es']]);
   if (!aj.getRange('I1').getValue()) {
     aj.getRange('I1:K1').setValues([['Setter (nombre del CRM)', 'Marca en sus mensajes (emoji o coletilla, NO su nombre; varias con comas)', 'Código de su enlace']]);
     aj.getRange('I2:K2').setValues([['Mario.e', '', 'mario']]);

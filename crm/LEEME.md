@@ -101,8 +101,8 @@ El dashboard vive en la carpeta `crm-app/` y se publica como **otro proyecto de 
 
 - **Instagram** (automático): ver `crm/INSTAGRAM.md`. Pestaña **Instagram** del CRM con cada convo con propuesta o enlace (visto, follow-ups, agendó…) y el Setting se rellena solo; las tarjetas − / + quedan para correcciones.
 
-- **Enlaces con seguimiento** (pestaña **Enlaces**, solo Mario): `go.systemacademy.es/agenda/<fuente>/<etiqueta>` (llamada) y
-  `go.systemacademy.es/biblio/<fuente>/<etiqueta>` (formulario de la biblioteca), p. ej. `/agenda/youtube/video-nichos-historia`. El origen se guarda en el lead
+- **Enlaces con seguimiento** (pestaña **Enlaces**, solo Mario): `biblioteca.systemacademy.es/agenda/<fuente>/<etiqueta>` (llamada) y
+  `biblioteca.systemacademy.es/biblio/<fuente>/<etiqueta>` (formulario de la biblioteca), p. ej. `/agenda/youtube/video-nichos-historia`. El origen se guarda en el lead
   (columna oculta «Origen») aunque agende más tarde, y la tabla «De dónde vienen los leads» cuenta leads, buen form y agendados por enlace.
   Para que se registren las reservas de quien no rellenó el formulario hace falta el token de Calendly (G6).
 

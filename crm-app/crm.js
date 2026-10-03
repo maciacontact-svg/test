@@ -692,7 +692,7 @@ $('sToggles').addEventListener('click', async e => {
 
 // ---------- Enlaces con seguimiento (solo maestro) ----------
 let ePer = '30';
-const web = () => D.web || 'go.systemacademy.es';   // dominio de la web: Ajustes → G13
+const web = () => D.web || 'biblioteca.systemacademy.es';   // dominio de la web: Ajustes → G13
 const enlace = (destino, fuente, etiqueta) => `${web()}/${destino}/${slugUrl(fuente)}${etiqueta ? '/' + slugUrl(etiqueta) : ''}`;
 const slugUrl = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 function misEnlaces() { try { return JSON.parse(localStorage.getItem('sa-crm-enlaces') || '[]'); } catch (e) { return []; } }

@@ -1,6 +1,6 @@
 // ===== System Academy · Webhook de Instagram (Meta) =====
 // Meta avisa aquí de cada DM de @aleix.ytf (enviados, recibidos y vistos) → se reenvían al CRM (Apps Script, acción "ig").
-// URL para Meta: https://go.systemacademy.es/api/ig
+// URL para Meta: https://biblioteca.systemacademy.es/api/ig
 // Variables de entorno en Vercel (nunca en el repo):
 //   IG_APP_SECRET    → «Clave secreta de la app» de Meta (para comprobar que el aviso viene de Meta)
 //   IG_VERIFY_TOKEN  → una palabra que te inventas y pegas también en Meta al configurar el webhook

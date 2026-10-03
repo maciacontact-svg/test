@@ -5,23 +5,15 @@ Orden: **A → B → C → D** (con eso ya funciona el seguimiento de YouTube, M
 
 ---
 
-## A. Dominio `go.systemacademy.es` (10 min + espera)
+## A. Dominio de la web: `biblioteca.systemacademy.es` (ya está)
 
-`systemacademy.es` lo usa la web de la clase gratuita (`/prelanding`). Esta web (formulario, agenda, biblioteca) va en un subdominio propio.
+`systemacademy.es` lo usa la web de la clase gratuita (`/prelanding`). Esta web (formulario, agenda, biblioteca) está en
+**`biblioteca.systemacademy.es`** (Vercel → proyecto `test` → Domains, «Valid Configuration»). No hay que crear nada.
 
-1. Entra en **vercel.com** → abre el proyecto de la **web**: el conectado al repo `maciacontact-svg/test` **sin** Root Directory
-   (el del CRM es el que tiene Root Directory `crm-app`).
-2. **Settings → Domains → Add** → escribe `go.systemacademy.es` → **Add**. Si pregunta por redirecciones, déjalo sin redirigir.
-3. Vercel lo marca como «Invalid Configuration» y te enseña el registro DNS que necesita. Normalmente:
-   - Tipo **CNAME** · Nombre **`go`** · Valor **`cname.vercel-dns.com`** (copia el valor exacto que te muestre Vercel).
-4. Ve a donde gestionas el DNS de `systemacademy.es` (el mismo sitio donde creaste `crmbiblio`) → **Añadir registro**:
-   - Tipo `CNAME`, Host/Nombre `go`, Destino/Valor el de Vercel, TTL automático.
-   - Si es **Cloudflare**: pon la nube en **gris** (solo DNS), no naranja.
-5. Espera de 5 a 30 min hasta que Vercel ponga **Valid Configuration** (el candado SSL lo pone solo).
-6. Comprueba en una ventana privada:
-   - `go.systemacademy.es/privacidad` → política de privacidad
-   - `go.systemacademy.es/agenda/youtube/prueba` → agenda de YouTube («Lo has visto en el vídeo. Ahora, tu caso.»)
-   - `go.systemacademy.es/biblio/youtube/prueba` → formulario de la biblioteca
+Comprueba en una ventana privada:
+- `biblioteca.systemacademy.es/agenda/youtube/prueba` → agenda de YouTube («Lo has visto en el vídeo. Ahora, tu caso.»)
+- `biblioteca.systemacademy.es/biblio/youtube/prueba` → formulario de la biblioteca
+- `biblioteca.systemacademy.es/privacidad` → política de privacidad
 
 ## B. Actualizar el Apps Script (5 min)
 
@@ -42,7 +34,7 @@ Orden: **A → B → C → D** (con eso ya funciona el seguimiento de YouTube, M
 | **C** (casilla «Setting») | Marca a quien haga setting (o desde el CRM → pestaña Setting) |
 | **G6** | Token de Calendly, si no está: Calendly → Integraciones → **API y webhooks** → Generar token personal. Sin él no se registran las reservas de quien no ha rellenado el formulario (p. ej. desde YouTube). |
 | **G11** | Las frases exactas con las que proponéis la llamada, separadas por comas |
-| **G13** | `go.systemacademy.es` (ya viene puesto) |
+| **G13** | `biblioteca.systemacademy.es` (ya viene puesto) |
 | **I–K** | Una fila por setter: **I** nombre (igual que en la columna A, o «Mario» para ti) · **J** su marca (emoji o coletilla, nunca su nombre; p. ej. `🙌🏼`) · **K** código del enlace (p. ej. `mario`) |
 
 ## D. Enlaces con seguimiento (ya funciona tras A, B y C)
@@ -51,16 +43,16 @@ Créalos en el CRM → pestaña **Enlaces** (solo tú la ves): fuente + a dónde
 
 | Dónde | Enlace |
 |---|---|
-| Descripción de cada vídeo de YouTube | `go.systemacademy.es/agenda/youtube/<nombre-del-video>` y `go.systemacademy.es/biblio/youtube/<nombre-del-video>` |
-| ManyChat (el recurso que envía) | `go.systemacademy.es/biblio/manychat/<palabra-clave>` |
-| Bio / historias de Instagram | `go.systemacademy.es/biblio/instagram` o `/agenda/instagram` |
-| Setters por DM | `go.systemacademy.es/a/<código>` (agenda) y `/b/<código>` (biblioteca) |
+| Descripción de cada vídeo de YouTube | `biblioteca.systemacademy.es/agenda/youtube/<nombre-del-video>` y `biblioteca.systemacademy.es/biblio/youtube/<nombre-del-video>` |
+| ManyChat (el recurso que envía) | `biblioteca.systemacademy.es/biblio/manychat/<palabra-clave>` |
+| Bio / historias de Instagram | `biblioteca.systemacademy.es/biblio/instagram` o `/agenda/instagram` |
+| Setters por DM | `biblioteca.systemacademy.es/a/<código>` (agenda) y `/b/<código>` (biblioteca) |
 
 Ejemplo de descripción de YouTube:
 
 ```
-📅 Llamada gratuita para analizar tu caso: https://go.systemacademy.es/agenda/youtube/nichos-historia
-📚 Biblioteca gratuita de recursos: https://go.systemacademy.es/biblio/youtube/nichos-historia
+📅 Llamada gratuita para analizar tu caso: https://biblioteca.systemacademy.es/agenda/youtube/nichos-historia
+📚 Biblioteca gratuita de recursos: https://biblioteca.systemacademy.es/biblio/youtube/nichos-historia
 ```
 
 Qué pasa con cada lead:
@@ -94,12 +86,12 @@ Luego borra esa fila del Sheet.
 
    Después: **Deployments** → el último → **⋯ → Redeploy**.
 5. Meta, misma página → **Configurar webhooks**:
-   - URL de devolución de llamada: `https://go.systemacademy.es/api/ig`
+   - URL de devolución de llamada: `https://biblioteca.systemacademy.es/api/ig`
    - Token de verificación: el mismo `IG_VERIFY_TOKEN` → **Verificar y guardar**
    - Suscríbete a **messages** y **messaging_seen**, y activa la suscripción de la cuenta @aleix.ytf.
 6. Meta → **Configuración de la app → Básica**:
-   - URL de la política de privacidad: `https://go.systemacademy.es/privacidad`
-   - URL de instrucciones de eliminación de datos: `https://go.systemacademy.es/privacidad#borrado`
+   - URL de la política de privacidad: `https://biblioteca.systemacademy.es/privacidad`
+   - URL de instrucciones de eliminación de datos: `https://biblioteca.systemacademy.es/privacidad#borrado`
    - Icono y categoría → **Guardar**.
 7. **Prueba**: desde otra cuenta de Instagram escribe a @aleix.ytf; contesta desde @aleix.ytf con tu marca y una propuesta
    («🙌🏼 ¿te parecería bien tener una llamada con mi socio de admisiones?») → en 15-30 s sale en el CRM, pestaña **Instagram**
