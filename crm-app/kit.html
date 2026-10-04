@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Kit de marca · System Academy</title>
+<link rel="icon" href="img/logo/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="marca/poppins.css">
+<style>
+/* System Academy · kit de marca (Instagram, WhatsApp y Skool). Solo acceso maestro.
+   Cada .lienzo mide en px lo mismo que el PNG final (1080×1350, 1460×752…).
+   La vista previa se escala con --z; al exportar se clona sin escala. */
+:root {
+  --bg: #f3f3f3;
+  --ink: #111111;
+  --ink-2: #3a3a3a;
+  --muted: #6b6b6b;
+  --line-soft: #d4d4d4;
+  --sans: "Poppins", system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { color-scheme: light; }
+body { background: #e7e7e7; color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; border: 0; background: none; cursor: pointer; color: inherit; }
+em { font-style: italic; font-weight: 500; }
+
+/* ---------- Acceso (solo maestro) ---------- */
+.puerta { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--bg); }
+.puerta[hidden] { display: none; }
+.puerta form { width: 100%; max-width: 360px; background: #fff; border-radius: 18px; padding: 28px 24px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 18px 40px -20px rgba(0,0,0,.25); }
+.puerta h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.puerta p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.puerta input { font: inherit; font-size: 15px; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 10px; background: #fafafa; }
+.puerta input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.puerta button { background: var(--ink); color: #fff; border-radius: 999px; padding: 12px; font-weight: 500; margin-top: 4px; }
+.puerta button:disabled { opacity: .5; }
+.puerta .err { color: #b3261e; font-size: 13px; min-height: 18px; }
+
+/* ---------- Página de trabajo ---------- */
+#todo[hidden] { display: none; }
+.top { display: flex; align-items: center; gap: 14px; padding: 22px 16px 6px; max-width: 1240px; margin: 0 auto; }
+.top h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; flex: 1; }
+.top .salir { font-size: 13px; color: var(--muted); text-decoration: underline; }
+.intro { max-width: 1240px; margin: 0 auto; padding: 4px 16px 10px; color: var(--ink-2); font-size: 14px; line-height: 1.6; }
+.intro b { color: var(--ink); }
+.indice { max-width: 1240px; margin: 0 auto; padding: 0 16px 6px; display: flex; flex-wrap: wrap; gap: 8px; }
+.indice a { font-size: 13px; color: var(--ink); text-decoration: none; background: #fff; border-radius: 999px; padding: 6px 14px; border: 1px solid var(--line-soft); }
+.seccion { max-width: 1240px; margin: 0 auto; padding: 26px 16px 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); scroll-margin-top: 10px; }
+.rejilla { max-width: 1240px; margin: 0 auto; padding: 0 16px 24px; display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+.pieza { display: flex; flex-direction: column; gap: 8px; max-width: 100%; }
+.marco { width: calc(var(--w) * var(--z) * 1px); height: calc(var(--h) * var(--z) * 1px); overflow: hidden; border-radius: 10px; box-shadow: 0 18px 40px -16px rgba(0,0,0,.25); }
+.marco > .lienzo { transform: scale(var(--z)); transform-origin: 0 0; }
+.marco.soltar { outline: 3px dashed var(--ink); outline-offset: 4px; }
+.pie { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 8px; font-size: 12px; color: var(--muted); width: calc(var(--w) * var(--z) * 1px); max-width: 100%; }
+.pie .id { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pie .acc { display: flex; flex-wrap: wrap; gap: 6px; }
+.pie button { background: var(--ink); color: #fff; border-radius: 999px; padding: 7px 13px; font-size: 12px; font-weight: 500; }
+.pie button.sec { background: #fff; color: var(--ink); border: 1px solid var(--line-soft); }
+.pie button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.pie button:disabled { opacity: .5; }
+.capa-ctl { display: none; width: 100%; flex-wrap: wrap; gap: 6px; padding: 8px; background: #fff; border-radius: 12px; border: 1px solid var(--line-soft); }
+.pieza.con-capa .capa-ctl { display: flex; }
+.capa-ctl span { width: 100%; font-size: 11px; color: var(--muted); }
+[contenteditable]:hover { outline: 3px dashed rgba(120,120,120,.45); outline-offset: 6px; }
+[contenteditable]:focus { outline: 3px solid rgba(120,120,120,.6); outline-offset: 6px; }
+@media (max-width: 640px) { .rejilla { justify-content: center; } }
+
+/* ---------- Imágenes libres (capas) ----------
+   Se colocan donde quieras: arrastra para mover, tira de las esquinas para cambiar el tamaño. */
+.capa { position: absolute; cursor: move; touch-action: none; user-select: none; -webkit-user-select: none; }
+.capa img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none; }
+.capa.tarjeta { background: #fff; border-radius: 34px; padding: 18px; box-shadow: 0 40px 80px -30px rgba(0,0,0,.35), 0 4px 12px rgba(0,0,0,.06); }
+.oscuro .capa.tarjeta { background: #1b1b1b; box-shadow: 0 40px 90px -30px rgba(0,0,0,.8), 0 0 0 2px rgba(255,255,255,.07); }
+.capa.tarjeta img, .capa.redondo img { border-radius: 20px; }
+.capa.sombra:not(.tarjeta) img { filter: drop-shadow(0 30px 40px rgba(0,0,0,.45)); }
+.capa.sel { outline: calc(3px * var(--iz)) solid #2f7cf6; }
+.capa .asa { display: none; position: absolute; width: calc(16px * var(--iz)); height: calc(16px * var(--iz)); background: #fff; border: calc(2px * var(--iz)) solid #2f7cf6; border-radius: 50%; }
+.capa.sel .asa { display: block; }
+.asa.nw { left: 0; top: 0; transform: translate(-50%, -50%); cursor: nwse-resize; }
+.asa.ne { right: 0; top: 0; transform: translate(50%, -50%); cursor: nesw-resize; }
+.asa.sw { left: 0; bottom: 0; transform: translate(-50%, 50%); cursor: nesw-resize; }
+.asa.se { right: 0; bottom: 0; transform: translate(50%, 50%); cursor: nwse-resize; }
+
+/* ---------- Lienzo base ---------- */
+.lienzo { position: relative; width: calc(var(--w) * 1px); height: calc(var(--h) * 1px); overflow: hidden; font-family: var(--sans); color: var(--ink); background: var(--bg); }
+.lienzo.claro {
+  background:
+    radial-gradient(900px 700px at 85% -10%, #ffffff 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(700px 600px at -10% 110%, #e6e6e6 0%, rgba(230,230,230,0) 70%),
+    var(--bg);
+}
+.lienzo.oscuro {
+  color: #fff;
+  background:
+    radial-gradient(900px 760px at 90% -12%, #2b2b2b 0%, rgba(43,43,43,0) 62%),
+    radial-gradient(800px 700px at -15% 115%, #1f1f1f 0%, rgba(31,31,31,0) 70%),
+    #111;
+}
+/* Rejilla fina de fondo, como la landing */
+.lienzo .rej { position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(0,0,0,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.045) 1px, transparent 1px);
+  background-size: 90px 90px; -webkit-mask-image: radial-gradient(closest-side at 50% 40%, #000 30%, transparent 100%); mask-image: radial-gradient(closest-side at 50% 40%, #000 30%, transparent 100%); }
+.oscuro .rej { background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); }
+.lienzo .marco-fino { position: absolute; inset: 28px; border: 2px solid rgba(17,17,17,.12); border-radius: 30px; pointer-events: none; }
+.oscuro .marco-fino { border-color: rgba(255,255,255,.12); }
+
+/* Logo con colores por CSS (así cambia solo con el tema) */
+.lg-f { fill: #111; } .lg-m { fill: #fff; stroke: #fff; } .lg-c { stroke: #111; }
+.oscuro .lg-f { fill: #fff; } .oscuro .lg-m { fill: #111; stroke: #111; } .oscuro .lg-c { stroke: #fff; }
+
+/* Cabecera tipo «Win» */
+.cab { position: absolute; left: 96px; right: 96px; top: 120px; display: flex; align-items: center; gap: 30px; }
+.cab svg { flex: none; width: 118px; height: 118px; }
+.cab .t { white-space: nowrap; font-size: 68px; font-weight: 600; letter-spacing: -0.035em; line-height: 1; }
+.cab .t em { letter-spacing: -0.03em; }
+.cab .h { font-size: 32px; color: var(--muted); margin-top: 10px; letter-spacing: 0; }
+.oscuro .cab .h { color: #9a9a9a; }
+.desc { position: absolute; left: 96px; right: 96px; top: 300px; font-size: 35px; line-height: 1.38; color: var(--ink-2); letter-spacing: -0.005em; }
+.oscuro .desc { color: #d6d6d6; }
+.desc b { color: var(--ink); font-weight: 600; }
+.oscuro .desc b { color: #fff; }
+
+/* Hueco para la captura: solo una guía. Al subir, la imagen pasa a ser libre. */
+.cap { position: absolute; left: 50%; transform: translateX(-50%); border: 4px dashed #cfcfcf; border-radius: 30px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #8a8a8a; font-size: 30px; text-align: center; padding: 30px; }
+.oscuro .cap { border-color: #3a3a3a; }
+.cap svg { width: 72px; height: 72px; }
+
+.firma { position: absolute; left: 96px; right: 96px; bottom: 74px; display: flex; justify-content: space-between; align-items: center; font-size: 26px; color: var(--muted); }
+.oscuro .firma { color: #8d8d8d; }
+.firma .pill { border: 2px solid currentColor; border-radius: 999px; padding: 8px 22px; }
+
+/* Carrusel */
+.car-logo { position: absolute; left: 96px; top: 96px; display: flex; align-items: center; gap: 20px; font-size: 32px; font-weight: 600; letter-spacing: -0.02em; }
+.car-logo svg { width: 76px; height: 76px; }
+.car-tag { position: absolute; right: 96px; top: 116px; font-size: 26px; border: 2px solid currentColor; border-radius: 999px; padding: 8px 24px; opacity: .7; }
+.car-titulo { position: absolute; left: 96px; right: 96px; top: 380px; font-size: 112px; line-height: 1.04; font-weight: 600; letter-spacing: -0.045em; }
+.car-titulo em { letter-spacing: -0.035em; }
+.car-sub { position: absolute; left: 96px; right: 140px; top: 900px; font-size: 38px; line-height: 1.4; color: var(--ink-2); }
+.oscuro .car-sub { color: #cfcfcf; }
+.desliza { position: absolute; right: 96px; bottom: 96px; display: flex; align-items: center; gap: 16px; background: var(--ink); color: #fff; border-radius: 999px; padding: 22px 40px; font-size: 32px; font-weight: 500; }
+.oscuro .desliza { background: #fff; color: var(--ink); }
+.num { position: absolute; left: 96px; top: 250px; font-size: 220px; font-weight: 600; letter-spacing: -0.06em; line-height: 1; color: transparent; -webkit-text-stroke: 3px rgba(17,17,17,.85); }
+.oscuro .num { -webkit-text-stroke-color: rgba(255,255,255,.85); }
+.int-titulo { position: absolute; left: 96px; right: 96px; top: 520px; font-size: 74px; line-height: 1.1; font-weight: 600; letter-spacing: -0.035em; }
+.int-texto { position: absolute; left: 96px; right: 96px; top: 760px; font-size: 38px; line-height: 1.5; color: var(--ink-2); }
+.oscuro .int-texto { color: #cfcfcf; }
+.puntos { position: absolute; left: 96px; bottom: 112px; display: flex; gap: 12px; }
+.puntos i { width: 14px; height: 14px; border-radius: 99px; background: currentColor; opacity: .22; }
+.puntos i.on { width: 46px; opacity: 1; }
+.handle-b { position: absolute; right: 96px; bottom: 100px; font-size: 28px; color: var(--muted); }
+
+/* Frase / anuncio */
+.frase { position: absolute; left: 110px; right: 110px; top: 50%; transform: translateY(-50%); font-size: 92px; line-height: 1.12; font-weight: 600; letter-spacing: -0.04em; }
+.comillas { font-size: 260px; line-height: .6; font-weight: 600; opacity: .14; display: block; margin-bottom: 30px; letter-spacing: 0; }
+
+/* Story */
+.st .cab { top: 210px; }
+.st .desc { top: 420px; }
+.st .firma { bottom: 150px; }
+
+/* Portadas de destacados y fotos de perfil */
+.dest { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 46px; }
+.dest .ico { width: 360px; height: 360px; }
+.dest .lbl { font-size: 70px; font-weight: 600; letter-spacing: -0.03em; }
+.perfil { display: flex; align-items: center; justify-content: center; }
+.wa { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+.wa .lbl { font-size: 64px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; }
+.wa .lbl em { font-weight: 500; }
+
+/* Portadas de Skool (1460×752) */
+.sk .rej { background-size: 76px 76px; -webkit-mask-image: radial-gradient(closest-side at 70% 45%, #000 20%, transparent 100%); mask-image: radial-gradient(closest-side at 70% 45%, #000 20%, transparent 100%); }
+.sk-marca { position: absolute; left: 92px; top: 80px; display: flex; align-items: center; gap: 16px; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+.sk-marca svg { width: 58px; height: 58px; }
+.sk-tag { position: absolute; left: 92px; top: 236px; font-size: 26px; font-weight: 500; border: 2px solid currentColor; border-radius: 999px; padding: 8px 24px; opacity: .65; }
+.sk-titulo { position: absolute; left: 88px; top: 318px; width: 840px; font-size: 128px; line-height: .98; font-weight: 600; letter-spacing: -0.05em; }
+.sk-titulo em { display: block; white-space: nowrap; font-weight: 500; letter-spacing: -0.04em; color: #9a9a9a; }
+.claro .sk-titulo em { color: #6b6b6b; }
+.sk-num { position: absolute; right: -30px; bottom: -150px; font-size: 600px; font-weight: 600; letter-spacing: -0.06em; line-height: 1; color: transparent; -webkit-text-stroke: 3px rgba(255,255,255,.09); }
+.claro .sk-num { -webkit-text-stroke-color: rgba(17,17,17,.08); }
+.sk-pieza { position: absolute; left: 960px; top: 166px; width: 400px; height: 400px; border-radius: 104px; display: flex; align-items: center; justify-content: center; transform: rotate(-7deg);
+  background: linear-gradient(145deg, #2c2c2c 0%, #161616 100%); box-shadow: 0 60px 90px -40px rgba(0,0,0,.9), inset 0 0 0 2px rgba(255,255,255,.08), inset 0 2px 0 rgba(255,255,255,.12); }
+.claro .sk-pieza { background: linear-gradient(145deg, #ffffff 0%, #ececec 100%); box-shadow: 0 60px 90px -40px rgba(0,0,0,.35), inset 0 0 0 2px rgba(17,17,17,.05), inset 0 2px 0 #fff; }
+.sk-pieza .ico { width: 220px; height: 220px; stroke: #fff; }
+.claro .sk-pieza .ico { stroke: #111; }
+.sk-pieza .lg { width: 230px; height: 230px; }
+
+/* Visor del PNG generado */
+.visor { position: fixed; inset: 0; z-index: 10; background: rgba(17,17,17,.72); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.visor[hidden] { display: none; }
+.visor-caja { background: #fff; border-radius: 16px; padding: 18px; max-width: 520px; width: 100%; display: flex; flex-direction: column; gap: 12px; max-height: 100%; }
+.visor-caja p { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.visor-caja img { width: 100%; height: auto; min-height: 0; object-fit: contain; border-radius: 8px; border: 1px solid var(--line-soft); }
+.visor-caja button { align-self: flex-end; background: var(--ink); color: #fff; border-radius: 999px; padding: 8px 18px; font-size: 13px; }
+button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Acceso: solo el maestro (mismo nombre y PIN que en el CRM) -->
+<section class="puerta" id="puerta" hidden>
+  <form id="puertaForm" autocomplete="on">
+    <h1>
+      <svg viewBox="0 0 100 100" width="34" height="34" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#111"/><path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#111" stroke-width="5.5" stroke-linecap="round"/></svg>
+      Kit de <em>marca</em>
+    </h1>
+    <p>Solo para el acceso maestro. Entra con tu nombre y PIN del CRM.</p>
+    <input id="pNombre" placeholder="Nombre" autocomplete="username" required>
+    <input id="pPin" placeholder="PIN" type="password" inputmode="numeric" autocomplete="current-password" required>
+    <div class="err" id="pErr"></div>
+    <button id="pBtn">Entrar</button>
+  </form>
+</section>
+
+<div id="todo" hidden>
+  <header class="top">
+    <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#111"/><path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#111" stroke-width="5.5" stroke-linecap="round"/></svg>
+    <h1>Kit de <em>marca</em></h1>
+    <button class="salir" id="salir" type="button">Salir</button>
+  </header>
+  <p class="intro">
+    <b>Textos:</b> haz clic en cualquier texto para cambiarlo.
+    <b>Imágenes:</b> pulsa <b>+ Imagen</b> (o arrastra un archivo encima de la pieza) y colócala donde quieras: arrástrala para moverla y tira de las esquinas para cambiar el tamaño
+    (con una imagen seleccionada: flechas para afinar, Supr para quitarla).
+    <b>Descargar PNG</b> te la baja a tamaño real. Lo que cambies no se guarda: descarga antes de cerrar.
+  </p>
+  <nav class="indice" id="indice"></nav>
+  <div id="kit"></div>
+</div>
+
+<script src="config.js"></script>
+<script src="marca/html-to-image.js"></script>
+<script>
+const HANDLE = '@systemacademy';   // ← cambia aquí tu @ de Instagram
+const WEB = 'systemacademy.es';
+
+/* ---------- Acceso: solo maestro. Usa la misma sesión que el CRM (mismo dominio). ---------- */
+const API = ((window.SA_CONFIG || {}).API_URL || '').trim();
+const SESION = 'sa-crm-sesion';
+const leer = () => { try { return JSON.parse(localStorage.getItem(SESION) || 'null'); } catch (e) { return null; } };
+const $ = id => document.getElementById(id);
+
+function abrir() { $('puerta').hidden = true; $('todo').hidden = false; pintar(); }
+function pedirAcceso(msg = '') { $('todo').hidden = true; $('puerta').hidden = false; $('pErr').textContent = msg; }
+
+$('puertaForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const caller = $('pNombre').value.trim(), pin = $('pPin').value.trim();
+  $('pBtn').disabled = true; $('pErr').textContent = '';
+  try {
+    const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'login', caller, pin }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'No se pudo entrar');
+    if (j.rol !== 'maestro') throw new Error('Esta página es solo para el acceso maestro.');
+    try { localStorage.setItem(SESION, JSON.stringify({ caller: j.caller, pin, rol: j.rol })); } catch (e) {}
+    $('pPin').value = '';
+    abrir();
+  } catch (err) { $('pErr').textContent = err.message; }
+  $('pBtn').disabled = false;
+});
+$('salir').addEventListener('click', () => { try { localStorage.removeItem(SESION); } catch (e) {} location.reload(); });
+
+/* ---------- Piezas ---------- */
+/* Logo: squircle con triángulo y corte en S. El corte se pinta como trazo del color de fondo (sin <mask>: sale igual en el PNG). */
+function logo({ fondo = '#111', marca = '#fff', sinFondo = false, corte = fondo, size = 100 } = {}) {
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true">
+    ${sinFondo ? '' : `<rect width="100" height="100" rx="26" fill="${fondo}"/>`}
+    <path d="M37 27 L77 50 L37 73 Z" fill="${marca}" stroke="${marca}" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="${corte}" stroke-width="5.5" stroke-linecap="round"/>
+  </svg>`;
+}
+/* Logo que sigue al tema (claro/oscuro) por CSS */
+const logoTema = (cls = '') => `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true"><rect class="lg-f" width="100" height="100" rx="26"/><path class="lg-m" d="M37 27 L77 50 L37 73 Z" stroke-width="9" stroke-linejoin="round"/><path class="lg-c" d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke-width="5.5" stroke-linecap="round"/></svg>`;
+
+/* Iconos de línea */
+const ICO = {
+  wins: '<path d="M32 18h36v18a18 18 0 0 1-36 0z"/><path d="M32 24H20v6a12 12 0 0 0 12 12M68 24h12v6a12 12 0 0 1-12 12"/><path d="M50 54v14M38 82h24M42 82v-8h16v8"/>',
+  clases: '<rect x="14" y="22" width="72" height="50" rx="10"/><path d="M44 37l15 10-15 10z"/><path d="M34 84h32"/>',
+  dudas: '<path d="M20 26a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v30a10 10 0 0 1-10 10H44L28 80V66h0a10 10 0 0 1-8-10z"/><path d="M42 34a8 8 0 1 1 11 7.5c-2 1-3 2.5-3 4.5v1"/><circle cx="50" cy="55" r=".5"/>',
+  llamada: '<path d="M30 16h10l6 16-8 5a40 40 0 0 0 25 25l5-8 16 6v10a8 8 0 0 1-8 8A62 62 0 0 1 22 24a8 8 0 0 1 8-8z"/>',
+  comunidad: '<circle cx="38" cy="36" r="12"/><path d="M16 80c0-14 10-24 22-24s22 10 22 24"/><circle cx="68" cy="40" r="9"/><path d="M64 58c12 0 20 8 20 20"/>',
+  recursos: '<path d="M14 30a8 8 0 0 1 8-8h18l8 8h30a8 8 0 0 1 8 8v34a8 8 0 0 1-8 8H22a8 8 0 0 1-8-8z"/><path d="M50 44v22M40 56l10 10 10-10"/>',
+  gorro: '<path d="M50 20 8 38l42 18 42-18z"/><path d="M26 46v18c0 7 11 13 24 13s24-6 24-13V46"/><path d="M88 40v24"/><path d="M84 72l4-8 4 8z"/>',
+  carpeta: '<path d="M12 30a8 8 0 0 1 8-8h20l8 8h32a8 8 0 0 1 8 8v36a8 8 0 0 1-8 8H20a8 8 0 0 1-8-8z"/><path d="M30 68l12-12 9 8 17-17"/><path d="M60 47h8v8"/>',
+  dinero: '<rect x="10" y="28" width="80" height="46" rx="9"/><circle cx="50" cy="51" r="11"/><path d="M24 42v18M76 42v18"/>',
+  escala: '<path d="M14 84h72"/><path d="M24 74V60M42 74V50M60 74V40M78 74V26"/><path d="M20 44 40 30l12 6 28-20"/><path d="M68 16h12v12"/>',
+  auriculares: '<path d="M18 62V50a32 32 0 0 1 64 0v12"/><rect x="12" y="58" width="18" height="26" rx="7"/><rect x="70" y="58" width="18" height="26" rx="7"/><path d="M79 84c0 6-8 9-20 9h-5"/>',
+  movil: '<rect x="28" y="10" width="44" height="80" rx="11"/><path d="M44 20h12"/><path d="M46 80h8"/>',
+};
+const icono = (k, color = '#fff') => `<svg class="ico" viewBox="0 0 100 100" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">${ICO[k]}</svg>`;
+const icoTema = k => `<svg class="ico" viewBox="0 0 100 100" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">${ICO[k]}</svg>`;
+const subir = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>`;
+
+const E = 'contenteditable spellcheck="false"';
+const fondo = () => `<div class="rej"></div><div class="marco-fino"></div>`;
+
+/* ---------- Plantillas ---------- */
+function win({ tema = 'claro', story = false }) {
+  const osc = tema === 'oscuro';
+  const capTop = story ? 680 : 560, capH = story ? 1000 : 640, capW = story ? 760 : 620;
+  return `
+    ${fondo()}
+    <div class="cab">${logo(osc ? { fondo: '#fff', marca: '#111' } : {})}
+      <div><div class="t" ${E}>System Academy <em>Win</em></div><div class="h" ${E}>${HANDLE}</div></div>
+    </div>
+    <p class="desc" ${E}><b>[Nombre]</b> celebra [la win: primer vídeo viral, primeros ingresos, monetización…]. Escribe aquí el contexto con los datos reales de la captura.</p>
+    <div class="cap" style="top:${capTop}px;width:${capW}px;height:${capH}px" title="Haz clic para subir la captura">${subir}<span>Haz clic y sube<br>la captura de la win</span></div>
+    ${story ? `<div class="firma"><span ${E}>${WEB}</span><span class="pill" ${E}>Alumno de System Academy</span></div>` : ''}`;
+}
+
+function portada({ tema = 'claro' }) {
+  return `
+    ${fondo()}
+    <div class="car-logo">${logo(tema === 'oscuro' ? { fondo: '#fff', marca: '#111' } : {})}<span>System Academy</span></div>
+    <div class="car-tag" ${E}>YouTube faceless</div>
+    <h2 class="car-titulo" ${E}>Cómo encontrar un <em>nicho</em> faceless en 10 minutos</h2>
+    <p class="car-sub" ${E}>El método paso a paso que usamos con los alumnos.</p>
+    <div class="desliza"><span ${E}>Desliza</span><span>→</span></div>`;
+}
+
+function interior({ tema = 'claro', n = '01', activo = 1 }) {
+  return `
+    ${fondo()}
+    <div class="car-logo">${logo(tema === 'oscuro' ? { fondo: '#fff', marca: '#111' } : {})}<span>System Academy</span></div>
+    <div class="num" ${E}>${n}</div>
+    <h3 class="int-titulo" ${E}>Busca canales <em>outlier</em> de tu temática</h3>
+    <p class="int-texto" ${E}>Explica aquí el paso en 2–3 frases cortas. Una idea por diapositiva, sin relleno.</p>
+    <div class="puntos">${[0, 1, 2, 3, 4].map(i => `<i class="${i === activo ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="handle-b" ${E}>${HANDLE}</div>`;
+}
+
+function frase() {
+  return `
+    ${fondo()}
+    <div class="car-logo">${logo({ fondo: '#fff', marca: '#111' })}<span>System Academy</span></div>
+    <div class="frase"><span class="comillas">“</span><span ${E}>No necesitas <em>enseñar la cara</em>. Necesitas un sistema.</span></div>
+    <div class="handle-b" ${E}>${HANDLE}</div>`;
+}
+
+function storyCta({ tema = 'claro' }) {
+  return `
+    ${fondo()}
+    <div class="car-logo" style="top:200px">${logo(tema === 'oscuro' ? { fondo: '#fff', marca: '#111' } : {})}<span>System Academy</span></div>
+    <h2 class="car-titulo" style="top:560px;font-size:118px" ${E}>¿Quieres tu <em>roadmap</em> de YouTube faceless?</h2>
+    <p class="car-sub" style="top:1100px" ${E}>Responde 6 preguntas y te decimos por dónde empezar.</p>
+    <div class="desliza" style="left:96px;right:96px;bottom:300px;justify-content:center;font-size:40px;padding:34px"><span ${E}>${WEB}</span><span>→</span></div>`;
+}
+
+/* Portada de Skool: título con acento en cursiva, pieza con icono a la derecha y número de fondo.
+   Si subes una imagen (p. ej. un objeto 3D), quita la pieza con «Sin icono» y colócala donde quieras. */
+function skool({ tag, t1, t2, ico, num, fs }) {
+  return `
+    <div class="rej"></div>
+    <div class="sk-num" ${E}>${num}</div>
+    <div class="sk-marca">${logoTema()}<span>System Academy</span></div>
+    <div class="sk-tag" ${E}>${tag}</div>
+    <h2 class="sk-titulo" ${fs ? `style="font-size:${fs}px"` : ''} ${E}>${t1}<em>${t2}</em></h2>
+    <div class="sk-pieza">${ico === 'logo' ? logoTema('lg') : icoTema(ico)}</div>`;
+}
+
+const SKOOL = [
+  ['introduccion', 'Bienvenida', 'Introducción', 'antes de empezar', 'gorro', '00', 92],
+  ['modulo-1', 'Módulo 1', 'Nichos &amp;', 'equipo', 'carpeta', '01'],
+  ['modulo-2', 'Módulo 2', 'Monetiza', 'el canal', 'dinero', '02'],
+  ['modulo-3', 'Módulo 3', 'Escala', 'el sistema', 'escala', '03'],
+  ['llamadas-aleix', 'Llamadas · Aleix', 'Llamadas', 'grupales #1', 'llamada', '#1'],
+  ['llamadas-profesor-2', 'Llamadas · Profesor 2', 'Llamadas', 'grupales #2', 'auriculares', '#2'],
+  ['llamadas-profesor-3', 'Llamadas · Profesor 3', 'Llamadas', 'grupales #3', 'movil', '#3'],
+];
+
+const PIEZAS = [
+  { grupo: 'Portadas de Skool (1460×752)', ancla: 'skool', items: SKOOL.map(([id, tag, t1, t2, ico, num, fs]) =>
+    ({ id: 'skool-' + id, w: 1460, h: 752, clase: 'oscuro sk', tema: true, pieza: true, html: () => skool({ tag, t1, t2, ico, num, fs }) })) },
+  { grupo: 'Plantillas de feed (1080×1350)', ancla: 'feed', items: [
+    { id: 'win-claro', w: 1080, h: 1350, clase: 'claro', html: () => win({ tema: 'claro' }) },
+    { id: 'win-oscuro', w: 1080, h: 1350, clase: 'oscuro', html: () => win({ tema: 'oscuro' }) },
+    { id: 'carrusel-portada', w: 1080, h: 1350, clase: 'claro', html: () => portada({ tema: 'claro' }) },
+    { id: 'carrusel-interior', w: 1080, h: 1350, clase: 'claro', html: () => interior({ tema: 'claro' }) },
+    { id: 'carrusel-portada-oscuro', w: 1080, h: 1350, clase: 'oscuro', html: () => portada({ tema: 'oscuro' }) },
+    { id: 'carrusel-interior-oscuro', w: 1080, h: 1350, clase: 'oscuro', html: () => interior({ tema: 'oscuro', n: '02', activo: 2 }) },
+    { id: 'frase', w: 1080, h: 1350, clase: 'oscuro', html: () => frase() },
+  ]},
+  { grupo: 'Stories (1080×1920)', ancla: 'stories', items: [
+    { id: 'story-win', w: 1080, h: 1920, clase: 'oscuro st', html: () => win({ tema: 'oscuro', story: true }) },
+    { id: 'story-win-claro', w: 1080, h: 1920, clase: 'claro st', html: () => win({ tema: 'claro', story: true }) },
+    { id: 'story-cta', w: 1080, h: 1920, clase: 'claro', html: () => storyCta({ tema: 'claro' }) },
+  ]},
+  { grupo: 'Portadas de destacados (1080×1080)', ancla: 'destacados', items:
+    [['wins', 'Wins'], ['clases', 'Clases'], ['recursos', 'Recursos'], ['dudas', 'Dudas'], ['llamada', 'Llamada'], ['comunidad', 'Comunidad']]
+      .map(([k, t]) => ({ id: 'destacado-' + k, w: 1080, h: 1080, clase: 'oscuro dest', html: () => `${icono(k)}<div class="lbl" ${E}>${t}</div>` })),
+  },
+  { grupo: 'Foto de perfil (1080×1080)', ancla: 'perfil', items: [
+    { id: 'perfil-negro', w: 1080, h: 1080, clase: 'perfil', estilo: 'background:#111', html: () => logo({ sinFondo: true, marca: '#fff', corte: '#111', size: 620 }) },
+    { id: 'perfil-gris', w: 1080, h: 1080, clase: 'perfil', estilo: 'background:#f3f3f3', html: () => logo({ size: 560 }) },
+    { id: 'perfil-blanco', w: 1080, h: 1080, clase: 'perfil', estilo: 'background:#fff', html: () => logo({ sinFondo: true, marca: '#111', corte: '#fff', size: 620 }) },
+    { id: 'perfil-squircle-negro', w: 1080, h: 1080, clase: 'perfil', estilo: 'background:#111', html: () => logo({ fondo: '#fff', marca: '#111', size: 560 }) },
+  ]},
+  { grupo: 'Grupos de WhatsApp (640×640)', ancla: 'whatsapp', items: [
+    { id: 'whatsapp-logo', w: 640, h: 640, clase: 'perfil', estilo: 'background:#111', html: () => logo({ sinFondo: true, marca: '#fff', corte: '#111', size: 380 }) },
+    ...[['comunidad', 'Comunidad'], ['wins', '<em>Wins</em>'], ['avisos', 'Avisos'], ['alumnos', 'Alumnos'], ['soporte', 'Soporte']]
+      .map(([k, t]) => ({ id: 'whatsapp-' + k, w: 640, h: 640, clase: 'wa', estilo: 'background:#111;color:#fff',
+        html: () => `${logo({ sinFondo: true, marca: '#fff', corte: '#111', size: 240 })}<div class="lbl" ${E}>${t}</div>` })),
+  ]},
+];
+
+/* ---------- Pintar ---------- */
+const kit = $('kit');
+const zoom = w => {
+  const max = window.innerWidth < 640 ? (window.innerWidth - 32) / w : (w === 640 ? 0.4 : w === 1460 ? 0.4 : 0.32);
+  return Math.min(1, max);
+};
+const zDe = nodo => parseFloat(nodo.closest('.marco').style.getPropertyValue('--z')) || 1;
+
+let pintado = false;
+function pintar() {
+  if (pintado) return;
+  pintado = true;
+  $('indice').innerHTML = PIEZAS.map(g => `<a href="#${g.ancla}">${g.grupo.replace(/ \(.*/, '')}</a>`).join('');
+  PIEZAS.forEach(g => {
+    kit.insertAdjacentHTML('beforeend', `<h2 class="seccion" id="${g.ancla}">${g.grupo}</h2>`);
+    const rej = document.createElement('div');
+    rej.className = 'rejilla';
+    g.items.forEach(p => {
+      const z = zoom(p.w);
+      rej.insertAdjacentHTML('beforeend', `
+        <div class="pieza" data-pieza="${p.id}">
+          <div class="marco" style="--w:${p.w};--h:${p.h};--z:${z};--iz:${1 / z}">
+            <div class="lienzo ${p.clase}" data-id="${p.id}" style="--w:${p.w};--h:${p.h};${p.estilo || ''}">${p.html()}</div>
+          </div>
+          <div class="pie" style="--w:${p.w};--z:${z}">
+            <span class="id">${p.id}</span>
+            <span class="acc">
+              ${p.tema ? '<button class="sec" data-tema>Claro / oscuro</button>' : ''}
+              ${p.pieza ? '<button class="sec" data-pieza-ico>Sin icono</button>' : ''}
+              <button class="sec" data-img>+ Imagen</button>
+              <button data-dl="${p.id}">Descargar PNG</button>
+            </span>
+            <div class="capa-ctl">
+              <span>Imagen seleccionada</span>
+              <button class="sec" data-c="delante">Delante del texto</button>
+              <button class="sec" data-c="detras">Detrás del texto</button>
+              <button class="sec" data-c="tarjeta">Tarjeta</button>
+              <button class="sec" data-c="redondo">Esquinas redondas</button>
+              <button class="sec" data-c="sombra">Sombra</button>
+              <button class="sec" data-c="centrar">Centrar</button>
+              <button class="sec" data-c="quitar">Quitar</button>
+            </div>
+          </div>
+        </div>`);
+    });
+    kit.appendChild(rej);
+  });
+}
+
+/* ---------- Imágenes libres ---------- */
+const input = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*', hidden: true });
+document.body.appendChild(input);
+let destino = null;   // { lienzo, caja: {left, top, width, height} | null, hueco }
+let sel = null;
+
+function seleccionar(capa) {
+  if (sel && sel !== capa) sel.classList.remove('sel');
+  document.querySelectorAll('.pieza.con-capa').forEach(p => p.classList.remove('con-capa'));
+  sel = capa || null;
+  if (!sel) return;
+  sel.classList.add('sel');
+  const pieza = sel.closest('.pieza');
+  pieza.classList.add('con-capa');
+  ['tarjeta', 'redondo', 'sombra'].forEach(k => pieza.querySelector(`[data-c="${k}"]`).classList.toggle('on', sel.classList.contains(k)));
+}
+
+function primeraNoFondo(lienzo) {
+  return [...lienzo.children].find(n => !n.classList.contains('rej') && !n.classList.contains('marco-fino') && !n.classList.contains('capa-fondo'));
+}
+
+/* Crea la capa con la imagen. caja = hueco donde encajarla al principio (si no, centrada al 60 %). */
+function anadirImagen(lienzo, src, caja, punto) {
+  const img = new Image();
+  img.onload = () => {
+    const W = lienzo.offsetWidth, H = lienzo.offsetHeight, ratio = img.naturalWidth / img.naturalHeight;
+    let w, h, x, y;
+    if (caja) {
+      w = Math.min(caja.width, caja.height * ratio); h = w / ratio;
+      x = caja.left + (caja.width - w) / 2; y = caja.top + (caja.height - h) / 2;
+    } else {
+      w = Math.min(W * 0.6, H * 0.6 * ratio); h = w / ratio;
+      x = punto ? punto.x - w / 2 : (W - w) / 2; y = punto ? punto.y - h / 2 : (H - h) / 2;
+    }
+    const capa = document.createElement('div');
+    capa.className = 'capa';
+    capa.style.cssText = `left:${Math.round(x)}px;top:${Math.round(y)}px;width:${Math.round(w)}px`;
+    capa.innerHTML = `<img alt="" src="${src}"><i class="asa nw"></i><i class="asa ne"></i><i class="asa sw"></i><i class="asa se"></i>`;
+    lienzo.appendChild(capa);
+    seleccionar(capa);
+  };
+  img.src = src;
+}
+
+function leerArchivo(f, fn) {
+  if (!f || !/^image\//.test(f.type)) return;
+  const r = new FileReader();
+  r.onload = () => fn(r.result);
+  r.readAsDataURL(f);
+}
+
+input.addEventListener('change', () => {
+  const d = destino;
+  if (!d) return;
+  leerArchivo(input.files[0], src => {
+    if (d.hueco) d.hueco.remove();
+    anadirImagen(d.lienzo, src, d.caja);
+  });
+});
+
+kit.addEventListener('click', e => {
+  const pieza = e.target.closest('.pieza');
+  if (!pieza) return;
+  const lienzo = pieza.querySelector('.lienzo');
+  const hueco = e.target.closest('.cap');
+  if (hueco) {
+    destino = { lienzo, hueco, caja: { left: hueco.offsetLeft - hueco.offsetWidth / 2, top: hueco.offsetTop, width: hueco.offsetWidth, height: hueco.offsetHeight } };
+    input.value = ''; input.click();
+    return;
+  }
+  if (e.target.closest('[data-img]')) { destino = { lienzo }; input.value = ''; input.click(); return; }
+  if (e.target.closest('[data-tema]')) { lienzo.classList.toggle('oscuro'); lienzo.classList.toggle('claro'); return; }
+  const bIco = e.target.closest('[data-pieza-ico]');
+  if (bIco) {
+    const pz = lienzo.querySelector('.sk-pieza');
+    const oculto = pz.style.display === 'none';
+    pz.style.display = oculto ? '' : 'none';
+    bIco.textContent = oculto ? 'Sin icono' : 'Con icono';
+    return;
+  }
+  const c = e.target.closest('[data-c]');
+  if (c && sel) { accionCapa(c.dataset.c); return; }
+  if (!e.target.closest('.pie')) seleccionar(e.target.closest('.capa'));
+});
+
+function accionCapa(a) {
+  const lienzo = sel.parentNode;
+  if (a === 'quitar') { sel.remove(); seleccionar(null); return; }
+  if (a === 'delante') lienzo.appendChild(sel);
+  if (a === 'detras') lienzo.insertBefore(sel, primeraNoFondo(lienzo));
+  if (a === 'centrar') { sel.style.left = Math.round((lienzo.offsetWidth - sel.offsetWidth) / 2) + 'px'; sel.style.top = Math.round((lienzo.offsetHeight - sel.offsetHeight) / 2) + 'px'; }
+  if (['tarjeta', 'redondo', 'sombra'].includes(a)) sel.classList.toggle(a);
+  seleccionar(sel);
+}
+
+/* Arrastrar (mover) y esquinas (tamaño, manteniendo la proporción) */
+kit.addEventListener('pointerdown', e => {
+  const capa = e.target.closest('.capa');
+  if (!capa) return;
+  e.preventDefault();
+  seleccionar(capa);
+  const z = zDe(capa), asa = e.target.closest('.asa');
+  const ini = { x: e.clientX, y: e.clientY, l: capa.offsetLeft, t: capa.offsetTop, w: capa.offsetWidth, h: capa.offsetHeight };
+  const ratio = ini.w / ini.h;
+  capa.setPointerCapture(e.pointerId);
+  const mover = ev => {
+    const dx = (ev.clientX - ini.x) / z, dy = (ev.clientY - ini.y) / z;
+    if (!asa) { capa.style.left = Math.round(ini.l + dx) + 'px'; capa.style.top = Math.round(ini.t + dy) + 'px'; return; }
+    const izq = asa.classList.contains('nw') || asa.classList.contains('sw');
+    const arr = asa.classList.contains('nw') || asa.classList.contains('ne');
+    const sx = izq ? -dx : dx, sy = arr ? -dy : dy;
+    const w = Math.max(40, Math.abs(sx) > Math.abs(sy * ratio) ? ini.w + sx : ini.w + sy * ratio);
+    const h = w / ratio;
+    capa.style.width = Math.round(w) + 'px';
+    capa.style.left = Math.round(izq ? ini.l + ini.w - w : ini.l) + 'px';
+    capa.style.top = Math.round(arr ? ini.t + ini.h - h : ini.t) + 'px';
+  };
+  const soltar = () => { capa.removeEventListener('pointermove', mover); capa.removeEventListener('pointerup', soltar); capa.removeEventListener('pointercancel', soltar); };
+  capa.addEventListener('pointermove', mover);
+  capa.addEventListener('pointerup', soltar);
+  capa.addEventListener('pointercancel', soltar);
+});
+
+document.addEventListener('keydown', e => {
+  if (!sel || e.target.isContentEditable || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  const paso = e.shiftKey ? 10 : 1;
+  const mov = { ArrowLeft: [-paso, 0], ArrowRight: [paso, 0], ArrowUp: [0, -paso], ArrowDown: [0, paso] }[e.key];
+  if (mov) {
+    e.preventDefault();
+    sel.style.left = sel.offsetLeft + mov[0] + 'px';
+    sel.style.top = sel.offsetTop + mov[1] + 'px';
+  } else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); accionCapa('quitar'); }
+  else if (e.key === 'Escape') seleccionar(null);
+});
+
+/* Soltar un archivo encima de una pieza */
+kit.addEventListener('dragover', e => {
+  const m = e.target.closest('.marco');
+  if (!m) return;
+  e.preventDefault();
+  m.classList.add('soltar');
+});
+kit.addEventListener('dragleave', e => { const m = e.target.closest('.marco'); if (m && !m.contains(e.relatedTarget)) m.classList.remove('soltar'); });
+kit.addEventListener('drop', e => {
+  const m = e.target.closest('.marco');
+  if (!m) return;
+  e.preventDefault();
+  m.classList.remove('soltar');
+  const lienzo = m.querySelector('.lienzo'), z = zDe(lienzo), r = m.getBoundingClientRect();
+  leerArchivo(e.dataTransfer.files[0], src => anadirImagen(lienzo, src, null, { x: (e.clientX - r.left) / z, y: (e.clientY - r.top) / z }));
+});
+
+/* ---------- Descargar ---------- */
+kit.addEventListener('click', async e => {
+  const b = e.target.closest('[data-dl]');
+  if (!b) return;
+  const nodo = kit.querySelector(`.lienzo[data-id="${b.dataset.dl}"]`);
+  b.disabled = true; b.textContent = 'Generando…';
+  try {
+    seleccionar(null);
+    document.activeElement && document.activeElement.blur();
+    const url = await htmlToImage.toPng(nodo, { pixelRatio: 1, cacheBust: true, style: { transform: 'none' }, filter: n => !(n.classList && n.classList.contains('asa')) });
+    Object.assign(document.createElement('a'), { href: url, download: `system-academy-${b.dataset.dl}.png` }).click();
+    mostrar(url);
+  } catch (err) {
+    mostrar(null);
+    console.error(err);
+  }
+  b.disabled = false; b.textContent = 'Descargar PNG';
+});
+
+/* Visor: por si el navegador no deja descargar, la imagen se guarda con clic derecho o pulsación larga */
+const visor = document.createElement('div');
+visor.className = 'visor';
+visor.hidden = true;
+visor.innerHTML = '<div class="visor-caja"><p></p><img alt="PNG generado"><button type="button">Cerrar</button></div>';
+document.body.appendChild(visor);
+visor.addEventListener('click', e => { if (e.target === visor || e.target.tagName === 'BUTTON') visor.hidden = true; });
+function mostrar(url) {
+  const img = visor.querySelector('img');
+  visor.querySelector('p').textContent = url
+    ? 'Si no se ha descargado solo: clic derecho → «Guardar imagen como…» (en el móvil, mantén pulsada la imagen).'
+    : 'No se pudo generar el PNG. Prueba en Chrome de ordenador.';
+  img.hidden = !url;
+  if (url) img.src = url;
+  visor.hidden = false;
+}
+
+/* Arranque: sin API (pruebas locales) o con sesión maestro guardada → directo; si no, pide acceso */
+const s = leer();
+if (!API || (s && s.rol === 'maestro')) abrir(); else pedirAcceso();
+</script>
+</body>
+</html>
