@@ -75,6 +75,7 @@ async function entrar() {
   $('demo').hidden = !DEMO;
   const maestro = S.rol === 'maestro';
   $('me').textContent = maestro ? `${S.caller} · Maestro` : S.caller;
+  $('kitLink').hidden = !maestro;
   $('tabKpis').textContent = maestro ? 'KPIs del equipo' : 'Mis KPIs';
   document.querySelector('#views [data-v="mios"]').hidden = maestro;
   // se abre al momento con lo último que se vio en este dispositivo; los datos frescos llegan por detrás

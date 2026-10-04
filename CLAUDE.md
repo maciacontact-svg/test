@@ -45,6 +45,6 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 - `privacidad.html`: titular MASTERFORGE DIGITAL LLC, contacto maciacontact@gmail.com (enlazada en los pies de página; URL para Meta).
 
 ## Otros
-- Kit de marca (solo maestro, fuera del CRM): `crm-app/kit.html` → crmbiblio.systemacademy.es/kit (pide nombre+PIN maestro o usa la sesión del CRM). Instagram, WhatsApp y portadas de Skool (1460×752); imágenes libres (mover, esquinas, delante/detrás, tarjeta). Recursos en `crm-app/marca/`. PNG de Skool en `skool/portadas/`. Original del artifact: `original/kit-instagram.html`.
+- Kit de marca (solo maestro, fuera del CRM): `crm-app/kit.html` → crmbiblio.systemacademy.es/kit (botón «🎨 Marca» en la barra del CRM, solo maestro; pide nombre+PIN maestro o usa la sesión del CRM). Instagram, WhatsApp y portadas de Skool (1460×752); imágenes libres (mover, esquinas, delante/detrás, tarjeta). Recursos en `crm-app/marca/`. PNG de Skool en `skool/portadas/`. Original del artifact: `original/kit-instagram.html`.
 - `guia/`: guía PDF (fuente `guia.html`, PDF de solo lectura). `historias/recortes/`: piezas PNG para stories.
 - Instrucciones de instalación: `crm/LEEME.md`, `crm/PENDIENTE.md`. Activación completa paso a paso: `crm/ACTIVAR.md`.
