@@ -1,4 +1,4 @@
-/** @OnlyCurrentDoc */
+// (Sin @OnlyCurrentDoc: las grabaciones de llamadas necesitan permiso de Google Drive)
 
 /**
  * System Academy · CRM
@@ -24,14 +24,14 @@ const COL = {
   caller: 7, estado: 8, contacto: 9, intentos: 10, notas: 11,
   id: 12, inversion: 13, meta: 14, cuando: 15, instagram: 16, origen: 17, aviso: 18,
   cualifica: 19, autoagenda: 20, rellamar: 21, rellamarAviso: 22, asignado: 23, embudo: 24,
-  setter: 25, agendadoEl: 26,
+  setter: 25, agendadoEl: 26, notasLlamada: 27, grabaciones: 28,
 };
 const CABECERA = [
   'Fecha registro', 'Nombre', 'Teléfono', 'En qué punto está', 'Qué quiere conseguir', 'Correo',
   'Caller', 'Estado', 'Contacto', 'Nº intentos', 'Notas',
   'ID', 'Inversión al mes', 'Meta a 3-6 meses', 'Cuándo empieza', 'Instagram', 'Origen', 'Aviso Slack',
   'Buen form', 'Autoagendado (Calendly)', 'Volver a llamar (hora)', 'Aviso rellamada', 'Asignado el', 'Embudo',
-  'Setter (enlace IG)', 'Agendado el',
+  'Setter (enlace IG)', 'Agendado el', 'Notas llamada', 'Grabaciones (Drive)',
 ];
 const VISIBLES = 11;
 
@@ -71,6 +71,8 @@ function doPost(e) {
       case 'setting':   return json(guardarSetting(b, auth(b)));
       case 'settingOn': return json(activarSetting(b, auth(b)));
       case 'ig':        return json(eventosInstagram(b));
+      case 'grabacion': return json(subirGrabacion(b, auth(b)));
+      case 'audio':     return json(leerAudio(b, auth(b)));
     }
     return json({ ok: false, error: 'Acción desconocida' });
   } catch (err) {
@@ -99,7 +101,7 @@ function nuevoLead(b) {
     instagram: limpio(b.instagram, 80), origen: limpio(b.origen, 200), aviso: '',
     cualifica: b.cualifica === true ? 'Sí' : 'No', autoagenda: '',
     rellamar: '', rellamarAviso: '', asignado: '', embudo: '',
-    setter: setterDeSlug(b.setter || paramDe(b.origen, 's')), agendadoEl: '',
+    setter: setterDeSlug(b.setter || paramDe(b.origen, 's')), agendadoEl: '', notasLlamada: '', grabaciones: '',
   };
 
   const fila = new Array(CABECERA.length).fill('');
@@ -200,7 +202,7 @@ function leadDesdeCalendly(sh, inv, origen) {
     punto: '', objetivo: '', caller: '', estado: '', contacto: '❌', intentos: 0, notas: '',
     inversion: '', meta: '', cuando: '', instagram: '', origen: origen ? origen + '&sin_formulario=1' : 'Calendly (sin formulario)', aviso: '—',
     cualifica: 'No', autoagenda: '', rellamar: '', rellamarAviso: '', asignado: '', embudo: '',
-    setter: '', agendadoEl: '',
+    setter: '', agendadoEl: '', notasLlamada: '', grabaciones: '',
   };
   const fila = new Array(CABECERA.length).fill('');
   Object.keys(COL).forEach(k => { fila[COL[k] - 1] = celda(lead[k]); });
@@ -306,6 +308,7 @@ function actualizar(b, quien) {
     contacto: v => (v === '' || CONTACTO.indexOf(v) >= 0) ? v : err('Contacto no válido'),
     intentos: v => { const x = Math.round(Number(v)); return x >= 0 && x <= 99 ? x : err('Intentos no válidos'); },
     notas: v => celda(limpio(v, 2000)),
+    notasLlamada: v => celda(limpio(v, 8000)),
     embudo: v => EMBUDO.indexOf(v) >= 0 ? v : err('Embudo no válido'),
   };
 
@@ -376,7 +379,118 @@ function filaALead(f) {
     embudo: String(v('embudo') || ''),
     setter: String(v('setter') || ''),
     agendadoEl: v('agendadoEl') instanceof Date ? v('agendadoEl').toISOString() : '',
+    notasLlamada: String(v('notasLlamada') || ''),
+    grabaciones: grabacionesDe(v('grabaciones')),
   };
+}
+
+// =====================================================================
+// Grabaciones de llamadas (audio que el caller sube desde el iPhone)
+// Van a tu Google Drive, carpeta privada «CRM · Grabaciones»: nadie las ve fuera del CRM.
+// Solo pueden subirlas y oírlas el caller del lead y el maestro.
+// =====================================================================
+const CARPETA_GRAB = 'CRM · Grabaciones';
+const TROZO = 4 * 1024 * 1024;           // el navegador las manda en trozos de 4 MB (múltiplo de 256 KB)
+const MAX_GRAB = 150 * 1024 * 1024;
+
+function grabacionesDe(x) {
+  try { const l = JSON.parse(String(x || '[]')); return Array.isArray(l) ? l : []; } catch (e) { return []; }
+}
+
+// Lead + permiso: el maestro siempre; un caller solo si el lead es suyo (o aún no tiene caller)
+function leadConPermiso(sh, id, u) {
+  const fila = buscarFila(sh, String(id || ''));
+  if (!fila) throw new Error('Lead no encontrado');
+  const f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
+  const caller = String(f[COL.caller - 1] || '');
+  if (u.rol !== 'maestro' && caller && caller.toUpperCase() !== u.nombre.toUpperCase())
+    throw new Error('Solo el caller de este lead puede ver o subir sus grabaciones');
+  return { fila: fila, f: f };
+}
+
+function carpetaGrab() {
+  const it = DriveApp.getFoldersByName(CARPETA_GRAB);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(CARPETA_GRAB);
+}
+
+// Subida por trozos: el primer trozo abre una subida reanudable en Drive y los siguientes la continúan.
+// b: { id (lead), parte (0…), total (bytes), nombre, tipo, sube (lo devuelve el primer trozo), datos (base64) }
+function subirGrabacion(b, u) {
+  const total = Math.round(Number(b.total)), parte = Math.round(Number(b.parte));
+  if (!(total > 0 && total <= MAX_GRAB)) throw new Error('La grabación pesa demasiado (máx. ' + (MAX_GRAB >> 20) + ' MB)');
+  if (!(parte >= 0 && parte * TROZO < total)) throw new Error('Trozo no válido');
+  const tipo = /^audio\/[\w.+-]{1,40}$/.test(String(b.tipo || '')) ? String(b.tipo) : 'audio/mp4';
+  const cache = CacheService.getScriptCache();
+  let ses;
+  if (parte === 0) {
+    const l = leadConPermiso(hoja(HOJA_LEADS), b.id, u);
+    const ext = (String(b.nombre || '').match(/\.(m4a|mp3|wav|aac|caf|ogg|opus|webm|mp4|amr|3gp)$/i) || ['', 'm4a'])[1].toLowerCase();
+    const nombre = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH.mm') + ' · ' +
+      limpio(l.f[COL.nombre - 1], 60).replace(/[\\/:*?"<>|]/g, '') + ' · ' + u.nombre + '.' + ext;
+    const r = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,size', {
+      method: 'post', contentType: 'application/json; charset=UTF-8', muteHttpExceptions: true,
+      headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken(), 'X-Upload-Content-Type': tipo, 'X-Upload-Content-Length': String(total) },
+      payload: JSON.stringify({ name: nombre, mimeType: tipo, parents: [carpetaGrab().getId()] }),
+    });
+    const loc = r.getHeaders().Location || r.getHeaders().location;
+    if (r.getResponseCode() !== 200 || !loc) throw new Error('Drive no ha aceptado la subida (' + r.getResponseCode() + ')');
+    ses = { url: loc, id: String(b.id), quien: u.nombre, total: total, nombre: nombre };
+    b.sube = Utilities.getUuid();
+  } else {
+    ses = JSON.parse(cache.get('sube_' + String(b.sube || '').slice(0, 40)) || 'null');
+    if (!ses || ses.id !== String(b.id) || ses.quien !== u.nombre || ses.total !== total) throw new Error('La subida ha caducado: vuelve a intentarlo');
+  }
+  const bytes = Utilities.base64Decode(String(b.datos || ''));
+  const desde = parte * TROZO, hasta = desde + bytes.length - 1;
+  const ultimo = hasta + 1 >= total;
+  if (!bytes.length || (!ultimo && bytes.length !== TROZO) || hasta >= total) throw new Error('Trozo con tamaño incorrecto');
+  const r = UrlFetchApp.fetch(ses.url, {
+    method: 'put', contentType: 'application/octet-stream', payload: bytes, muteHttpExceptions: true, followRedirects: false,
+    headers: { 'Content-Range': 'bytes ' + desde + '-' + hasta + '/' + total },
+  });
+  const code = r.getResponseCode();
+  if (!ultimo) {
+    if (code !== 308) throw new Error('Drive ha cortado la subida (' + code + ')');
+    cache.put('sube_' + b.sube, JSON.stringify(ses), 21600);
+    return { ok: true, sube: b.sube, sigue: true };
+  }
+  if (code !== 200 && code !== 201) throw new Error('Drive no ha terminado la subida (' + code + ')');
+  cache.remove('sube_' + b.sube);
+  const archivo = JSON.parse(r.getContentText());
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = hoja(HOJA_LEADS);
+    const l = leadConPermiso(sh, b.id, u);
+    const lista = grabacionesDe(l.f[COL.grabaciones - 1]);
+    lista.push({ archivo: archivo.id, fecha: new Date().toISOString(), por: u.nombre, mb: Math.round(total / 1048576 * 10) / 10, tipo: tipo, nombre: ses.nombre });
+    sh.getRange(l.fila, COL.grabaciones).setValue(JSON.stringify(lista));
+    SpreadsheetApp.flush();
+    return { ok: true, lead: filaALead(sh.getRange(l.fila, 1, 1, CABECERA.length).getValues()[0]) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Escuchar: el navegador pide el audio en trozos de 4 MB (solo grabaciones de ese lead y con permiso)
+// b: { id (lead), archivo (ID de Drive), parte }
+function leerAudio(b, u) {
+  const l = leadConPermiso(hoja(HOJA_LEADS), b.id, u);
+  const g = grabacionesDe(l.f[COL.grabaciones - 1]).find(x => x.archivo === String(b.archivo || ''));
+  if (!g) throw new Error('Grabación no encontrada');
+  const parte = Math.max(0, Math.round(Number(b.parte) || 0));
+  const r = UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(g.archivo) + '?alt=media', {
+    muteHttpExceptions: true,
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken(), Range: 'bytes=' + (parte * TROZO) + '-' + ((parte + 1) * TROZO - 1) },
+  });
+  const code = r.getResponseCode();
+  if (code === 416) return { ok: true, datos: '', fin: true };
+  if (code !== 200 && code !== 206) throw new Error('No se ha podido leer la grabación (' + code + '). ¿Se ha borrado de Drive?');
+  const total = Number(String((r.getHeaders()['Content-Range'] || r.getHeaders()['content-range'] || '')).split('/')[1]) || 0;
+  const bytes = r.getContent();
+  return { ok: true, datos: Utilities.base64Encode(bytes), tipo: g.tipo || 'audio/mp4', total: total,
+    fin: code === 200 || !total || (parte + 1) * TROZO >= total };
 }
 
 // =====================================================================
@@ -999,6 +1113,7 @@ function configurar() {
   sh.getRange('C2:C').setNumberFormat('@');
   sh.getRange('I2:J').setHorizontalAlignment('center');
   sh.getRange('K2:K').setWrap(true);
+  carpetaGrab();   // pide permiso de Drive (grabaciones de llamadas)
   const anchos = [135, 180, 140, 250, 250, 230, 110, 150, 90, 95, 320];
   anchos.forEach((w, i) => sh.setColumnWidth(i + 1, w));
   sh.hideColumns(VISIBLES + 1, CABECERA.length - VISIBLES);

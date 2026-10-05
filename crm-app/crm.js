@@ -402,15 +402,99 @@ function abrirFicha(id) {
     ${row('Prioridad para llamar', `${prioridad(l)} de 4 · ${PRIOS[prioridad(l)]}`)}
     ${row('Buen form', l.cualifica ? 'Sí: encaja con el perfil (se le ofreció agendar)' : '')}
     ${row('Autoagendado por Calendly', l.autoagenda)}
-    ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' : l.caller)}${row('Estado', l.estado || 'Nuevo')}${row('Notas', l.notas)}
+    ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' : l.caller)}${row('Estado', l.estado || 'Nuevo')}${row('Notas caller', l.notas)}
+    ${bloqueLlamada(l)}
     ${row('Canal', CANALES[canalDe(l)])}
     ${row('Origen', (o => o.nombre + (o.etiqueta ? ' · ' + o.etiqueta : '') + (l.setter ? ' · setter ' + l.setter : ''))(origenDe(l)))}`;
   $('drawer').classList.add('open');
   $('drawer').setAttribute('aria-hidden', 'false');
 }
+// ---------- Notas llamada y grabaciones ----------
+const PLANTILLA = 'Situación: \nObjetivo: \nObjeciones: \nPresupuesto: \nResultado: \nPróximo paso: ';
+const audios = {};                 // archivo → URL del audio ya descargado (para no bajarlo dos veces)
+let subiendo = null;               // { id, txt } mientras se sube una grabación
+const puedeGrabar = l => S.rol === 'maestro' || !l.caller || l.caller.toUpperCase() === S.caller.toUpperCase();
+function bloqueLlamada(l) {
+  const grabs = l.grabaciones || [];
+  const lista = grabs.map(g => `<li data-archivo="${esc(g.archivo)}"><span>${fecha(g.fecha)} · ${esc(g.por)}${g.mb ? ' · ' + g.mb + ' MB' : ''}</span>
+    ${audios[g.archivo] ? `<audio controls preload="metadata" src="${audios[g.archivo]}"></audio>`
+      : puedeGrabar(l) ? `<button type="button" class="mini" data-oir="${esc(g.archivo)}">▶ Escuchar</button>` : ''}</li>`).join('');
+  const sub = subiendo && subiendo.id === l.id;
+  return `<div class="kv llamada"><small>📝 Notas llamada <button type="button" class="mini" data-plantilla>Plantilla</button></small>
+      <textarea data-ll="${esc(l.id)}" rows="7" placeholder="Puntos importantes de la llamada: situación, objeciones, resultado, próximo paso…">${esc(l.notasLlamada)}</textarea></div>
+    <div class="kv grab"><small>📼 Grabaciones${grabs.length ? ` (${grabs.length})` : ''}</small>
+      ${lista ? `<ul>${lista}</ul>` : ''}
+      ${puedeGrabar(l) ? `<label class="subir${sub ? ' on' : ''}"><input type="file" accept="audio/*,.m4a,.mp3,.wav,.aac" data-subir="${esc(l.id)}" hidden ${sub ? 'disabled' : ''}>
+        ${sub ? esc(subiendo.txt) : '📼 Subir grabación'}</label>
+        <p class="nota">iPhone: graba la llamada con el botón de grabar de la propia llamada → Notas → la grabación → ⋯ → «Guardar audio en Archivos» → súbela aquí.</p>`
+      : '<p class="nota">Solo el caller de este lead puede subir y escuchar sus grabaciones.</p>'}</div>`;
+}
+const aB64 = buf => { let s = ''; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+const deB64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+const TROZO = 4 * 1024 * 1024;     // igual que en Code.gs
+async function subirGrabacion(id, file) {
+  if (!file) return;
+  if (file.size > 150 * 1024 * 1024) return toast('La grabación pesa demasiado (máx. 150 MB)', true);
+  const tipo = /^audio\//.test(file.type) ? file.type : 'audio/mp4';
+  const partes = Math.ceil(file.size / TROZO);
+  const pinta = () => { if ($('drawer').classList.contains('open')) abrirFicha(id); };
+  subiendo = { id, txt: 'Subiendo… 0 %' }; pinta();
+  try {
+    let sube = '', r;
+    for (let i = 0; i < partes; i++) {
+      const datos = aB64(await file.slice(i * TROZO, (i + 1) * TROZO).arrayBuffer());
+      r = await api('grabacion', { id, parte: i, total: file.size, nombre: file.name, tipo, sube, datos });
+      sube = r.sube || sube;
+      subiendo.txt = `Subiendo… ${Math.round((i + 1) / partes * 100)} %`; pinta();
+    }
+    const l = D.leads.find(x => x.id === id);
+    if (l && r.lead) Object.assign(l, r.lead);
+    toast('Grabación guardada');
+  } catch (err) {
+    toast('No se ha subido: ' + err.message, true);
+  } finally {
+    subiendo = null; pinta();
+  }
+}
+async function oirGrabacion(id, archivo, btn) {
+  btn.disabled = true; btn.textContent = 'Cargando…';
+  try {
+    const trozos = []; let tipo = 'audio/mp4';
+    for (let i = 0; i < 60; i++) {
+      const r = await api('audio', { id, archivo, parte: i });
+      if (r.datos) trozos.push(deB64(r.datos));
+      tipo = r.tipo || tipo;
+      if (r.total) btn.textContent = `Cargando… ${Math.min(100, Math.round((i + 1) * TROZO / r.total * 100))} %`;
+      if (r.fin) break;
+    }
+    audios[archivo] = URL.createObjectURL(new Blob(trozos, { type: tipo }));
+    abrirFicha(id);
+  } catch (err) {
+    btn.disabled = false; btn.textContent = '▶ Escuchar';
+    toast('No se ha podido cargar: ' + err.message, true);
+  }
+}
+$('drawer').addEventListener('change', e => {
+  const i = e.target.closest('[data-subir]');
+  if (i) subirGrabacion(i.dataset.subir, i.files[0]);
+});
+$('drawer').addEventListener('focusout', e => {
+  const t = e.target.closest('[data-ll]');
+  if (!t) return;
+  const l = D.leads.find(x => x.id === t.dataset.ll);
+  if (l && t.value.trim() !== (l.notasLlamada || '')) guardar(l.id, { notasLlamada: t.value.trim() }).then(ok => ok && toast('Notas de la llamada guardadas'));
+});
+
 function cerrarFicha() { $('drawer').classList.remove('open'); $('drawer').setAttribute('aria-hidden', 'true'); }
 $('drawer').addEventListener('click', e => {
   if (e.target.closest('[data-close]')) return cerrarFicha();
+  if (e.target.closest('[data-plantilla]')) {
+    const t = $('dBody').querySelector('[data-ll]');
+    if (t && !t.value.trim()) t.value = PLANTILLA;
+    return t && t.focus();
+  }
+  const oir = e.target.closest('[data-oir]');
+  if (oir) return oirGrabacion($('dBody').querySelector('[data-ll]').dataset.ll, oir.dataset.oir, oir);
   const b = e.target.closest('[data-etapa]');
   if (!b || b.disabled) return;
   const id = b.closest('.pasos').dataset.id;
@@ -974,6 +1058,8 @@ function demoApi(action, extra) {
         asignado: b[4] ? min(b[3] - 1) : '',
         embudo: ['', '', 'Conversación', '', 'Conversación', '', 'Oferta llamada', 'Oferta llamada', 'Conversación'][i],
         rellamar: i === 4 ? min(5) : i === 6 ? new Date(Date.now() + 150 * 60000).toISOString() : '',
+        notasLlamada: i === 2 ? 'Situación: trabaja en hostelería, 0 experiencia en YouTube\nObjetivo: ingreso extra en 6 meses\nObjeciones: precio, poco tiempo\nPresupuesto: 200-400 €/mes\nResultado: lo piensa\nPróximo paso: rellamar el jueves' : '',
+        grabaciones: i === 2 ? [{ archivo: 'demo-a', fecha: min(40), por: 'Mario.e', mb: 18.4, tipo: 'audio/mp4' }] : [],
       })),
     };
   }
@@ -1007,6 +1093,13 @@ function demoApi(action, extra) {
   }
   if (action === 'setting') { Object.assign(diaSet(db.setting, extra.dia, S.caller), extra.cambios); return Promise.resolve({ ok: true }); }
   if (action === 'settingOn') { db.setting.callers.find(c => c.nombre === extra.para).on = extra.on; return Promise.resolve({ ok: true }); }
+  if (action === 'grabacion') {
+    const l = db.leads.find(x => x.id === extra.id);
+    if (extra.parte * TROZO + TROZO < extra.total) return new Promise(r => setTimeout(() => r({ ok: true, sube: 'demo', sigue: true }), 300));
+    l.grabaciones = [...(l.grabaciones || []), { archivo: 'demo' + Date.now(), fecha: new Date().toISOString(), por: S.caller, mb: Math.round(extra.total / 104857.6) / 10, tipo: extra.tipo }];
+    return new Promise(r => setTimeout(() => r({ ok: true, lead: { ...l } }), 300));
+  }
+  if (action === 'audio') return Promise.reject(new Error('En la demo no hay audio real'));
   if (action === 'update') {
     const l = db.leads.find(x => x.id === extra.id);
     Object.assign(l, extra.cambios);

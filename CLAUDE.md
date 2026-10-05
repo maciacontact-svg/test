@@ -26,11 +26,12 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 - «Cuenta» del alumno = `localStorage['sa-lead']` {id,nombre,correo}; en otro dispositivo, acción `cuenta` por email.
 
 ## CRM
-- `crm/Code.gs` = Apps Script dentro del Google Sheet (pestañas Leads y Ajustes). Acciones: lead, agendado, cuenta, login, list, update, setting, settingOn, ig.
+- `crm/Code.gs` = Apps Script dentro del Google Sheet (pestañas Leads y Ajustes). Acciones: lead, agendado, cuenta, login, list, update, setting, settingOn, ig, grabacion, audio.
   Columnas A–K visibles (orden fijado por el cliente), L–Z ocultas (ver `COL`). Ajustes: A/B callers+PIN, C casilla Setting, D estados, G2 Slack, G3 URL CRM, G4 minutos, G5 menciones, G6 token Calendly, G7/G8 acceso maestro (Mario), G9 clave IG, G10 token IG (se renueva solo cada semana: `renovarTokenInstagram`, estado en G12), G11 frases de propuesta, G13 dominio de la web para enlaces, G14 estado de `conectarInstagram` (suscribe la cuenta a messages/messaging_seen), I–K setters (nombre, palabra clave, código de enlace).
 - Si cambia `Code.gs`, el usuario debe: copiar el archivo (GitHub «Copy raw file») → pegar en Apps Script → ejecutar `configurar` → Implementar › Gestionar › Nueva versión. Avisarle siempre.
 - `crm-app/` = dashboard (login nombre+PIN, rol caller/maestro, rellamadas desde notas, embudo por lead, KPIs por caller).
   Pestaña «Setting» (hoja Setting: día+caller → abiertos, convos, ofertas, agendas, ofertasBib, entradasBib); solo el maestro la activa por caller.
+  Ficha del lead: «Notas caller» + «📝 Notas llamada» (columna notasLlamada, con plantilla) + «📼 Grabaciones» (audio subido desde el iPhone → Drive, carpeta privada «CRM · Grabaciones», resumible por trozos de 4 MB; columna grabaciones = JSON; solo el caller del lead o el maestro suben/oyen, filtrado en Code.gs).
   País por teléfono (`prefijo`/`espana`: +34 o 9 cifras por 6/7/9). Vista «🎯 Prioridad»: España buen form → España → LATAM buen form → LATAM (dentro, por llegada).
 - Probar Code.gs con un mock de SpreadsheetApp en Node antes de entregar.
 
