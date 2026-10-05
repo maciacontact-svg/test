@@ -116,6 +116,15 @@ El dashboard vive en la carpeta `crm-app/` y se publica como **otro proyecto de 
 - Al elegir un estado como «Contactado», «Seguimiento»… se marca ✅ solo.
 - Las notas se guardan al salir del cuadro de texto (o con Ctrl/Cmd + Enter).
 
+## 10. Grabaciones de llamadas y «Notas llamada»
+
+- En la ficha del lead: **📝 Notas llamada** (aparte de las notas del caller) y **📼 Subir grabación** → se guarda en tu Drive, carpeta privada «CRM · Grabaciones», y se escucha con «▶ Escuchar».
+- Solo el caller del lead y el maestro pueden subirlas y oírlas.
+- `configurar` pide permiso de Google Drive. Si sale **«Permission denied while enabling APIs: drive for GCP project …»**:
+  1. Abre `https://console.cloud.google.com/apis/library/drive.googleapis.com?project=NÚMERO` (el número que sale en el error) con la misma cuenta del Sheet → **Habilitar**.
+  2. Si dice que no tienes permiso: Apps Script → ⚙️ Configuración del proyecto → «Proyecto de Google Cloud (GCP)». Ese proyecto tiene que ser tuyo; si no lo es, cámbialo por uno tuyo con la Google Drive API habilitada.
+  3. Vuelve a ejecutar `configurar` y publica una nueva versión.
+
 ## Preguntas rápidas
 
 - **¿Puedo seguir editando en el Sheet?** Sí. El dashboard lo recoge en la siguiente actualización (15 s). No borres ni reordenes las columnas; ordenar filas o filtrar sí se puede.

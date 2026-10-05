@@ -1113,7 +1113,9 @@ function configurar() {
   sh.getRange('C2:C').setNumberFormat('@');
   sh.getRange('I2:J').setHorizontalAlignment('center');
   sh.getRange('K2:K').setWrap(true);
-  carpetaGrab();   // pide permiso de Drive (grabaciones de llamadas)
+  // Pide permiso de Drive (grabaciones de llamadas). Si Drive falla, el resto del CRM se configura igual.
+  let avisoDrive = '';
+  try { carpetaGrab(); } catch (e) { avisoDrive = 'Grabaciones: ' + e.message; console.error(avisoDrive); }
   const anchos = [135, 180, 140, 250, 250, 230, 110, 150, 90, 95, 320];
   anchos.forEach((w, i) => sh.setColumnWidth(i + 1, w));
   sh.hideColumns(VISIBLES + 1, CABECERA.length - VISIBLES);
@@ -1148,7 +1150,8 @@ function configurar() {
   ScriptApp.newTrigger('revisarAvisos').timeBased().everyMinutes(1).create();
 
   ss.setActiveSheet(sh);
-  ss.toast('Siguiente: en "Ajustes" cambia los PIN, pega el webhook de Slack y publica como aplicación web.', 'CRM listo ✅', 15);
+  if (avisoDrive) ss.toast(avisoDrive + ' (mira crm/LEEME.md → Grabaciones)', 'CRM listo, pero sin grabaciones ⚠️', 30);
+  else ss.toast('Siguiente: en "Ajustes" cambia los PIN, pega el webhook de Slack y publica como aplicación web.', 'CRM listo ✅', 15);
 }
 
 function estiloCabecera(r) {
