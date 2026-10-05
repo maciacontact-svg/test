@@ -380,7 +380,7 @@ function filaALead(f) {
     setter: String(v('setter') || ''),
     agendadoEl: v('agendadoEl') instanceof Date ? v('agendadoEl').toISOString() : '',
     notasLlamada: String(v('notasLlamada') || ''),
-    grabaciones: grabacionesDe(v('grabaciones')),
+    grabaciones: grabacionesDe(v('grabaciones')).map(g => ({ archivo: g.archivo, fecha: g.fecha, por: g.por, mb: g.mb })),   // lo justo: la lista se pide cada 15 s
   };
 }
 
