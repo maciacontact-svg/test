@@ -109,3 +109,19 @@ Luego borra esa fila del Sheet.
 
 Dile a cada setter: su **marca**, que sus enlaces están en la pestaña **Instagram** del CRM y que, si tiene el setting activado,
 verá la pestaña **Setting**. Cada uno solo ve lo suyo; tú lo ves todo.
+
+## G. Pipeline de closers, informe semanal y Fathom
+
+1. Actualiza el Apps Script (paso **B**) y ejecuta `configurar`: crea la columna **E «Closer (pipeline)»** en Ajustes,
+   la celda **G16** (closer por defecto) y el activador del **informe semanal** (lunes a las 9 → Slack, canal de G2,
+   y una fila en la pestaña «Informe semanal»).
+2. En el CRM (como Mario) → pestaña **Closers** → «Quién tiene acceso»: activa a cada closer (hoy, Mario.e).
+   Los agendados sin closer van al de **G16**; si G16 está vacío y solo hay un closer con acceso, a ese.
+3. **Fathom** (opcional: rellena solo el link y 3 líneas de conclusiones):
+   - Fathom → *Settings → API Access → Webhooks* → **Add webhook** con la URL `https://biblioteca.systemacademy.es/api/fathom`,
+     marcando *Include summary* (y *Action items*). Copia el **secreto** que te da (`whsec_…`).
+   - Vercel → proyecto web → *Settings → Environment Variables*: `FATHOM_WEBHOOK_SECRET` = ese secreto
+     (`IG_CRM_KEY` y `CRM_API_URL` ya están de Instagram). **Redeploy**.
+   - El lead se encuentra por el email del invitado de la reunión: tiene que ser el mismo que el de su ficha.
+     Solo se rellena si el campo está vacío (lo que escriba el closer manda).
+   - Si no llega: Vercel → **Logs**, filtra `/api/fathom` (`Bad signature` = el secreto no coincide; `Ningún lead con ese email`).

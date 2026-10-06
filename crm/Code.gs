@@ -5,7 +5,8 @@
  * Google Apps Script que vive dentro de tu Google Sheet (Extensiones → Apps Script).
  *
  *  - Recibe los leads del formulario de la web y los guarda en la pestaña "Leads".
- *  - Avisa por Slack al momento, y otra vez si a los X minutos nadie ha llamado.
+ *  - Avisa por Slack al momento y cuando toca volver a llamar (hora o día escritos en las notas).
+ *  - Pipeline de closers (los agendados), informe semanal a Slack los lunes y conclusiones de Fathom.
  *  - Sirve los datos al dashboard del equipo (crm.html) con acceso por nombre + PIN.
  *    El equipo NUNCA necesita acceso al Sheet: solo tú lo tienes.
  *
@@ -25,14 +26,17 @@ const COL = {
   id: 12, inversion: 13, meta: 14, cuando: 15, instagram: 16, origen: 17, aviso: 18,
   cualifica: 19, autoagenda: 20, rellamar: 21, rellamarAviso: 22, asignado: 23, embudo: 24,
   setter: 25, agendadoEl: 26, notasLlamada: 27, grabaciones: 28, fijo: 29, alias: 30,
+  // Pipeline de closers (lead agendado → pasa al closer)
+  closer: 31, closerEstado: 32, closerNotas: 33, linkLlamada: 34, conclusiones: 35, diaAgenda: 36, fuente: 37,
 };
 const CABECERA = [
   'Fecha registro', 'Nombre', 'Teléfono', 'En qué punto está', 'Qué quiere conseguir', 'Correo',
-  'Caller', 'Estado', 'Contacto', 'Nº intentos', 'Notas',
+  'Caller', 'Estado', 'Respondió', 'Nº intentos', 'Notas',
   'ID', 'Inversión al mes', 'Meta a 3-6 meses', 'Cuándo empieza', 'Instagram', 'Origen', 'Aviso Slack',
   'Buen form', 'Autoagendado (Calendly)', 'Volver a llamar (hora)', 'Aviso rellamada', 'Asignado el', 'Embudo',
   'Setter (enlace IG)', 'Agendado el', 'Notas llamada', 'Grabaciones (Drive)',
   'Caller fijo (agendó en llamada)', 'IDs fusionados',
+  'Closer', 'Estado closer', 'Notas closer', 'Link de llamada (Fathom)', 'Conclusiones', 'Día de la agenda', 'UTM source (pipeline)',
 ];
 const VISIBLES = 11;
 
@@ -45,9 +49,13 @@ const COLORES = { // fondo, texto (los mismos tonos que tu hoja de cold calling)
 const CONTACTO = ['✅', '❌'];
 const EMBUDO = ['', 'Conversación', 'Oferta llamada'];   // además de Contactado (intentos), Respondió (✅) y Agendado (estado)
 const CIERRAN = ['Agendado', 'Perdido', 'Invalid'];       // estados que quitan la hora de volver a llamar
+// Pipeline de closers
+const ESTADOS_CLOSER = ['Pendiente', 'Reagendado', 'No show', 'Se lo piensa', 'Seguimiento', 'Pagado', 'No cierra', 'Cancelado'];
+const FUENTES_CLOSER = ['SETTING', 'COLD', 'YT', 'IG'];
+const CAMPOS_CLOSER = ['closer', 'closerEstado', 'closerNotas', 'linkLlamada', 'conclusiones', 'diaAgenda', 'fuente'];
 
 // Celdas de la pestaña "Ajustes"
-const AJ = { callers: 'A2:A', pins: 'B2:B', setting: 'C2:C', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8',
+const AJ = { callers: 'A2:A', pins: 'B2:B', setting: 'C2:C', estados: 'D2:D', closers: 'E2:E', closerDef: 'G16', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8',
   igClave: 'G9', igToken: 'G10', igFrases: 'G11', igRenovado: 'G12', web: 'G13', webhookAgendas: 'G15', setters: 'I2:K' };
 
 // =====================================================================
@@ -67,10 +75,12 @@ function doPost(e) {
       case 'agendado': return json(autoagendado(b));
       case 'cuenta': return json(buscarCuenta(b));
       case 'login':  { const u = auth(b); return json({ ok: true, caller: u.nombre, rol: u.rol }); }
-      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, web: dominiosWeb()[0], setting: settingDe(u), setters: settersDe(u), ig: listarIg(u), enlacesCaller: enlacesCallerDe(u) })); }
+      case 'list':   { const u = auth(b); return json(Object.assign(listar(u), { rol: u.rol, web: dominiosWeb()[0], setting: settingDe(u), setters: settersDe(u), ig: listarIg(u), enlacesCaller: enlacesCallerDe(u) })); }
       case 'update': return json(actualizar(b, auth(b)));
       case 'setting':   return json(guardarSetting(b, auth(b)));
       case 'settingOn': return json(activarSetting(b, auth(b)));
+      case 'closerOn':  return json(activarCloser(b, auth(b)));
+      case 'fathom':    return json(reunionFathom(b));
       case 'ig':        return json(eventosInstagram(b));
       case 'grabacion': return json(subirGrabacion(b, auth(b)));
       case 'grabacionFin': return json(terminarGrabacion(b, auth(b)));
@@ -109,7 +119,7 @@ function nuevoLead(b) {
   };
 
   const fila = new Array(CABECERA.length).fill('');
-  Object.keys(COL).forEach(k => { fila[COL[k] - 1] = celda(lead[k]); });
+  Object.keys(COL).forEach(k => { fila[COL[k] - 1] = lead[k] == null ? '' : celda(lead[k]); });
 
   // Mismo teléfono que un lead que ya está → UNA sola ficha: se completa la que había (no se crea otra)
   let antes = null;
@@ -165,7 +175,9 @@ function autoagendado(b) {
     }
     if (!fila) throw new Error('Lead no encontrado');
     f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
-    cuando = horaLlamada(b.evento);
+    const ini = inicioLlamada(b.evento);
+    cuando = ini ? Utilities.formatDate(ini, TZ, 'dd/MM HH:mm') : '';
+    if (ini) sh.getRange(fila, COL.diaAgenda).setValue(ini);
     const marca = cuando ? 'Llamada ' + cuando : 'Reservado ' + Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm');
     if (porCaller) { const r = agendadoPorCaller(sh, fila, f, porCaller, marca, cuando, b); lock.releaseLock(); slackAgenda(f, '📞 *' + esc(porCaller) + '* ha agendado a *' + esc(f[COL.nombre - 1]) + '* en llamada', cuando, inv || invitadoCalendly(b.invitado)); return r; }
     if (f[COL.autoagenda - 1]) return { ok: true, repetido: true };
@@ -289,7 +301,7 @@ function leadDesdeCalendly(sh, inv, origen) {
     fijo: '', alias: '',
   };
   const fila = new Array(CABECERA.length).fill('');
-  Object.keys(COL).forEach(k => { fila[COL[k] - 1] = celda(lead[k]); });
+  Object.keys(COL).forEach(k => { fila[COL[k] - 1] = lead[k] == null ? '' : celda(lead[k]); });
   sh.appendRow(fila);
   return sh.getLastRow();
 }
@@ -319,10 +331,11 @@ function calendlyGet(uri, patron) {
 }
 
 // Fecha y hora de la llamada (solo si has pegado tu token de Calendly en Ajustes → G6)
-function horaLlamada(evento) {
+function inicioLlamada(evento) {
   const j = calendlyGet(evento, /^https:\/\/api\.calendly\.com\/scheduled_events\/[A-Za-z0-9-]+$/);
   const t = j && j.resource && j.resource.start_time;
-  return t ? Utilities.formatDate(new Date(t), TZ, 'dd/MM HH:mm') : '';
+  const d = t ? new Date(t) : null;
+  return d && !isNaN(d) ? d : null;
 }
 
 // =====================================================================
@@ -355,7 +368,8 @@ function maestro() {
   return { nombre: String(ajCelda(AJ.maestro)).trim(), pin: String(ajCelda(AJ.maestroPin)).trim() };
 }
 
-function listar() {
+function listar(u) {
+  u = u || { rol: 'maestro' };
   const sh = hoja(HOJA_LEADS);
   const n = sh.getLastRow() - 1;
   const leads = [];
@@ -374,6 +388,12 @@ function listar() {
     });
     if (cambios) SpreadsheetApp.flush();
   }
+  // Pipeline de closers: lo que habla el closer con el lead solo lo ven ese closer y el maestro (se quita aquí, no en el navegador)
+  const def = closerPorDefecto();
+  leads.forEach(l => {
+    if (!l.closer && enPipeline(l)) l.closer = def;
+    if (u.rol !== 'maestro' && !mismoNombre(l.closer, u.nombre)) { l.closerNotas = ''; l.conclusiones = ''; l.linkLlamada = ''; }
+  });
   return {
     ok: true,
     ahora: new Date().toISOString(),
@@ -381,7 +401,43 @@ function listar() {
     estados: estados(),
     minutos: minutosAviso(),
     leads: leads,
+    pipeline: pipelineDe(u),
   };
+}
+
+// =====================================================================
+// Pipeline de closers: un lead agendado (por caller o autoagendado) sale de la lista de leads y pasa aquí.
+// Acceso: el maestro lo activa por persona (Ajustes → columna E). Cada closer ve solo sus leads; el maestro, todos.
+// =====================================================================
+const mismoNombre = (a, b) => String(a || '').trim().toUpperCase() === String(b || '').trim().toUpperCase();
+const enPipeline = l => l.estado === 'Agendado' || !!l.autoagenda;
+
+// Closer de los agendados que aún no tienen: Ajustes → G16; si está vacío y solo una persona tiene acceso de closer, esa
+function closerPorDefecto() {
+  const eq = equipo();
+  const g = String(ajCelda(AJ.closerDef) || '').trim();
+  const p = eq.find(x => mismoNombre(x.nombre, g));
+  if (p) return p.nombre;
+  const con = eq.filter(x => x.closer);
+  return con.length === 1 ? con[0].nombre : '';
+}
+
+function pipelineDe(u) {
+  const eq = equipo();
+  const base = { estados: ESTADOS_CLOSER, fuentes: FUENTES_CLOSER, closers: eq.map(p => p.nombre) };
+  if (u.rol === 'maestro') return Object.assign(base, { on: true, acceso: eq.map(p => ({ nombre: p.nombre, on: p.closer })), porDefecto: closerPorDefecto() });
+  const yo = eq.find(p => mismoNombre(p.nombre, u.nombre));
+  return Object.assign(base, { on: !!(yo && yo.closer) });
+}
+
+function activarCloser(b, u) {
+  if (u.rol !== 'maestro') throw new Error('Solo el acceso maestro puede dar acceso al pipeline');
+  const p = equipo().find(x => x.nombre === String(b.para || ''));
+  if (!p) throw new Error('Persona no encontrada');
+  hoja(HOJA_AJUSTES).getRange(p.fila, 5).setValue(!!b.on);
+  AJM = null;
+  SpreadsheetApp.flush();
+  return { ok: true, nombre: p.nombre, on: !!b.on };
 }
 
 function actualizar(b, u) {
@@ -396,6 +452,14 @@ function actualizar(b, u) {
     notas: v => celda(limpio(v, 2000)),
     notasLlamada: v => celda(limpio(v, 8000)),
     embudo: v => EMBUDO.indexOf(v) >= 0 ? v : err('Embudo no válido'),
+    // pipeline de closers
+    closer: v => (v === '' || equipo().some(p => p.nombre === v)) ? v : err('Closer no válido'),
+    closerEstado: v => (v === '' || ESTADOS_CLOSER.indexOf(v) >= 0) ? v : err('Estado de closer no válido'),
+    closerNotas: v => celda(limpio(v, 4000)),
+    linkLlamada: v => { const x = limpio(v, 500); return !x || /^https:\/\/\S+$/.test(x) ? x : err('El link tiene que empezar por https://'); },
+    conclusiones: v => celda(limpio(v, 2000)),
+    diaAgenda: v => { if (!v) return ''; const d = new Date(v); return isNaN(d) ? err('Fecha no válida') : d; },
+    fuente: v => (v === '' || FUENTES_CLOSER.indexOf(v) >= 0) ? v : err('UTM source no válido'),
   };
 
   const lock = LockService.getScriptLock();
@@ -407,6 +471,20 @@ function actualizar(b, u) {
     const antes = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
     const ant = k => antes[COL[k] - 1];
     if ('caller' in c) permitido.caller(c.caller);    // antes de tocar nada
+    // Pipeline: el maestro, o el closer del lead si tiene el acceso activado
+    if (CAMPOS_CLOSER.some(k => k in c)) {
+      if (!maestro) {
+        const yo = equipo().find(p => mismoNombre(p.nombre, quien));
+        if (!yo || !yo.closer) throw new Error('No tienes acceso al pipeline de closers (lo activa Mario)');
+        const suyo = String(ant('closer') || '') || closerPorDefecto();
+        if (!mismoNombre(suyo, quien)) throw new Error('Este lead lo lleva otro closer' + (suyo ? ' (' + suyo + ')' : ''));
+      }
+      CAMPOS_CLOSER.forEach(k => {
+        if (!(k in c)) return;
+        sh.getRange(fila, COL[k]).setValue(k === 'diaAgenda' ? permitido[k](c[k]) : permitido[k](String(c[k] == null ? '' : c[k])));
+        delete c[k];
+      });
+    }
     const ahora = new Date();
     // Autoagendado y caller fijo: solo el maestro los cambia (p. ej. un caller agendó en llamada con el enlace equivocado)
     if (!maestro) {
@@ -449,6 +527,8 @@ function actualizar(b, u) {
       if (!permitido[k]) return;
       sh.getRange(fila, COL[k]).setValue(permitido[k](c[k]));
     });
+    // Pasa a Agendado a mano → cuándo (para el informe semanal) y al pipeline de closers
+    if (c.estado === 'Agendado' && ant('estado') !== 'Agendado' && !ant('agendadoEl')) sh.getRange(fila, COL.agendadoEl).setValue(ahora);
     // Asignación: guardamos cuándo se lo ha quedado el caller (para sus KPIs por día)
     if ('caller' in c && c.caller !== ant('caller')) sh.getRange(fila, COL.asignado).setValue(c.caller ? ahora : '');
     // "llamar a las 19:00", "después"… en las notas → hora de volver a llamar
@@ -512,7 +592,8 @@ function combinar(a, b) {
   const vacio = x => x === '' || x == null;
   const txt = x => String(x == null ? '' : x).trim();
   // datos que faltan en la ficha
-  ['telefono', 'correo', 'origen', 'setter', 'rellamar', 'rellamarAviso', 'asignado', 'agendadoEl', 'aviso', 'fijo']
+  ['telefono', 'correo', 'origen', 'setter', 'rellamar', 'rellamarAviso', 'asignado', 'agendadoEl', 'aviso', 'fijo',
+    'closer', 'closerEstado', 'closerNotas', 'linkLlamada', 'conclusiones', 'diaAgenda', 'fuente']
     .forEach(k => { if (vacio(v(a, k)) && !vacio(v(b, k))) set(k, v(b, k)); });
   // respuestas del formulario: mandan las más recientes
   ['punto', 'objetivo', 'inversion', 'meta', 'cuando', 'instagram'].forEach(k => { if (!vacio(v(b, k))) set(k, v(b, k)); });
@@ -604,6 +685,10 @@ function filaALead(f) {
     fijo: String(v('fijo') || ''),
     notasLlamada: String(v('notasLlamada') || ''),
     grabaciones: grabacionesDe(v('grabaciones')).map(g => ({ archivo: g.archivo, fecha: g.fecha, por: g.por, mb: g.mb })),   // lo justo: la lista se pide cada 15 s
+    closer: String(v('closer') || ''), closerEstado: String(v('closerEstado') || ''), closerNotas: String(v('closerNotas') || ''),
+    linkLlamada: String(v('linkLlamada') || ''), conclusiones: String(v('conclusiones') || ''),
+    diaAgenda: v('diaAgenda') instanceof Date ? v('diaAgenda').toISOString() : '',
+    fuente: String(v('fuente') || ''),
   };
 }
 
@@ -1118,13 +1203,17 @@ function listarIg(u) {
 // =====================================================================
 // Notas → hora de volver a llamar
 //   "19:00", "19.30", "19h", "a las 7", "mañana a las 10", "en 2 horas", "en 30 min"
+//   "llamar miércoles 18:00", "el jueves a las 6" (→ 18:00), "lunes" (→ 10:00), "15/10 a las 12"
 //   "después", "luego", "más tarde", "en un rato" → dentro de 2 h 30 min
 // Devuelve { fecha, clave }: la clave sirve para recalcular solo si cambia lo que se ha escrito.
 // =====================================================================
 const DESPUES_MIN = 150;
+const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
 function horaEnNota(nota, ahora) {
-  const t = String(nota || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // las líneas que escribe el propio CRM (📅 autoagendado, 📞 agendado en llamada, 📎…) no cuentan
+  const t = String(nota || '').split('\n').filter(l => !/^\s*(📅|📞|📎|🔁)/.test(l)).join('\n')
+    .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const ninguna = { fecha: null, clave: '' };
   if (!t.trim()) return ninguna;
   const base = new Date(ahora.getTime());
@@ -1138,6 +1227,19 @@ function horaEnNota(nota, ahora) {
     return { fecha: new Date(base.getTime() + min * 60000), clave: m[0] };
   }
 
+  // día concreto: "miércoles", "el lunes", "15/10" (sin hora → a las 10:00)
+  const hoy0 = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+  let dia = null, claveDia = '';
+  if ((m = t.match(/\b(0?[1-9]|[12]\d|3[01])\/(0?[1-9]|1[0-2])\b/))) {
+    dia = new Date(base.getFullYear(), +m[2] - 1, +m[1]);
+    if (hoy0 - dia > 30 * 864e5) dia.setFullYear(dia.getFullYear() + 1);   // «24/08» escrito en octubre → el año que viene
+    claveDia = m[0];
+  } else if ((m = t.match(/\b(domingo|lunes|martes|miercoles|jueves|viernes|sabado)\b/))) {
+    dia = new Date(hoy0.getTime());
+    dia.setDate(dia.getDate() + (DIAS_SEMANA.indexOf(m[1]) - base.getDay() + 7) % 7);
+    claveDia = m[1];
+  }
+
   // hora concreta
   let h = -1, mi = 0, clave = '';
   if ((m = t.match(/\b([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)\b/))) { h = +m[1]; mi = +m[2]; clave = m[0]; }
@@ -1146,9 +1248,16 @@ function horaEnNota(nota, ahora) {
   }
   else if ((m = t.match(/\b([01]?\d|2[0-3])\s*(?:h|hs|horas?)\b/))) { h = +m[1]; clave = m[0]; }
 
+  const porLaManana = /\b(por|de) la manana\b/.test(t);
+  const tarde = /\b(tarde|noche)\b/.test(t) && !/\bmas tarde\b/.test(t);
+  if (dia) {
+    if (h < 0) { h = 10; mi = 0; }
+    else if (h < 12 && (tarde || (h >= 1 && h <= 7 && !porLaManana))) h += 12;   // "el jueves a las 6" → 18:00
+    const d = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate(), h, mi);
+    if (d <= base && !/\//.test(claveDia)) d.setDate(d.getDate() + 7);              // "miércoles" y hoy es miércoles pero ya pasó la hora
+    return { fecha: d, clave: claveDia + '@' + clave + (tarde ? 't' : '') };
+  }
   if (h >= 0) {
-    const porLaManana = /\b(por|de) la manana\b/.test(t);
-    const tarde = /\b(tarde|noche)\b/.test(t) && !/\bmas tarde\b/.test(t);
     const dias = /\bpasado manana\b/.test(t) ? 2 : (/\bmanana\b/.test(t) && !porLaManana) ? 1 : 0;
     if (tarde && h < 12) h += 12;
     const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + dias, h, mi);
@@ -1165,6 +1274,142 @@ function horaEnNota(nota, ahora) {
     return { fecha: new Date(base.getTime() + DESPUES_MIN * 60000), clave: m[1] };
   }
   return ninguna;
+}
+
+// =====================================================================
+// Fathom (grabación de la llamada del closer): la función de Vercel /api/fathom recibe el aviso de Fathom
+// y lo reenvía aquí. Se busca el lead por el email del invitado y se rellenan el link y las conclusiones
+// (solo si están vacíos: lo que escriba el closer manda). b = { clave, reunion: { url, invitados: [emails], nombres, resumen } }
+// =====================================================================
+function reunionFathom(b) {
+  const clave = String(ajCelda(AJ.igClave)).trim();
+  if (clave.length < 16 || String(b.clave || '') !== clave) throw new Error('Clave incorrecta');
+  const r = b.reunion || {};
+  const url = limpio(r.url, 500);
+  const correos = (Array.isArray(r.invitados) ? r.invitados : []).map(x => limpio(x, 120).toLowerCase()).filter(Boolean).slice(0, 20);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = hoja(HOJA_LEADS);
+    let fila = 0;
+    correos.some(c => (fila = buscarCorreo(sh, c)));
+    if (!fila) return { ok: true, encontrado: false };
+    const f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
+    if (/^https:\/\/\S+$/.test(url) && !f[COL.linkLlamada - 1]) sh.getRange(fila, COL.linkLlamada).setValue(url);
+    const res = limpio(r.resumen, 1200);
+    if (res && !String(f[COL.conclusiones - 1] || '').trim()) sh.getRange(fila, COL.conclusiones).setValue(celda('🤖 Fathom: ' + res));
+    SpreadsheetApp.flush();
+    return { ok: true, encontrado: true, id: String(f[COL.id - 1]) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// =====================================================================
+// Informe semanal: cada lunes a las 9 (activador de configurar) llega a Slack cómo fue la semana pasada
+// comparada con la anterior, y se guarda una fila en la pestaña «Informe semanal».
+// Las cuentas son las mismas que la tarjeta «Semana» de la pestaña KPIs del CRM (crm.js → metricasSemana).
+// =====================================================================
+const HOJA_INFORME = 'Informe semanal';
+const INF = [
+  ['leads', 'Leads nuevos'], ['buen', '⭐ Buen form'], ['asignados', 'Asignados a caller'], ['contactados', 'Contactados (algún intento)'],
+  ['respondieron', 'Respondieron'], ['ofertas', 'Ofertas de llamada'], ['agCaller', 'Agendados por caller'], ['auto', 'Autoagendados'],
+  ['agendas', 'Agendas totales'], ['llamadas', 'Llamadas de closer'], ['noShow', 'No show'], ['pagados', 'Pagados'],
+];
+const INF_PCT = [
+  ['pContacto', '% contacto (respondieron / asignados)'], ['pLlamadaAgenda', '% llamada → agenda (agendados / respondieron)'],
+  ['pLeadAgenda', '% lead → agenda (agendas / leads)'], ['pCierre', '% cierre (pagados / llamadas hechas)'],
+];
+
+function etapaLead(l) {
+  if (l.estado === 'Agendado' && !l.autoagenda) return 5;
+  if (l.embudo === 'Oferta llamada') return 4;
+  if (l.embudo === 'Conversación') return 3;
+  if (l.contacto === '✅') return 2;
+  if (l.intentos > 0 || l.estado === 'Contactado') return 1;
+  return 0;
+}
+
+function metricasSemana(L, desde, hasta) {
+  const en = iso => { if (!iso) return false; const t = new Date(iso).getTime(); return t >= desde && t < hasta; };
+  const m = {};
+  INF.forEach(x => { m[x[0]] = 0; });
+  let hechas = 0;
+  L.forEach(l => {
+    if (en(l.fecha)) { m.leads++; if (l.cualifica) m.buen++; }
+    if (l.autoagenda && en(l.agendadoEl || l.fecha)) m.auto++;
+    if (enPipeline(l) && en(l.agendadoEl || (l.autoagenda ? l.fecha : ''))) m.agendas++;
+    if (l.caller && !l.autoagenda && en(l.asignado || l.fecha)) {
+      const e = etapaLead(l);
+      m.asignados++;
+      if (e >= 1) m.contactados++;
+      if (e >= 2) m.respondieron++;
+      if (e >= 4) m.ofertas++;
+      if (e >= 5) m.agCaller++;
+    }
+    const dA = diaAgendaDe(l);
+    if (enPipeline(l) && dA && en(dA.toISOString())) {
+      m.llamadas++;
+      if (l.closerEstado === 'No show') m.noShow++;
+      if (l.closerEstado === 'Pagado') m.pagados++;
+      if (['Pagado', 'No cierra', 'Se lo piensa', 'Seguimiento'].indexOf(l.closerEstado) >= 0) hechas++;
+    }
+  });
+  const p = (a, b) => b ? Math.round(a / b * 100) : 0;
+  m.pContacto = p(m.respondieron, m.asignados);
+  m.pLlamadaAgenda = p(m.agCaller, m.respondieron);
+  m.pLeadAgenda = p(m.agendas, m.leads);
+  m.pCierre = p(m.pagados, hechas);
+  return m;
+}
+
+// Día de la llamada: el de Calendly; en leads antiguos, el de «Llamada 03/10 18:00» (igual que crm.js)
+function diaAgendaDe(l) {
+  if (l.diaAgenda) return new Date(l.diaAgenda);
+  const m = String((l.autoagenda || '') + '\n' + (l.notas || '')).match(/Llamada (\d{2})\/(\d{2}) (\d{2}):(\d{2})/);
+  if (!m) return null;
+  const ref = new Date(l.agendadoEl || l.fecha || Date.now());
+  const d = new Date(ref.getFullYear(), +m[2] - 1, +m[1], +m[3], +m[4]);
+  if (d < ref.getTime() - 60 * 864e5) d.setFullYear(d.getFullYear() + 1);
+  return d;
+}
+
+function lunesDe(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - (x.getDay() + 6) % 7);
+  return x;
+}
+
+function informeSemanal() {
+  const L = listar().leads;
+  const esta = lunesDe(new Date());
+  const pasada = new Date(esta); pasada.setDate(pasada.getDate() - 7);
+  const ante = new Date(pasada); ante.setDate(ante.getDate() - 7);
+  const a = metricasSemana(L, pasada.getTime(), esta.getTime()), b = metricasSemana(L, ante.getTime(), pasada.getTime());
+  const fmt = d => Utilities.formatDate(d, TZ, 'dd/MM');
+  const fin = new Date(esta.getTime() - 864e5);
+  const flecha = (x, y, pc) => { const d = x - y; return d > 0 ? '🟢 +' + d + (pc ? ' pts' : '') : d < 0 ? '🔴 ' + d + (pc ? ' pts' : '') : '⚪ =' };
+  const linea = (k, t, pc) => '• ' + t + ': *' + a[k] + (pc ? ' %' : '') + '*  (antes ' + b[k] + (pc ? ' %' : '') + ' · ' + flecha(a[k], b[k], pc) + ')';
+  enviarSlack({
+    text: '📊 Informe semanal ' + fmt(pasada) + '–' + fmt(fin),
+    blocks: [
+      { type: 'header', text: { type: 'plain_text', text: '📊 Semana del ' + fmt(pasada) + ' al ' + fmt(fin) } },
+      { type: 'section', text: md('*Comparado con la semana anterior (' + fmt(ante) + '–' + fmt(new Date(pasada.getTime() - 864e5)) + ')*\n' +
+        INF_PCT.map(x => linea(x[0], x[1], true)).join('\n')) },
+      { type: 'section', text: md(INF.map(x => linea(x[0], x[1], false)).join('\n')) },
+      botonCrm(),
+    ].filter(Boolean),
+  });
+  const ss = SpreadsheetApp.getActive();
+  let sh = ss.getSheetByName(HOJA_INFORME);
+  if (!sh) {
+    sh = ss.insertSheet(HOJA_INFORME);
+    const cab = ['Semana (lunes)'].concat(INF.map(x => x[1]), INF_PCT.map(x => x[1]), ['Enviado']);
+    sh.getRange(1, 1, 1, cab.length).setValues([cab]);
+    estiloCabecera(sh.getRange(1, 1, 1, cab.length));
+    sh.setFrozenRows(1);
+  }
+  sh.appendRow([pasada].concat(INF.map(x => a[x[0]]), INF_PCT.map(x => a[x[0]]), [new Date()]));
 }
 
 // =====================================================================
@@ -1288,7 +1533,7 @@ function ajCelda(a1, valor) {
 
 function equipo() {
   return ajM().d.slice(1)
-    .map((r, i) => ({ nombre: String(r[0]).trim(), pin: String(r[1]).trim(), fila: i + 2, setting: activo(ajM().v[i + 1][2]) }))
+    .map((r, i) => ({ nombre: String(r[0]).trim(), pin: String(r[1]).trim(), fila: i + 2, setting: activo(ajM().v[i + 1][2]), closer: activo(ajM().v[i + 1][4]) }))
     .filter(p => p.nombre);
 }
 const activo = v => v === true || /^(s[ií]|true|verdadero|x|1)$/i.test(String(v).trim());
@@ -1346,7 +1591,9 @@ function configurar() {
   }
   aj.getRange('C1').setValue('Setting (KPIs)');
   aj.getRange(2, 3, Math.max(aj.getMaxRows() - 1, 1), 1).setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build());
-  [aj.getRange('A1:D1'), aj.getRange('F1:G1')].forEach(estiloCabecera);
+  aj.getRange('E1').setValue('Closer (pipeline)');
+  aj.getRange(2, 5, Math.max(aj.getMaxRows() - 1, 1), 1).setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build());
+  [aj.getRange('A1:E1'), aj.getRange('F1:G1')].forEach(estiloCabecera);
   aj.setColumnWidth(1, 160); aj.setColumnWidth(2, 220); aj.setColumnWidth(3, 110);
   if (!aj.getRange('F6').getValue())
     aj.getRange('F6:G6').setValues([['Token de Calendly (opcional: hora de la llamada en el CRM)', '']]);
@@ -1363,6 +1610,7 @@ function configurar() {
   }
   if (!aj.getRange('F12').getValue()) aj.getRange('F12').setValue('Instagram: estado del token (se renueva solo cada semana)');
   if (!aj.getRange('F15').getValue()) aj.getRange('F15:G15').setValues([['Webhook de Slack para AGENDAS (otro canal; vacío = al de G2)', '']]);
+  if (!aj.getRange('F16').getValue()) aj.getRange('F16:G16').setValues([['Closer por defecto de los agendados (vacío = el único con acceso en la columna E)', '']]);
   if (!aj.getRange('F13').getValue()) aj.getRange('F13:G13').setValues([['Dominio de la web para los enlaces (sin https; varios con comas)', 'biblioteca.systemacademy.es']]);
   if (!aj.getRange('I1').getValue()) {
     aj.getRange('I1:K1').setValues([['Setter (nombre del CRM)', 'Marca en sus mensajes (emoji o coletilla, NO su nombre; varias con comas)', 'Código de su enlace']]);
@@ -1370,7 +1618,7 @@ function configurar() {
   }
   estiloCabecera(aj.getRange('I1:K1'));
   aj.setColumnWidth(8, 30); aj.setColumnWidth(9, 180); aj.setColumnWidth(10, 220); aj.setColumnWidth(11, 170);
-  aj.setColumnWidth(4, 170); aj.setColumnWidth(5, 30); aj.setColumnWidth(6, 260); aj.setColumnWidth(7, 420);
+  aj.setColumnWidth(4, 170); aj.setColumnWidth(5, 120); aj.setColumnWidth(6, 260); aj.setColumnWidth(7, 420);
   aj.setFrozenRows(1);
 
   hojaSetting();
@@ -1393,6 +1641,7 @@ function configurar() {
   sh.getRange(2, COL.rellamar, sh.getMaxRows() - 1, 1).setNumberFormat('dd/mm HH:mm');
   sh.getRange(2, COL.asignado, sh.getMaxRows() - 1, 1).setNumberFormat('dd/mm/yyyy HH:mm');
   sh.getRange(2, COL.agendadoEl, sh.getMaxRows() - 1, 1).setNumberFormat('dd/mm/yyyy HH:mm');
+  sh.getRange(2, COL.diaAgenda, sh.getMaxRows() - 1, 1).setNumberFormat('dd/mm/yyyy HH:mm');
   sh.getRange('C2:C').setNumberFormat('@');
   sh.getRange('I2:J').setHorizontalAlignment('center');
   sh.getRange('K2:K').setWrap(true);
@@ -1431,6 +1680,8 @@ function configurar() {
   ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'renovarTokenInstagram').forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('renovarTokenInstagram').timeBased().everyDays(7).atHour(4).create();
   ScriptApp.newTrigger('revisarAvisos').timeBased().everyMinutes(1).create();
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'informeSemanal').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('informeSemanal').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(9).create();
 
   // Fichas repetidas (mismo teléfono) → una sola. Las quitadas quedan copiadas en la pestaña «Duplicados».
   let unidas = 0;

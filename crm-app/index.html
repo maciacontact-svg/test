@@ -55,6 +55,7 @@
     <nav class="tabs" id="tabs" aria-label="Secciones">
       <button type="button" data-t="leads" class="on">Leads</button>
       <button type="button" data-t="kpis" id="tabKpis">Mis KPIs</button>
+      <button type="button" data-t="pipe" id="tabPipe" hidden>Closers</button>
       <button type="button" data-t="setting" id="tabSet" hidden>Setting</button>
       <button type="button" data-t="ig" id="tabIg" hidden>Instagram</button>
       <button type="button" data-t="enlaces" id="tabEnl" hidden>Enlaces</button>
@@ -76,16 +77,17 @@
 
     <section class="toolbar">
       <label class="search"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <input id="q" type="search" placeholder="Buscar nombre, teléfono, correo o notas"></label>
+        <input id="q" type="search" placeholder="Buscar en todos los leads: nombre, teléfono, correo o notas"></label>
       <div class="chips" id="views">
-        <button type="button" data-v="todos" class="on">Todos</button>
+        <button type="button" data-v="todos" class="on" title="Leads sin asignar: elige caller y pasan a «Por llamar» y «Mis leads»">Todos <i id="nTodos"></i></button>
+        <button type="button" data-v="llamar" title="Asignados sin cerrar que aún no han respondido o tienen rellamada">Por llamar <i id="nLlamar"></i></button>
+        <button type="button" data-v="mios">Mis leads</button>
+        <button type="button" data-v="asignados" id="vAsig" hidden title="Todos los leads que ya tienen caller">Asignados</button>
         <button type="button" data-v="prio" class="prio" title="Sin cerrar, en este orden: España buen form → España → LATAM buen form → LATAM">🎯 Prioridad <i id="nPrio"></i></button>
         <button type="button" data-v="buen" class="buen">⭐ Buen form no agendado <i id="nBuen"></i></button>
         <button type="button" data-v="rellamar">📞 Rellamadas <i id="nRell"></i></button>
         <button type="button" data-v="espana">🇪🇸 España <i id="nEsp"></i></button>
-        <button type="button" data-v="llamar">Por llamar</button>
-        <button type="button" data-v="mios">Mis leads</button>
-        <button type="button" data-v="sin">Sin caller</button>
+        <button type="button" data-v="agendados" title="Agendados: salen de la lista y pasan al pipeline de closers">📅 Agendados <i id="nAg"></i></button>
       </div>
       <select id="fEstado" aria-label="Filtrar por estado"><option value="">Todos los estados</option></select>
       <select id="fCanal" aria-label="Filtrar por canal"><option value="">Todos los canales</option><option value="youtube">▶️ YouTube</option><option value="instagram">📸 Instagram</option><option value="otros">🔗 Otros</option><option value="directo">Directo / sin enlace</option></select>
@@ -96,7 +98,7 @@
         <table class="leads">
           <thead><tr>
             <th>Fecha registro</th><th>Nombre</th><th>Teléfono</th><th>En qué punto está</th><th>Qué quiere conseguir</th>
-            <th>Correo</th><th>Caller</th><th>Estado</th><th>Contacto</th><th>Nº intentos</th><th>Notas</th>
+            <th>Correo</th><th>Caller</th><th>Estado</th><th title="✅ cuando te conteste; mientras, ❌ y suma intentos">Respondió</th><th>Nº intentos</th><th>Notas</th>
           </tr></thead>
           <tbody id="rows"></tbody>
         </table>
@@ -114,10 +116,17 @@
         </div>
         <div class="chips" id="periodo">
           <button type="button" data-p="hoy" class="on">Hoy</button>
+          <button type="button" data-p="ayer">Ayer</button>
           <button type="button" data-p="7">7 días</button>
           <button type="button" data-p="30">30 días</button>
           <button type="button" data-p="todo">Todo</button>
+          <button type="button" data-p="rango">📅 Fechas</button>
         </div>
+      </section>
+      <section class="k-rango" id="kRango" hidden>
+        <label>Desde <input type="date" id="kDesde"></label>
+        <label>Hasta <input type="date" id="kHasta"></label>
+        <small>Para un solo día, deja «Hasta» vacío.</small>
       </section>
       <section class="kpis k-tiles" id="kTiles"></section>
       <section class="k-grid">
@@ -131,7 +140,52 @@
           <div class="table-wrap"><table class="rank" id="kRank"></table></div>
         </div>
       </section>
+      <section class="k-card k-semana">
+        <h3>📊 Semana a semana</h3>
+        <p class="k-note" id="kSemNota">Lunes a domingo. El lunes a las 9 llega a Slack el informe de la semana pasada comparada con la anterior.</p>
+        <div class="table-wrap"><table class="rank sem" id="kSem"></table></div>
+      </section>
       <p class="k-note foot-note">Todo se cuenta sobre los leads <b>asignados</b> a cada caller en el periodo (por la fecha en que se los asignó). Los autoagendados por Calendly no cuentan para ningún caller.</p>
+    </div>
+
+    <!-- Pipeline de closers: los agendados salen de Leads y pasan aquí. Cada closer ve los suyos; el maestro, todos -->
+    <div id="vPipe" hidden>
+      <section class="k-head">
+        <div>
+          <h2 id="pTitle">Pipeline <em>de closers</em></h2>
+          <p id="pSub" class="k-sub"></p>
+        </div>
+        <div class="chips" id="pVistas">
+          <button type="button" data-v="proximas" class="on">Próximas <i id="nProx"></i></button>
+          <button type="button" data-v="hoy">Hoy <i id="nHoyP"></i></button>
+          <button type="button" data-v="pend" title="Llamadas ya pasadas sin estado">Sin estado <i id="nPend"></i></button>
+          <button type="button" data-v="todas">Todas</button>
+        </div>
+      </section>
+      <section class="k-card s-callers" id="pAcceso" hidden>
+        <h3>Quién tiene acceso</h3>
+        <p class="k-note">Solo tú puedes activarlo. Cada closer ve solo sus leads. Los agendados sin closer van a <b id="pDef">—</b> (Ajustes → G16).</p>
+        <div id="pToggles" class="s-toggles"></div>
+      </section>
+      <section class="kpis p-kpis" id="pKpis"></section>
+      <section class="toolbar">
+        <label class="search"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="pQ" type="search" placeholder="Buscar nombre, email o teléfono"></label>
+        <select id="pEstado" class="selchip" aria-label="Estado"></select>
+        <select id="pCloser" class="selchip" aria-label="Closer" hidden></select>
+      </section>
+      <section class="board">
+        <div class="table-wrap">
+          <table class="leads pipe">
+            <thead><tr>
+              <th>Lead ID</th><th>Fecha registro</th><th>Nombre</th><th>Apellidos</th><th>Email</th><th>Teléfono</th>
+              <th>Día de la agenda</th><th>UTM source</th><th>Propietario</th><th>Estado</th><th>Closer</th><th>Notas</th><th>Link de llamada</th><th>Conclusiones</th>
+            </tr></thead>
+            <tbody id="pRows"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="pEmpty" hidden>No hay llamadas que coincidan.</p>
+      </section>
     </div>
 
     <!-- KPIs de setting: cada caller apunta sus números del día; solo el maestro lo activa para cada caller -->

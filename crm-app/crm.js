@@ -56,6 +56,7 @@ $('loginForm').addEventListener('submit', async e => {
     S.caller = r.caller;
     S.rol = r.rol || 'caller';
     guardarSesion(S);
+    try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
     $('lgPin').value = '';
     entrar();
   } catch (err) {
@@ -79,6 +80,7 @@ async function entrar() {
   $('agLink').hidden = true;
   $('tabKpis').textContent = maestro ? 'KPIs del equipo' : 'Mis KPIs';
   document.querySelector('#views [data-v="mios"]').hidden = maestro;
+  $('vAsig').hidden = !maestro;
   // se abre al momento con lo último que se vio en este dispositivo; los datos frescos llegan por detrás
   const c = leerCache();
   if (c && !D.leads.length) { pintarDatos(c); $('liveText').textContent = 'Actualizando…'; }
@@ -96,6 +98,7 @@ function borrarCache() { try { Object.keys(localStorage).filter(k => k.startsWit
 function pintarDatos(r) {
   r.setting = r.setting || { on: false, dias: [] };
   r.ig = r.ig || []; r.setters = r.setters || [];
+  r.pipeline = r.pipeline || { on: false, estados: [], fuentes: [], closers: [] };
   D = r;
   // enlace para agendar al lead en plena llamada (queda asignado a quien lo usa)
   const mio = (D.enlacesCaller || []).find(x => mismo(x.nombre, S.caller));
@@ -108,6 +111,8 @@ function pintarDatos(r) {
   if (pestana === 'setting') pintarSetting();
   if (pestana === 'ig') pintarIg();
   if (pestana === 'enlaces') pintarEnlaces();
+  if (pestana === 'pipe') pintarPipe();
+  avisarRellamadas();
 }
 
 let cargando = false;
@@ -149,22 +154,24 @@ async function guardar(id, cambios) {
   Object.keys(local).forEach(k => { antes[k] = l[k]; });
   Object.assign(l, local);
   pendientes[id] = { ...(pendientes[id] || {}), ...local };
-  render();
+  repintar();
   try {
     const r = await api('update', { id, cambios });
     Object.keys(local).forEach(k => { if (pendientes[id]) delete pendientes[id][k]; });
     if (pendientes[id] && !Object.keys(pendientes[id]).length) delete pendientes[id];
     Object.assign(l, r.lead, pendientes[id] || {});
-    render();
+    repintar();
     return true;
   } catch (err) {
     Object.assign(l, antes);
     delete pendientes[id];
-    render();
+    repintar();
     toast('No se ha guardado: ' + err.message, true);
     return false;
   }
 }
+
+function repintar() { render(); if (pestana === 'pipe') pintarPipe(); }
 
 // ---------- Tiempo ----------
 function hace(iso) {
@@ -187,6 +194,19 @@ const hhmm = d => d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-di
 // Hora de volver a llamar (sale de las notas: "19:00", "a las 7", "después"…)
 const rellamarEn = l => l.rellamar ? new Date(l.rellamar) : null;
 const tocaLlamar = l => { const d = rellamarEn(l); return !!d && d <= Date.now(); };
+const rellamarHoy = l => { const d = rellamarEn(l); return !!d && d.toDateString() === new Date().toDateString(); };
+// Aviso dentro del CRM cuando llega la hora de una rellamada (además del aviso de Slack)
+const avisadas = new Set();
+function avisarRellamadas() {
+  const mios = l => S.rol === 'maestro' || !l.caller || mismo(l.caller, S.caller);
+  D.leads.filter(l => tocaLlamar(l) && mios(l) && Date.now() - rellamarEn(l) < 3600e3).forEach(l => {
+    const k = l.id + l.rellamar;
+    if (avisadas.has(k)) return;
+    avisadas.add(k);
+    toast(`📞 Toca llamar a ${l.nombre} (${hhmm(rellamarEn(l))})`);
+    try { if (window.Notification && Notification.permission === 'granted') new Notification('Toca llamar a ' + l.nombre, { body: String(l.notas || '').split('\n')[0], icon: 'img/app/icon-180.png' }); } catch (e) {}
+  });
+}
 function chipRellamar(l) {
   const d = rellamarEn(l);
   if (!d || isNaN(d)) return '';
@@ -244,6 +264,10 @@ const espana = l => prefijo(l.telefono) === '34';
 const PRIOS = ['', '🇪🇸 España · buen form', '🇪🇸 España', '🌎 LATAM · buen form', '🌎 LATAM'];
 const prioridad = l => (espana(l) ? 1 : 3) + (l.cualifica ? 0 : 1);
 const cerrado = l => l.autoagenda || ['Agendado', 'Perdido', 'Invalid'].includes(l.estado);
+// Agendado (por caller o él solo) → sale de la lista de leads y pasa al pipeline de closers
+const enPipeline = l => l.estado === 'Agendado' || !!l.autoagenda;
+const esMio = l => mismo(l.caller, S.caller);
+const porLlamar = l => !!l.caller && (S.rol === 'maestro' || esMio(l)) && !cerrado(l) && (l.contacto !== '✅' || !!l.rellamar);
 
 // Aviso de "llámale ya": cuenta atrás de los minutos configurados y luego "tarde"
 function urgencia(l) {
@@ -264,13 +288,16 @@ function filtrados() {
   const n = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const qq = n(q);
   return D.leads
+    // al buscar se busca en todos; si no, los agendados solo salen en «📅 Agendados»
+    .filter(l => qq || (vista === 'agendados' ? enPipeline(l) : !enPipeline(l)))
+    .filter(l => qq || vista !== 'todos' || !l.caller)
+    .filter(l => qq || vista !== 'asignados' || l.caller)
     .filter(l => vista !== 'buen' || buenForm(l))
     .filter(l => vista !== 'rellamar' || l.rellamar)
     .filter(l => vista !== 'prio' || !cerrado(l))
     .filter(l => vista !== 'espana' || espana(l))
-    .filter(l => vista !== 'llamar' || (l.contacto !== '✅' && !l.autoagenda && l.estado !== 'Agendado'))
-    .filter(l => vista !== 'mios' || l.caller.toUpperCase() === S.caller.toUpperCase())
-    .filter(l => vista !== 'sin' || !l.caller)
+    .filter(l => qq || vista !== 'llamar' || porLlamar(l))
+    .filter(l => qq || vista !== 'mios' || esMio(l))
     .filter(l => !fCanal || canalDe(l) === fCanal)
     .filter(l => !fEstado || (fEstado === '__nuevo' ? !l.estado : l.estado === fEstado))
     .filter(l => !qq || n([l.nombre, l.telefono, l.correo, l.notas, l.punto, l.objetivo].join(' ')).includes(qq))
@@ -278,8 +305,9 @@ function filtrados() {
       // primero los que piden que les llamen ya (por hora), luego por fecha de registro
       if (vista === 'rellamar') return rellamarEn(a) - rellamarEn(b);
       if (vista === 'prio' && prioridad(a) !== prioridad(b)) return prioridad(a) - prioridad(b);
-      const ta = tocaLlamar(a), tb = tocaLlamar(b);
-      if (ta !== tb) return ta ? -1 : 1;
+      // el día de la rellamada el lead sube arriba: primero los que ya tocan y luego los de más tarde hoy
+      const ta = tocaLlamar(a) ? 2 : rellamarHoy(a) ? 1 : 0, tb = tocaLlamar(b) ? 2 : rellamarHoy(b) ? 1 : 0;
+      if (ta !== tb) return tb - ta;
       if (ta && tb) return rellamarEn(a) - rellamarEn(b);
       return new Date(b.fecha) - new Date(a.fecha);
     });
@@ -312,7 +340,10 @@ function pintarKpis() {
   const espHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy && espana(l)).length;
   const ytHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy && canalDe(l) === 'youtube').length;
   const igHoy = L.filter(l => new Date(l.fecha).toDateString() === hoy && canalDe(l) === 'instagram').length;
-  const porLlamar = L.filter(l => l.contacto !== '✅' && !l.autoagenda && l.estado !== 'Agendado').length;
+  const nLlamar = L.filter(porLlamar).length;
+  const nT = $('nTodos'); if (nT) nT.textContent = L.filter(l => !l.caller && !enPipeline(l)).length || '';
+  const nL = $('nLlamar'); if (nL) nL.textContent = nLlamar || '';
+  const nA = $('nAg'); if (nA) nA.textContent = L.filter(enPipeline).length || '';
   const buenos = L.filter(buenForm).length;
   const buenosSin = L.filter(l => buenForm(l) && !llamado(l)).length;
   const auto = L.filter(l => l.autoagenda).length;
@@ -331,9 +362,9 @@ function pintarKpis() {
   $('kpis').innerHTML =
     k('Leads hoy', deHoy, `▶️ ${ytHoy} YouTube · 📸 ${igHoy} Instagram · 🇪🇸 ${espHoy} España`) +
     k('⭐ Buen form no agendado', buenos, buenosSin ? `${buenosSin} sin llamar todavía` : 'Todos llamados', buenosSin ? 'hot' : '') +
-    k('Por llamar', porLlamar, urgentes ? `${urgentes} en la última hora sin llamar` : 'Ninguno urgente', urgentes ? 'hot' : '') +
+    k(S.rol === 'maestro' ? 'Por llamar (asignados)' : 'Tus leads por llamar', nLlamar, urgentes ? `${urgentes} en la última hora sin llamar` : 'Ninguno urgente', urgentes ? 'hot' : '') +
     k('En seguimiento', seg, 'Seguimiento y volver a llamar') +
-    k('Agendados', agend, auto ? `${auto} autoagendados por Calendly` : 'Llamadas con el closer') +
+    k('Agendados', agend, (auto ? `${auto} autoagendados · ` : '') + 'en el pipeline de closers') +
     k(S.rol === 'maestro' ? 'Tasa de contacto (equipo)' : 'Tu tasa de contacto', `${tasa} %`, `${contactados} de ${mis.length} asignados respondieron`);
 }
 
@@ -370,7 +401,7 @@ function fila(l) {
     <td data-label="Correo" class="mail">${l.correo ? `<a href="mailto:${esc(l.correo)}" title="${esc(l.correo)}">${esc(l.correo)}</a>` : '—'}</td>
     <td data-label="Caller">${celdaCaller(l)}</td>
     <td data-label="Estado"><select class="pill estado" data-e="${slug(l.estado) || 'nuevo'}" data-f="estado" aria-label="Estado">${opciones(D.estados, l.estado, 'Nuevo')}</select></td>
-    <td data-label="Contacto"><button type="button" class="contact ${l.contacto === '✅' ? 'yes' : 'no'}" data-f="contacto" aria-label="Contactado: ${l.contacto === '✅' ? 'sí' : 'no'}">${l.contacto === '✅' ? '✅' : '❌'}</button></td>
+    <td data-label="Respondió"><button type="button" class="contact ${l.contacto === '✅' ? 'yes' : 'no'}" data-f="contacto" title="${l.contacto === '✅' ? 'Ha respondido' : 'Aún no ha respondido: suma intentos y cámbialo cuando conteste'}" aria-label="Respondió: ${l.contacto === '✅' ? 'sí' : 'no'}">${l.contacto === '✅' ? '✅' : '❌'}</button></td>
     <td data-label="Nº intentos"><div class="step"><button type="button" data-f="intentos" data-d="-1" aria-label="Menos">−</button><b>${l.intentos}</b><button type="button" data-f="intentos" data-d="1" aria-label="Más">+</button></div></td>
     <td data-label="Notas" class="notes"><textarea data-f="notas" rows="1" placeholder="Añadir nota…">${esc(l.notas)}</textarea></td>
   </tr>`;
@@ -423,13 +454,16 @@ function abrirFicha(id) {
     ${row('Autoagendado por Calendly', l.autoagenda)}
     ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' + (S.rol === 'maestro' ? ' · si lo agendó un caller en llamada, cámbialo en la columna Caller' : '') : l.caller + (l.fijo ? ' · 🔒 lo agendó en llamada' : ''))}${row('Estado', l.estado || 'Nuevo')}${row('Notas caller', l.notas)}
     ${bloqueLlamada(l)}
+    ${enPipeline(l) ? `<div class="kv pipe-kv"><small>🎯 Pipeline de closer</small><p>${esc([l.closer ? 'Closer: ' + l.closer : 'Sin closer',
+      diaAgendaDe(l) ? 'Llamada: ' + fecha(diaAgendaDe(l).toISOString()) : '', 'Estado: ' + (l.closerEstado || 'Pendiente')].filter(Boolean).join(' · '))}</p>
+      ${l.conclusiones ? `<p>${esc(l.conclusiones)}</p>` : ''}${/^https:\/\//.test(l.linkLlamada) ? `<p><a href="${esc(l.linkLlamada)}" target="_blank" rel="noopener">▶ Ver la llamada (Fathom)</a></p>` : ''}</div>` : ''}
     ${row('Canal', CANALES[canalDe(l)])}
     ${row('Origen', (o => o.nombre + (o.etiqueta ? ' · ' + o.etiqueta : '') + (l.setter ? ' · setter ' + l.setter : ''))(origenDe(l)))}`;
   $('drawer').classList.add('open');
   $('drawer').setAttribute('aria-hidden', 'false');
 }
 // ---------- Notas llamada y grabaciones ----------
-const PLANTILLA = 'Situación: \nObjetivo: \nObjeciones: \nPresupuesto: \nResultado: \nPróximo paso: ';
+const PLANTILLA = 'Situación: \nTemporalidad: \nObjetivo / visión: \nPuente: \nTiempo y dinero: \nOferta: ';
 const audios = {};                 // archivo → URL del audio ya descargado (para no bajarlo dos veces)
 let subiendo = null;               // { id, txt } mientras se sube una grabación
 const puedeGrabar = l => S.rol === 'maestro' || !l.caller || l.caller.toUpperCase() === S.caller.toUpperCase();
@@ -442,7 +476,7 @@ function bloqueLlamada(l) {
       : puedeGrabar(l) ? `<button type="button" class="mini" data-oir="${esc(g.archivo)}">▶ Escuchar</button>` : ''}</li>`).join('');
   const sub = subiendo && subiendo.id === l.id;
   return `<div class="kv llamada"><small>📝 Notas llamada <button type="button" class="mini" data-plantilla>Plantilla</button></small>
-      <textarea data-ll="${esc(l.id)}" rows="7" placeholder="Puntos importantes de la llamada: situación, objeciones, resultado, próximo paso…">${esc(l.notasLlamada)}</textarea></div>
+      <textarea data-ll="${esc(l.id)}" rows="7" placeholder="Situación, temporalidad, objetivo / visión, puente, tiempo y dinero, oferta…">${esc(l.notasLlamada)}</textarea></div>
     <div class="kv grab"><small>📼 Grabaciones${grabs.length ? ` (${grabs.length})` : ''}</small>
       ${lista || sub ? `<ul>${lista}${sub ? `<li><span>Subiendo ahora · ya puedes escucharla</span><audio controls preload="metadata" src="${subiendo.url}"></audio></li>` : ''}</ul>` : ''}
       ${puedeGrabar(l) ? `<label class="subir${sub ? ' on' : ''}"><input type="file" accept="audio/*,.m4a,.mp3,.wav,.aac" data-subir="${esc(l.id)}" hidden ${sub ? 'disabled' : ''}>
@@ -606,7 +640,7 @@ function etapa(l) {
   if (l.embudo === 'Oferta llamada') return 4;
   if (l.embudo === 'Conversación') return 3;
   if (l.contacto === '✅') return 2;
-  if (l.intentos > 0) return 1;
+  if (l.intentos > 0 || l.estado === 'Contactado') return 1;
   return 0;
 }
 // Pasar un lead a la etapa n (marca también las anteriores)
@@ -630,12 +664,26 @@ function desdePeriodo(p) {
   d.setDate(d.getDate() - Number(p) + 1);
   return d;
 }
-function calcKpis(leads, desde) {
+// KPIs: Hoy, Ayer, 7 días, 30 días, Todo o 📅 un día / de tal fecha a tal fecha → [desde, hasta)
+const deInput = v => { const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+const fmtDia = d => d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+function rangoKpis() {
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const dia = 864e5, inf = new Date(8.64e15);
+  if (periodo === 'ayer') return { desde: new Date(hoy - dia), hasta: hoy, txt: 'ayer' };
+  if (periodo === 'rango') {
+    const d = deInput($('kDesde').value) || hoy, h0 = deInput($('kHasta').value);
+    const h = h0 && h0 >= d ? h0 : d;
+    return { desde: d, hasta: new Date(h.getTime() + dia), txt: +h === +d ? fmtDia(d) : `del ${fmtDia(d)} al ${fmtDia(h)}` };
+  }
+  return { desde: desdePeriodo(periodo), hasta: inf, txt: { hoy: 'hoy', 7: 'últimos 7 días', 30: 'últimos 30 días', todo: 'desde el principio' }[periodo] };
+}
+function calcKpis(leads, desde, hasta = new Date(8.64e15)) {
   const por = {};
   leads.forEach(l => {
     if (!l.caller || l.autoagenda) return;
     const f = new Date(l.asignado || l.fecha);
-    if (!(f >= desde)) return;
+    if (!(f >= desde && f < hasta)) return;
     const k = l.caller.toUpperCase();
     const c = por[k] || (por[k] = { nombre: l.caller, n: [0, 0, 0, 0, 0, 0], llamadas: 0 });
     const e = etapa(l);
@@ -648,18 +696,19 @@ const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
 
 function pintarKpisVista() {
   const maestro = S.rol === 'maestro';
-  const todos = calcKpis(D.leads, desdePeriodo(periodo));
+  const rg = rangoKpis();
+  const todos = calcKpis(D.leads, rg.desde, rg.hasta);
   (D.callers || []).forEach(n => { if (!todos.some(c => c.nombre.toUpperCase() === n.toUpperCase())) todos.push({ nombre: n, n: [0, 0, 0, 0, 0, 0], llamadas: 0 }); });
   const yo = todos.find(c => c.nombre.toUpperCase() === S.caller.toUpperCase()) || { nombre: S.caller, n: [0, 0, 0, 0, 0, 0], llamadas: 0 };
   const equipo = todos.reduce((t, c) => { c.n.forEach((v, i) => t.n[i] += v); t.llamadas += c.llamadas; return t; }, { nombre: 'Equipo', n: [0, 0, 0, 0, 0, 0], llamadas: 0 });
   const sel = maestro ? (todos.find(c => c.nombre === kSel) || equipo) : yo;
-  const txtPer = { hoy: 'hoy', 7: 'últimos 7 días', 30: 'últimos 30 días', todo: 'desde el principio' }[periodo];
+  const txtPer = rg.txt;
 
   $('kTitle').textContent = maestro ? 'KPIs del equipo' : `Tus KPIs · ${S.caller}`;
   $('kSub').textContent = maestro ? `Solo tú ves esta vista · ${txtPer}` : `Sobre los leads que te has asignado · ${txtPer}`;
   const tile = (label, val, sub, cls = '') => `<div class="kpi ${cls}"><small>${label}</small><b>${val}</b><span>${sub}</span></div>`;
   const n = sel.n;
-  const auto = maestro ? D.leads.filter(l => l.autoagenda && new Date(l.fecha) >= desdePeriodo(periodo)).length : 0;
+  const auto = maestro ? D.leads.filter(l => { const f = new Date(l.agendadoEl || l.fecha); return l.autoagenda && f >= rg.desde && f < rg.hasta; }).length : 0;
   $('kTiles').innerHTML =
     tile('Asignados', n[0], maestro && sel === equipo ? 'Entre todos los callers' : 'Leads que se ha quedado') +
     tile('Tasa de contacto', `${pct(n[2], n[0])} %`, `${n[2]} de ${n[0]} respondieron`, 'hot') +
@@ -687,13 +736,74 @@ function pintarKpisVista() {
         <td><b>${pct(c.n[2], c.n[0])} %</b></td><td><b>${pct(c.n[5], c.n[0])} %</b></td><td>${c.llamadas}</td></tr>`).join('') +
       `<tr class="tot" data-c=""><td>Equipo</td>${equipo.n.map(v => `<td>${v}</td>`).join('')}<td>${pct(equipo.n[2], equipo.n[0])} %</td><td>${pct(equipo.n[5], equipo.n[0])} %</td><td>${equipo.llamadas}</td></tr></tbody>`;
   }
+  pintarSemana();
+}
+
+// ---------- Semana a semana (mismas cuentas que el informe de Slack de los lunes: Code.gs → metricasSemana) ----------
+const INF = [
+  ['leads', 'Leads nuevos', 1], ['buen', '⭐ Buen form', 1], ['asignados', 'Asignados a caller'], ['contactados', 'Contactados (algún intento)'],
+  ['respondieron', 'Respondieron'], ['ofertas', 'Ofertas de llamada'], ['agCaller', 'Agendados por caller'], ['auto', 'Autoagendados', 1],
+  ['agendas', 'Agendas totales', 1], ['llamadas', 'Llamadas de closer', 1], ['noShow', 'No show', 1], ['pagados', 'Pagados', 1],
+];
+const INF_PCT = [
+  ['pContacto', '% contacto (respondieron / asignados)'], ['pLlamadaAgenda', '% llamada → agenda (agendados / respondieron)'],
+  ['pLeadAgenda', '% lead → agenda (agendas / leads)', 1], ['pCierre', '% cierre (pagados / llamadas hechas)', 1],
+];
+function metricasSemana(L, desde, hasta) {
+  const en = iso => { if (!iso) return false; const t = new Date(iso).getTime(); return t >= desde && t < hasta; };
+  const m = Object.fromEntries(INF.map(x => [x[0], 0]));
+  let hechas = 0;
+  L.forEach(l => {
+    if (en(l.fecha)) { m.leads++; if (l.cualifica) m.buen++; }
+    if (l.autoagenda && en(l.agendadoEl || l.fecha)) m.auto++;
+    if (enPipeline(l) && en(l.agendadoEl || (l.autoagenda ? l.fecha : ''))) m.agendas++;
+    if (l.caller && !l.autoagenda && en(l.asignado || l.fecha)) {
+      const e = etapa(l);
+      m.asignados++;
+      if (e >= 1) m.contactados++;
+      if (e >= 2) m.respondieron++;
+      if (e >= 4) m.ofertas++;
+      if (e >= 5) m.agCaller++;
+    }
+    const dA = diaAgendaDe(l);
+    if (enPipeline(l) && dA && en(dA.toISOString())) {
+      m.llamadas++;
+      if (l.closerEstado === 'No show') m.noShow++;
+      if (l.closerEstado === 'Pagado') m.pagados++;
+      if (['Pagado', 'No cierra', 'Se lo piensa', 'Seguimiento'].includes(l.closerEstado)) hechas++;
+    }
+  });
+  m.pContacto = pct(m.respondieron, m.asignados);
+  m.pLlamadaAgenda = pct(m.agCaller, m.respondieron);
+  m.pLeadAgenda = pct(m.agendas, m.leads);
+  m.pCierre = pct(m.pagados, hechas);
+  return m;
+}
+function pintarSemana() {
+  const maestro = S.rol === 'maestro';
+  const L = maestro ? (kSel ? D.leads.filter(l => mismo(l.caller, kSel)) : D.leads) : D.leads.filter(esMio);
+  const lunes = new Date(); lunes.setHours(0, 0, 0, 0); lunes.setDate(lunes.getDate() - (lunes.getDay() + 6) % 7);
+  const sem = n => { const d = new Date(lunes); d.setDate(d.getDate() - 7 * n); return d; };
+  const [a, b, c] = [0, 1, 2].map(n => metricasSemana(L, +sem(n), n ? +sem(n - 1) : 8.64e15));
+  const solo = maestro && !kSel;               // las filas de equipo (leads, autoagendados, closer) solo en la vista de todo el equipo
+  const fil = x => solo || !x[2];
+  const dif = (x, y, pc) => { const d = x - y; return `<span class="dif ${d > 0 ? 'up' : d < 0 ? 'down' : ''}">${d > 0 ? '▲ +' : d < 0 ? '▼ ' : '= '}${d ? d : ''}${d && pc ? ' pts' : ''}</span>`; };
+  const fila = (x, pc, sep) => `<tr${sep ? ' class="sep"' : ''}><td>${esc(x[1])}</td><td>${a[x[0]]}${pc ? ' %' : ''}</td><td><b>${b[x[0]]}${pc ? ' %' : ''}</b></td><td>${c[x[0]]}${pc ? ' %' : ''}</td><td>${dif(b[x[0]], c[x[0]], pc)}</td></tr>`;
+  const f = d => d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+  const fin = n => { const d = sem(n - 1); d.setDate(d.getDate() - 1); return d; };
+  $('kSem').innerHTML = `<thead><tr><th>${maestro ? (kSel ? esc(kSel) : 'Equipo') : 'Tú'}</th><th>Esta semana<small>en curso · desde ${f(sem(0))}</small></th>
+    <th>Semana pasada<small>${f(sem(1))}–${f(fin(1))}</small></th><th>La anterior<small>${f(sem(2))}–${f(fin(2))}</small></th><th>Cambio</th></tr></thead><tbody>` +
+    INF_PCT.filter(fil).map((x, i, l) => fila(x, true, i === l.length - 1)).join('') + INF.filter(fil).map(x => fila(x, false)).join('') + '</tbody>';
 }
 $('periodo').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   periodo = b.dataset.p;
   $('periodo').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  $('kRango').hidden = periodo !== 'rango';
+  if (periodo === 'rango' && !$('kDesde').value) $('kDesde').value = diaKey(new Date());
   pintarKpisVista();
 });
+['kDesde', 'kHasta'].forEach(id => $(id).addEventListener('change', pintarKpisVista));
 $('kRank').addEventListener('click', e => {
   const tr = e.target.closest('tr[data-c]'); if (!tr) return;
   kSel = tr.dataset.c === kSel ? '' : tr.dataset.c;
@@ -708,10 +818,159 @@ $('tabs').addEventListener('click', e => {
   $('vSet').hidden = pestana !== 'setting';
   $('vIg').hidden = pestana !== 'ig';
   $('vEnl').hidden = pestana !== 'enlaces';
+  $('vPipe').hidden = pestana !== 'pipe';
+  if (pestana === 'pipe') pintarPipe();
   if (pestana === 'enlaces') pintarEnlaces();
   if (pestana === 'kpis') pintarKpisVista();
   if (pestana === 'setting') pintarSetting();
   if (pestana === 'ig') pintarIg();
+});
+
+// ---------- Pipeline de closers ----------
+// Los agendados (por un caller o él solo) salen de «Leads» y llegan aquí. El closer rellena estado, notas, link de Fathom
+// y conclusiones (Fathom las rellena solo si está conectado: api/fathom.js). Cada closer ve los suyos; el maestro, todos.
+let pVista = 'proximas', pQ = '', pEst = '', pClo = '', pendientePipe = false;
+const FINALES = ['Pagado', 'No cierra', 'Cancelado'];
+const COLOR_FUENTE = { SETTING: 'setting', COLD: 'cold', YT: 'yt', IG: 'ig' };
+// Día de la agenda: el de Calendly; si es un lead antiguo, se saca de «Llamada 03/10 18:00» (autoagendado o notas)
+function diaAgendaDe(l) {
+  if (l.diaAgenda) return new Date(l.diaAgenda);
+  const m = String((l.autoagenda || '') + '\n' + (l.notas || '')).match(/Llamada (\d{2})\/(\d{2}) (\d{2}):(\d{2})/);
+  if (!m) return null;
+  const ref = new Date(l.agendadoEl || l.fecha || Date.now());
+  const d = new Date(ref.getFullYear(), +m[2] - 1, +m[1], +m[3], +m[4]);
+  if (d < ref - 60 * 864e5) d.setFullYear(d.getFullYear() + 1);
+  return d;
+}
+// UTM source del pipeline: el que elija el closer o, si no, el que sale del origen del lead
+function fuenteAuto(l) {
+  if (l.setter) return 'SETTING';
+  const c = canalDe(l);
+  if (c === 'youtube') return 'YT';
+  if (c === 'instagram') return 'IG';
+  return l.autoagenda ? '' : 'COLD';
+}
+const puedeCerrar = l => S.rol === 'maestro' || (D.pipeline.on && mismo(l.closer, S.caller));
+const apellidos = n => String(n || '').trim().split(/\s+/).slice(1).join(' ');
+const localDT = d => d ? `${diaKey(d)}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : '';
+function pipeLeads() {
+  const m = S.rol === 'maestro';
+  return D.leads.filter(enPipeline).filter(l => m ? (!pClo || (pClo === '__sin' ? !l.closer : mismo(l.closer, pClo))) : mismo(l.closer, S.caller));
+}
+function pintarPipe() {
+  const act = document.activeElement;
+  if (act && $('pRows').contains(act) && /TEXTAREA|SELECT|INPUT/.test(act.tagName)) { pendientePipe = true; return; }
+  pendientePipe = false;
+  const m = S.rol === 'maestro', P = D.pipeline;
+  $('pTitle').innerHTML = m ? 'Pipeline <em>de closers</em>' : `Tu pipeline <em>· ${esc(S.caller)}</em>`;
+  $('pSub').textContent = m ? 'Todos los agendados. Solo tú ves los de todos los closers.' : 'Tus llamadas agendadas. Rellena el estado después de cada llamada.';
+  $('pAcceso').hidden = !m;
+  if (m) {
+    $('pDef').textContent = P.porDefecto || 'nadie (elige closer a mano)';
+    $('pToggles').innerHTML = (P.acceso || []).map(c =>
+      `<button type="button" class="s-toggle ${c.on ? 'on' : ''}" data-c="${esc(c.nombre)}" aria-pressed="${c.on}">${esc(c.nombre)}<i></i></button>`).join('') ||
+      '<p class="k-note">Añade personas en la pestaña Ajustes del Sheet (columna A).</p>';
+  }
+  const selE = $('pEstado');
+  if (!selE.dataset.ok) { selE.innerHTML = '<option value="">Todos los estados</option><option value="__sin">Sin estado</option>' + (P.estados || []).map(e => `<option>${esc(e)}</option>`).join(''); selE.dataset.ok = 1; }
+  $('pCloser').hidden = !m;
+  if (m) { $('pCloser').innerHTML = '<option value="">Todos los closers</option><option value="__sin">Sin closer</option>' + (P.closers || []).map(c => `<option${c === pClo ? ' selected' : ''}>${esc(c)}</option>`).join(''); $('pCloser').value = pClo; }
+
+  const hoy0 = new Date(); hoy0.setHours(0, 0, 0, 0);
+  const manana = new Date(+hoy0 + 864e5);
+  const todos = pipeLeads();
+  const esHoy = l => { const d = diaAgendaDe(l); return d && d >= hoy0 && d < manana; };
+  const proxima = l => { const d = diaAgendaDe(l); return !FINALES.includes(l.closerEstado) && (!d || d >= hoy0); };
+  const pend = l => { const d = diaAgendaDe(l); return (!l.closerEstado || l.closerEstado === 'Pendiente') && d && d < Date.now(); };
+  $('nProx').textContent = todos.filter(proxima).length || '';
+  $('nHoyP').textContent = todos.filter(esHoy).length || '';
+  $('nPend').textContent = todos.filter(pend).length || '';
+  const n = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const qq = n(pQ);
+  const t = (l, sin) => { const d = diaAgendaDe(l); return d ? +d : sin; };
+  const ls = todos
+    .filter(l => pVista === 'todas' || (pVista === 'hoy' ? esHoy(l) : pVista === 'pend' ? pend(l) : proxima(l)))
+    .filter(l => !pEst || (pEst === '__sin' ? !l.closerEstado : l.closerEstado === pEst))
+    .filter(l => !qq || n([l.nombre, l.correo, l.telefono, l.id].join(' ')).includes(qq))
+    .sort((a, b) => pVista === 'todas' ? t(b, 0) - t(a, 0) : t(a, 9e15) - t(b, 9e15));   // próximas: la más cercana arriba; todas: la más reciente
+
+  // resumen
+  const hechas = todos.filter(l => ['Pagado', 'No cierra', 'Se lo piensa', 'Seguimiento'].includes(l.closerEstado)).length;
+  const pag = todos.filter(l => l.closerEstado === 'Pagado').length, ns = todos.filter(l => l.closerEstado === 'No show').length;
+  const k = (label, val, sub, cls = '') => `<div class="kpi ${cls}"><small>${label}</small><b>${val}</b><span>${sub}</span></div>`;
+  $('pKpis').innerHTML = k('Hoy', todos.filter(esHoy).length, 'Llamadas agendadas para hoy', 'hot') +
+    k('Próximas', todos.filter(proxima).length, 'Pendientes de hacer') +
+    k('Sin estado', todos.filter(pend).length, 'Ya pasaron: rellena cómo fue') +
+    k('Pagados', pag, `${pct(pag, hechas)} % de las llamadas hechas`) +
+    k('No show', ns, `${pct(ns, ns + hechas)} % de las que tocaban`) +
+    k('Total agendados', todos.length, 'En este pipeline');
+
+  $('pRows').innerHTML = ls.map(filaPipe).join('');
+  $('pEmpty').hidden = ls.length > 0;
+  document.querySelectorAll('#pRows textarea').forEach(autoalto);
+}
+function filaPipe(l) {
+  const ed = puedeCerrar(l), dis = ed ? '' : ' disabled';
+  const d = diaAgendaDe(l);
+  const fu = l.fuente || fuenteAuto(l);
+  const prop = l.autoagenda ? '<span class="pill prop auto" title="Se agendó él solo por Calendly">📅 Autoagendado</span>'
+    : `<span class="pill prop" title="Lo agendó en llamada">${esc(l.fijo || l.caller || '—')}</span>`;
+  const sel = (campo, lista, actual, vacio, cls = '') => `<select class="pill ${cls}" data-p="${campo}"${dis}>` +
+    `<option value="">${vacio}</option>` + (actual && !lista.includes(actual) ? [actual, ...lista] : lista).map(v => `<option${v === actual ? ' selected' : ''}>${esc(v)}</option>`).join('') + '</select>';
+  const cuando = d ? (d.toDateString() === new Date().toDateString() ? `<span class="urge call">Hoy ${hhmm(d)}</span>` : d < Date.now() ? `<small>${hace(d.toISOString())}</small>` : '') : '<small>Sin fecha</small>';
+  return `<tr data-id="${esc(l.id)}" class="${d && d.toDateString() === new Date().toDateString() ? 'due' : ''}">
+    <td data-label="Lead ID" class="pid">${esc(l.id)}</td>
+    <td data-label="Fecha registro" class="when"><small>${fecha(l.fecha)}</small></td>
+    <td data-label="Nombre" class="name"><button type="button" class="link" data-ficha="${esc(l.id)}">${esc(String(l.nombre).trim().split(/\s+/)[0] || l.nombre)}</button></td>
+    <td data-label="Apellidos">${esc(apellidos(l.nombre)) || '—'}</td>
+    <td data-label="Email" class="mail">${l.correo ? `<a href="mailto:${esc(l.correo)}" title="${esc(l.correo)}">${esc(l.correo)}</a>` : '—'}</td>
+    <td data-label="Teléfono" class="phone">${telLinks(l.telefono)}</td>
+    <td data-label="Día de la agenda" class="dia"><input type="datetime-local" data-p="diaAgenda" value="${localDT(d)}"${dis}>${cuando}</td>
+    <td data-label="UTM source">${sel('fuente', D.pipeline.fuentes || [], fu, '—', 'fuente f-' + (COLOR_FUENTE[fu] || 'x'))}${!l.fuente && fu ? '<small class="auto-tag">auto</small>' : ''}</td>
+    <td data-label="Propietario">${prop}</td>
+    <td data-label="Estado">${sel('closerEstado', D.pipeline.estados || [], l.closerEstado, 'Pendiente', 'estado c-' + slug(l.closerEstado || 'pendiente'))}</td>
+    <td data-label="Closer">${S.rol === 'maestro' || ed ? sel('closer', D.pipeline.closers || [], l.closer, '— Sin closer', 'closer') : `<span class="pill prop">${esc(l.closer || '—')}</span>`}</td>
+    <td data-label="Notas" class="notes"><textarea data-p="closerNotas" rows="1" placeholder="Notas…"${dis}>${esc(l.closerNotas)}</textarea></td>
+    <td data-label="Link de llamada" class="link-ll"><input type="url" data-p="linkLlamada" value="${esc(l.linkLlamada)}" placeholder="https://fathom.video/…"${dis}>${/^https:\/\//.test(l.linkLlamada) ? `<a href="${esc(l.linkLlamada)}" target="_blank" rel="noopener">Abrir ↗</a>` : ''}</td>
+    <td data-label="Conclusiones" class="notes"><textarea data-p="conclusiones" rows="1" placeholder="Qué pasa ahora: pagado, reagenda, se lo piensa…"${dis}>${esc(l.conclusiones)}</textarea></td>
+  </tr>`;
+}
+function guardarPipe(el) {
+  const id = el.closest('tr')?.dataset.id, campo = el.dataset.p;
+  const l = D.leads.find(x => x.id === id);
+  if (!l || !campo) return;
+  let v = el.value.trim();
+  if (campo === 'diaAgenda') v = v ? new Date(v).toISOString() : '';
+  const actual = campo === 'diaAgenda' ? (diaAgendaDe(l) ? diaAgendaDe(l).toISOString() : '') : campo === 'fuente' ? (l.fuente || fuenteAuto(l)) : (l[campo] || '');
+  if (v === actual && !(campo === 'fuente' && !l.fuente)) return;
+  if (campo === 'linkLlamada' && v && !/^https:\/\//.test(v)) { toast('El link tiene que empezar por https://', true); el.value = l.linkLlamada || ''; return; }
+  if (campo === 'closer' && !confirm(v ? `¿Pasar a ${l.nombre} al closer ${v}?` : `¿Quitar el closer de ${l.nombre}?`)) { el.value = l.closer; return; }
+  guardar(id, { [campo]: v }).then(ok => ok && /Notas|conclusiones/.test(campo) && toast('Guardado'));
+}
+$('pRows').addEventListener('change', e => { if (/SELECT|INPUT/.test(e.target.tagName)) { guardarPipe(e.target); e.target.blur(); } });
+$('pRows').addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') autoalto(e.target); });
+$('pRows').addEventListener('focusout', e => {
+  if (e.target.tagName === 'TEXTAREA') guardarPipe(e.target);
+  setTimeout(() => { if (pendientePipe && !$('pRows').contains(document.activeElement)) pintarPipe(); }, 0);
+});
+$('pRows').addEventListener('click', e => { const b = e.target.closest('[data-ficha]'); if (b) abrirFicha(b.dataset.ficha); });
+$('pVistas').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  pVista = b.dataset.v;
+  $('pVistas').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  pintarPipe();
+});
+$('pQ').addEventListener('input', e => { pQ = e.target.value.trim(); pintarPipe(); });
+$('pEstado').addEventListener('change', e => { pEst = e.target.value; pintarPipe(); });
+$('pCloser').addEventListener('change', e => { pClo = e.target.value; pintarPipe(); });
+$('pToggles').addEventListener('click', async e => {
+  const b = e.target.closest('.s-toggle'); if (!b) return;
+  const c = (D.pipeline.acceso || []).find(x => x.nombre === b.dataset.c); if (!c) return;
+  c.on = !c.on; pintarPipe();
+  try {
+    await api('closerOn', { para: c.nombre, on: c.on });
+    toast(`Pipeline ${c.on ? 'activado' : 'desactivado'} para ${c.nombre}`);
+  } catch (err) { c.on = !c.on; pintarPipe(); toast('No se ha guardado: ' + err.message, true); }
 });
 
 // ---------- Setting (mensajes) ----------
@@ -736,6 +995,10 @@ function pintarTabSetting() {
   $('tabSet').hidden = !ver;
   $('tabIg').hidden = !verIg;
   $('tabEnl').hidden = S.rol !== 'maestro';
+  const verPipe = S.rol === 'maestro' || D.pipeline.on;
+  $('tabPipe').hidden = !verPipe;
+  $('tabPipe').textContent = S.rol === 'maestro' ? 'Closers' : 'Mi pipeline';
+  if (!verPipe && pestana === 'pipe') $('tabs').querySelector('[data-t="leads"]').click();
   if (S.rol !== 'maestro' && pestana === 'enlaces') $('tabs').querySelector('[data-t="leads"]').click();
   if ((!ver && pestana === 'setting') || (!verIg && pestana === 'ig')) $('tabs').querySelector('[data-t="leads"]').click();
 }
@@ -1060,9 +1323,11 @@ $('rows').addEventListener('change', e => {
     } else if (l.fijo && val !== l.caller && !confirm(val ? `Este lead lo agendó ${l.fijo} en llamada. ¿Pasárselo a ${val}?` : `¿Quitar el caller (${l.fijo}) a este lead agendado en llamada?`)) return render();
   }
   // al elegir estado, si nadie lo había marcado como contactado, se marca solo
+  // «Contactado» = le has llamado (cuenta un intento), NO que haya respondido: eso es la columna Respondió (✅)
   if (campo === 'estado' && val && val !== 'Invalid') {
     const l = D.leads.find(x => x.id === id);
-    if (l && l.contacto !== '✅' && /Contactado|Seguimiento|Agendado|Perdido|Nutricion/.test(val)) cambios.contacto = '✅';
+    if (l && val === 'Contactado' && l.intentos < 1) cambios.intentos = 1;
+    if (l && l.contacto !== '✅' && /Seguimiento|Agendado|Nutricion/.test(val)) cambios.contacto = '✅';
   }
   guardar(id, cambios);
 });
@@ -1160,11 +1425,17 @@ function demoApi(action, extra) {
         asignado: b[4] ? min(b[3] - 1) : '',
         embudo: ['', '', 'Conversación', '', 'Conversación', '', 'Oferta llamada', 'Oferta llamada', 'Conversación'][i],
         rellamar: i === 4 ? min(5) : i === 6 ? new Date(Date.now() + 150 * 60000).toISOString() : '',
-        notasLlamada: i === 2 ? 'Situación: trabaja en hostelería, 0 experiencia en YouTube\nObjetivo: ingreso extra en 6 meses\nObjeciones: precio, poco tiempo\nPresupuesto: 200-400 €/mes\nResultado: lo piensa\nPróximo paso: rellamar el jueves' : '',
+        notasLlamada: i === 2 ? 'Situación: trabaja en hostelería, 0 experiencia en YouTube\nTemporalidad: quiere empezar este mes\nObjetivo / visión: ingreso extra en 6 meses y dejar turnos de noche\nPuente: le falta método y constancia\nTiempo y dinero: 1 h al día · 200-400 €/mes\nOferta: le encaja, lo habla con su pareja' : '',
+        closer: [3, 7].includes(i) ? 'Mario.e' : '', closerEstado: i === 7 ? 'Se lo piensa' : '',
+        closerNotas: i === 7 ? 'Muy interesado, duda por el precio' : '', linkLlamada: i === 7 ? 'https://fathom.video/share/demo' : '',
+        conclusiones: i === 7 ? '🤖 Fathom: Quiere empezar en noviembre.\nLe preocupa el tiempo que necesita a la semana.\nSe lo piensa: rellamar el viernes.' : '',
+        diaAgenda: i === 3 ? new Date(Date.now() + 26 * 3600e3).toISOString() : i === 7 ? min(1440) : '', fuente: '',
         grabaciones: i === 2 ? [{ archivo: 'demo-a', fecha: min(40), por: 'Mario.e', mb: 18.4, tipo: 'audio/mp4' }] : [],
       })),
     };
   }
+  if (!window.__demo.pipeline) window.__demo.pipeline = { estados: ['Pendiente', 'Reagendado', 'No show', 'Se lo piensa', 'Seguimiento', 'Pagado', 'No cierra', 'Cancelado'],
+    fuentes: ['SETTING', 'COLD', 'YT', 'IG'], closers: ['Mario.e'], acceso: [{ nombre: 'Mario.e', on: true }], porDefecto: 'Mario.e' };
   if (!window.__demo.setting) {
     const d = i => { const x = new Date(); x.setDate(x.getDate() - i); return diaKey(x); };
     window.__demo.setting = { callers: [{ nombre: 'Mario.e', on: true }], dias: [
@@ -1192,10 +1463,14 @@ function demoApi(action, extra) {
     const r = JSON.parse(JSON.stringify(db));
     const yo = db.setting.callers.find(c => c.nombre.toUpperCase() === (S.caller || '').toUpperCase());
     if (!esMaestro) { r.setters = r.setters.filter(x => mismo(x.nombre, S.caller)); r.ig = r.ig.filter(c => mismo(c.setter, S.caller)); r.enlacesCaller = r.enlacesCaller.filter(x => mismo(x.nombre, S.caller)); }
+    const pa = db.pipeline.acceso.find(c => mismo(c.nombre, S.caller));
+    r.pipeline = esMaestro ? { on: true, ...r.pipeline } : { ...r.pipeline, acceso: undefined, on: !!(pa && pa.on) };
+    if (!esMaestro) r.leads.forEach(l => { if (!mismo(l.closer, S.caller)) Object.assign(l, { closerNotas: '', conclusiones: '', linkLlamada: '' }); });
     r.setting = esMaestro ? { on: true, ...r.setting } : yo && yo.on ? { on: true, dias: r.setting.dias.filter(x => x.caller === yo.nombre) } : { on: false, dias: [] };
     return Promise.resolve({ ok: true, rol: esMaestro ? 'maestro' : 'caller', ...r });
   }
   if (action === 'setting') { Object.assign(diaSet(db.setting, extra.dia, S.caller), extra.cambios); return Promise.resolve({ ok: true }); }
+  if (action === 'closerOn') { db.pipeline.acceso.find(c => c.nombre === extra.para).on = extra.on; return Promise.resolve({ ok: true }); }
   if (action === 'settingOn') { db.setting.callers.find(c => c.nombre === extra.para).on = extra.on; return Promise.resolve({ ok: true }); }
   if (action === 'grabacion') {
     const l = db.leads.find(x => x.id === extra.id);
