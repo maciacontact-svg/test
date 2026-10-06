@@ -73,7 +73,8 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     const q = new URL(req.url, 'https://x').searchParams;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    if (!secreto || q.get('setup') !== secreto) { res.statusCode = 403; return res.end('{"error":"Forbidden"}'); }
+    if (!secreto) { res.statusCode = 403; return res.end('{"error":"Vercel no tiene TG_SECRET: añádela en el proyecto de la web (Production) y haz Redeploy"}'); }
+    if (q.get('setup') !== secreto) { res.statusCode = 403; return res.end('{"error":"El setup= del enlace no coincide con TG_SECRET de Vercel (mira espacios o comillas)"}'); }
     // Conecta el bot con esta URL y dice qué falta por configurar (sin enseñar claves)
     const d = {};
     d.IA = process.env.ANTHROPIC_API_KEY ? 'ok: Claude' : process.env.GROQ_API_KEY ? 'ok: Groq (gratis)' : 'FALTA GROQ_API_KEY (gratis en console.groq.com)';
