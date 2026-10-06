@@ -86,11 +86,6 @@ function doPost(e) {
       case 'grabacionFin': return json(terminarGrabacion(b, auth(b)));
       case 'borrarGrabacion': return json(borrarGrabacion(b, auth(b)));
       case 'audio':     return json(leerAudio(b, auth(b)));
-      case 'ideaGuardar': return json(guardarIdeas(b));
-      case 'ideasBuscar': return json(buscarIdeas(b));
-      case 'ideaEstado':  return json(estadoIdea(b));
-      case 'ideas':       return json(listarIdeas(auth(b)));
-      case 'ideaEditar':  return json(editarIdea(b, auth(b)));
     }
     return json({ ok: false, error: 'Acción desconocida' });
   } catch (err) {
@@ -1311,162 +1306,6 @@ function reunionFathom(b) {
 }
 
 // =====================================================================
-// Jarvis · segundo cerebro (pestaña «Ideas»)
-// Las ideas llegan solas desde api/jarvis-wa.js (WhatsApp de Mario → «Mario») y api/jarvis-slack.js
-// (canal de Slack del equipo → «Equipo»), ya ordenadas por Claude. Clave: Ajustes → G9 (la misma que IG_CRM_KEY).
-// Mario las ve en el CRM (pestaña «Ideas», solo maestro); el equipo nunca ve las de Mario.
-// =====================================================================
-const HOJA_IDEAS = 'Ideas';
-const IDEA = { id: 1, fecha: 2, de: 3, autor: 4, canal: 5, categoria: 6, titulo: 7, paraQue: 8, idea: 9, paso: 10, prioridad: 11, estado: 12, original: 13, msg: 14 };
-const IDEA_CABECERA = ['Nº', 'Fecha', 'De', 'Autor', 'Canal', 'Categoría', 'Título', 'Para qué sirve', 'La idea', 'Siguiente paso', 'Prioridad', 'Estado',
-  'Original (texto o audio transcrito)', 'ID mensaje'];
-const CATEGORIAS_IDEA = ['Funnel', 'Contenido', 'Ventas', 'Formación', 'Marketing', 'Equipo', 'Tecnología', 'Otros'];
-const ESTADOS_IDEA = ['Nueva', 'En marcha', 'Hecha', 'Descartada'];
-const PRIORIDADES_IDEA = ['Alta', 'Media', 'Baja'];
-
-function hojaIdeas() {
-  const ss = SpreadsheetApp.getActive();
-  let sh = ss.getSheetByName(HOJA_IDEAS);
-  if (!sh) {
-    sh = ss.insertSheet(HOJA_IDEAS);
-    sh.getRange(1, 1, 1, IDEA_CABECERA.length).setValues([IDEA_CABECERA]);
-    estiloCabecera(sh.getRange(1, 1, 1, IDEA_CABECERA.length));
-    sh.setFrozenRows(1);
-    sh.getRange('B2:B').setNumberFormat('dd/mm/yyyy HH:mm');
-    [50, 125, 80, 110, 90, 105, 240, 280, 380, 260, 80, 100, 380, 120].forEach((w, i) => sh.setColumnWidth(i + 1, w));
-    sh.getRange('G2:M').setWrap(true);
-    sh.hideColumns(IDEA.msg);
-    const filas = sh.getMaxRows() - 1;
-    const lista = (col, valores) => sh.getRange(2, col, filas, 1).setDataValidation(
-      SpreadsheetApp.newDataValidation().requireValueInList(valores, true).setAllowInvalid(false).build());
-    lista(IDEA.categoria, CATEGORIAS_IDEA); lista(IDEA.estado, ESTADOS_IDEA); lista(IDEA.prioridad, PRIORIDADES_IDEA);
-  }
-  return sh;
-}
-
-function claveJarvis(b) {
-  const clave = String(ajCelda(AJ.igClave)).trim();
-  if (clave.length < 16 || String(b.clave || '') !== clave) throw new Error('Clave incorrecta');
-}
-
-function filaIdea(f) {
-  const v = k => f[IDEA[k] - 1];
-  const fecha = v('fecha');
-  return {
-    n: Number(v('id')) || 0, fecha: fecha instanceof Date ? fecha.toISOString() : String(fecha || ''),
-    de: String(v('de') || ''), autor: String(v('autor') || ''), canal: String(v('canal') || ''),
-    categoria: String(v('categoria') || ''), titulo: String(v('titulo') || ''), paraQue: String(v('paraQue') || ''),
-    idea: String(v('idea') || ''), paso: String(v('paso') || ''), prioridad: String(v('prioridad') || ''),
-    estado: String(v('estado') || 'Nueva'), original: String(v('original') || ''),
-  };
-}
-
-function todasLasIdeas() {
-  const sh = hojaIdeas();
-  const n = sh.getLastRow() - 1;
-  if (n < 1) return [];
-  return sh.getRange(2, 1, n, IDEA_CABECERA.length).getValues().filter(f => f[0] !== '').map(filaIdea);
-}
-
-const deIdea = x => /^equipo$/i.test(String(x || '')) ? 'Equipo' : 'Mario';
-const deLista = (x, lista, def) => lista.find(c => c.toLowerCase() === String(x || '').trim().toLowerCase()) || def;
-
-// b = { action: 'ideaGuardar', clave, de: 'mario'|'equipo', autor, canal, original, msg, ideas: [{ titulo, categoria, paraQue, idea, paso, prioridad }] }
-function guardarIdeas(b) {
-  claveJarvis(b);
-  const msg = limpio(b.msg, 120);
-  const ideas = (Array.isArray(b.ideas) ? b.ideas : []).slice(0, 10).filter(x => x && limpio(x.titulo || x.idea, 10));
-  if (!ideas.length) return { ok: true, ideas: [] };
-  const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
-  try {
-    const sh = hojaIdeas();
-    const n = sh.getLastRow() - 1;
-    const datos = n > 0 ? sh.getRange(2, 1, n, IDEA_CABECERA.length).getValues() : [];
-    // Meta y Slack a veces repiten el aviso: el mismo mensaje no se guarda dos veces
-    if (msg) {
-      const ya = datos.filter(f => String(f[IDEA.msg - 1]) === msg).map(filaIdea);
-      if (ya.length) return { ok: true, repetida: true, ideas: ya };
-    }
-    let num = datos.reduce((m, f) => Math.max(m, Number(f[IDEA.id - 1]) || 0), 0);
-    const ahora = new Date();
-    const filas = ideas.map(x => {
-      const f = new Array(IDEA_CABECERA.length).fill('');
-      const pon = (k, v) => { f[IDEA[k] - 1] = celda(v); };
-      pon('id', ++num); f[IDEA.fecha - 1] = ahora;
-      pon('de', deIdea(b.de)); pon('autor', limpio(b.autor, 60)); pon('canal', limpio(b.canal, 30));
-      pon('categoria', deLista(x.categoria, CATEGORIAS_IDEA, 'Otros'));
-      pon('titulo', limpio(x.titulo, 120)); pon('paraQue', limpio(x.paraQue, 600)); pon('idea', limpio(x.idea, 3000));
-      pon('paso', limpio(x.paso, 600)); pon('prioridad', deLista(x.prioridad, PRIORIDADES_IDEA, 'Media'));
-      pon('estado', 'Nueva'); pon('original', limpio(b.original, 8000)); pon('msg', msg);
-      return f;
-    });
-    sh.getRange(sh.getLastRow() + 1, 1, filas.length, IDEA_CABECERA.length).setValues(filas);
-    SpreadsheetApp.flush();
-    return { ok: true, ideas: filas.map(filaIdea) };
-  } finally { lock.releaseLock(); }
-}
-
-// b = { action: 'ideasBuscar', clave, quien: 'mario'|'equipo', ambito: 'mias'|'equipo'|'todas', categoria?, estados? }
-// Desde Slack (quien = equipo) solo salen las del equipo, pida lo que pida.
-function buscarIdeas(b) {
-  claveJarvis(b);
-  let ambito = String(b.ambito || 'mias');
-  if (deIdea(b.quien) === 'Equipo') ambito = 'equipo';
-  const cat = b.categoria ? deLista(b.categoria, CATEGORIAS_IDEA, '') : '';
-  const estados = (Array.isArray(b.estados) && b.estados.length ? b.estados : ['Nueva', 'En marcha']).map(String);
-  const ideas = todasLasIdeas()
-    .filter(x => ambito === 'todas' || x.de === (ambito === 'equipo' ? 'Equipo' : 'Mario'))
-    .filter(x => !cat || x.categoria === cat)
-    .filter(x => estados.indexOf(x.estado) >= 0)
-    .sort((x, y) => y.n - x.n).slice(0, 80)
-    .map(x => { delete x.original; return x; });
-  return { ok: true, ambito: ambito, ideas: ideas };
-}
-
-// b = { action: 'ideaEstado', clave, quien, n, estado } — «la 12 está hecha». El equipo solo toca las del equipo.
-function estadoIdea(b) {
-  claveJarvis(b);
-  const estado = deLista(b.estado, ESTADOS_IDEA, '');
-  if (!estado) throw new Error('Estado no válido');
-  return cambiarIdea(Number(b.n), { estado: estado }, deIdea(b.quien) === 'Equipo' ? 'Equipo' : '');
-}
-
-function cambiarIdea(n, cambios, soloDe) {
-  if (!(n > 0)) throw new Error('Falta el número de la idea');
-  const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
-  try {
-    const sh = hojaIdeas();
-    const total = sh.getLastRow() - 1;
-    const ids = total > 0 ? sh.getRange(2, IDEA.id, total, 1).getValues() : [];
-    const i = ids.findIndex(f => Number(f[0]) === n);
-    if (i < 0) throw new Error('No encuentro la idea ' + n);
-    const fila = i + 2;
-    const antes = filaIdea(sh.getRange(fila, 1, 1, IDEA_CABECERA.length).getValues()[0]);
-    if (soloDe && antes.de !== soloDe) throw new Error('No encuentro la idea ' + n);
-    Object.keys(cambios).forEach(k => sh.getRange(fila, IDEA[k]).setValue(celda(cambios[k])));
-    SpreadsheetApp.flush();
-    return { ok: true, idea: Object.assign(antes, cambios) };
-  } finally { lock.releaseLock(); }
-}
-
-// CRM (solo maestro): todas las ideas, y cambiar estado / categoría / prioridad a mano
-function listarIdeas(u) {
-  if (u.rol !== 'maestro') throw new Error('Solo el maestro ve las ideas');
-  return { ok: true, ideas: todasLasIdeas().sort((x, y) => y.n - x.n), categorias: CATEGORIAS_IDEA, estados: ESTADOS_IDEA, prioridades: PRIORIDADES_IDEA };
-}
-
-function editarIdea(b, u) {
-  if (u.rol !== 'maestro') throw new Error('Solo el maestro edita las ideas');
-  const c = {};
-  if (b.estado) c.estado = deLista(b.estado, ESTADOS_IDEA, '') || err('Estado no válido');
-  if (b.categoria) c.categoria = deLista(b.categoria, CATEGORIAS_IDEA, '') || err('Categoría no válida');
-  if (b.prioridad) c.prioridad = deLista(b.prioridad, PRIORIDADES_IDEA, '') || err('Prioridad no válida');
-  return cambiarIdea(Number(b.n), c, '');
-}
-
-// =====================================================================
 // Informe semanal: cada lunes a las 9 (activador de configurar) llega a Slack cómo fue la semana pasada
 // comparada con la anterior, y se guarda una fila en la pestaña «Informe semanal».
 // Las cuentas son las mismas que la tarjeta «Semana» de la pestaña KPIs del CRM (crm.js → metricasSemana).
@@ -1784,7 +1623,6 @@ function configurar() {
 
   hojaSetting();
   hojaIg();
-  hojaIdeas();
 
   // ---- Leads ----
   let sh = ss.getSheetByName(HOJA_LEADS);

@@ -59,6 +59,7 @@
       <button type="button" data-t="setting" id="tabSet" hidden>Setting</button>
       <button type="button" data-t="ig" id="tabIg" hidden>Instagram</button>
       <button type="button" data-t="enlaces" id="tabEnl" hidden>Enlaces</button>
+      <button type="button" data-t="ideas" id="tabIdeas" hidden>Ideas</button>
     </nav>
     <div class="nav-right">
       <span class="live" id="live"><i></i><span id="liveText">Conectando…</span></span>
@@ -296,6 +297,32 @@
       </section>
       <section class="ig-list" id="igList"></section>
       <p class="empty" id="igEmpty" hidden>No hay conversaciones que coincidan.</p>
+    </div>
+
+    <!-- Ideas (solo maestro): segundo cerebro. Llegan solas de Jarvis (tu WhatsApp → «Mías», canal de Slack → «Equipo») -->
+    <div id="vIdeas" hidden>
+      <section class="k-head">
+        <div>
+          <h2>Ideas <em>· segundo cerebro</em></h2>
+          <p class="k-sub">Lo que le mandas a Jarvis por WhatsApp (texto o audio) y lo que el equipo deja en Slack, ordenado solo. Solo tú ves esta pestaña.</p>
+        </div>
+        <div class="chips" id="iDe">
+          <button type="button" data-d="Mario" class="on">Mías <i id="nMias"></i></button>
+          <button type="button" data-d="Equipo">Equipo <i id="nEquipo"></i></button>
+          <button type="button" data-d="">Todas</button>
+        </div>
+      </section>
+      <section class="toolbar">
+        <label class="search"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="iQ" type="search" placeholder="Buscar en las ideas"></label>
+        <select id="iCat" aria-label="Categoría"></select>
+        <select id="iEstado" aria-label="Estado">
+          <option value="abiertas">Pendientes y en marcha</option><option value="Nueva">🆕 Nuevas</option><option value="En marcha">🚀 En marcha</option>
+          <option value="Hecha">✅ Hechas</option><option value="Descartada">🗑️ Descartadas</option><option value="">Todas</option>
+        </select>
+      </section>
+      <section id="iList" class="i-list"></section>
+      <p class="empty" id="iEmpty" hidden></p>
     </div>
   </main>
 </div>

@@ -1,6 +1,7 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": { "api/jarvis-*.js": { "maxDuration": 60 } },
   "redirects": [
     { "source": "/crm-app", "destination": "/", "permanent": false },
     { "source": "/crm-app/:path*", "destination": "/", "permanent": false },

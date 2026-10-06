@@ -1,0 +1,9 @@
+{
+  "name": "system-academy-web",
+  "private": true,
+  "description": "Web estática (sin build) + funciones de Vercel en api/ (Instagram, Fathom, Jarvis)",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@vercel/functions": "^3.9.11"
+  }
+}

@@ -26,7 +26,7 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 - «Cuenta» del alumno = `localStorage['sa-lead']` {id,nombre,correo}; en otro dispositivo, acción `cuenta` por email.
 
 ## CRM
-- `crm/Code.gs` = Apps Script dentro del Google Sheet (pestañas Leads y Ajustes). Acciones: lead, agendado, cuenta, login, list, update, setting, settingOn, closerOn, fathom, ig, grabacion, grabacionFin, borrarGrabacion, audio.
+- `crm/Code.gs` = Apps Script dentro del Google Sheet (pestañas Leads y Ajustes). Acciones: lead, agendado, cuenta, login, list, update, setting, settingOn, closerOn, fathom, ig, grabacion, grabacionFin, borrarGrabacion, audio, ideaGuardar, ideasBuscar, ideaEstado, ideas, ideaEditar.
   Columnas A–K visibles (orden fijado por el cliente), L–Z ocultas (ver `COL`). Ajustes: A/B callers+PIN, C casilla Setting, D estados, G2 Slack, G3 URL CRM, G4 minutos, G5 menciones, G6 token Calendly, G7/G8 acceso maestro (Mario), G9 clave IG, G10 token IG (se renueva solo cada semana: `renovarTokenInstagram`, estado en G12), G11 frases de propuesta, G13 dominio de la web para enlaces, G15 webhook de Slack del canal de agendas (`enviarSlack(payload, 'agendas')`; G2 = leads/rellamadas; sin aviso de «X min sin llamar»), G16 closer por defecto, E (casilla) acceso al pipeline de closers, G14 estado de `conectarInstagram` (suscribe la cuenta a messages/messaging_seen), I–K setters (nombre, palabra clave, código de enlace).
 - Si cambia `Code.gs`, el usuario debe: copiar el archivo (GitHub «Copy raw file») → pegar en Apps Script → ejecutar `configurar` → Implementar › Gestionar › Nueva versión. Avisarle siempre.
 - `crm-app/` = dashboard (login nombre+PIN, rol caller/maestro, rellamadas desde notas, embudo por lead, KPIs por caller).
@@ -46,6 +46,11 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 - `api/ig.js` (Vercel, web pública): webhook de Meta (firma con IG_APP_SECRET) → Apps Script `ig` con IG_CRM_KEY. Env: IG_APP_SECRET, IG_VERIFY_TOKEN, IG_CRM_KEY, CRM_API_URL.
 - Todos los setters escriben desde @aleix.ytf **como Aleix**: se distinguen por su marca (emoji/coletilla, NUNCA su nombre) y enlace propio (`/a/<código>` → agendar, `/b/<código>` → empezar, `/c/<código>` → agendar en modo caller, en `vercel.json`; `?s=` se guarda en `sa-setter`).
 - Hoja «Instagram» (una fila por convo, ver `IG`). CRM: pestaña Instagram (seguimiento) y Setting = automático + correcciones a mano.
+
+## Jarvis · segundo cerebro (`crm/JARVIS.md`)
+- Ideas por WhatsApp de Mario (`api/jarvis-wa.js`, API oficial Cloud, solo números de WA_MARIO) → «Mario»; canal de Slack (`api/jarvis-slack.js`) → «Equipo». Audio → texto (TRANSCRIBE_*), Claude (`api/_jarvis.js`, ANTHROPIC_API_KEY) clasifica: ideas / consulta / estado.
+- Hoja «Ideas» (ver `IDEA` en Code.gs; clave G9): acciones ideaGuardar, ideasBuscar, ideaEstado (con clave), ideas, ideaEditar (maestro). En Slack solo salen ideas del equipo; Mario pide «mías» (defecto), «equipo» o «todas».
+- CRM: pestaña «Ideas» (solo maestro). `package.json` raíz = dependencias de las funciones (@anthropic-ai/sdk, @vercel/functions).
 
 ## Origen y enlaces
 - `/agenda/youtube/<vídeo>` → `youtube.html` (agenda con texto para YouTube, misma lógica que agendar). `/agenda/<fuente>/<etiqueta>` → agendar y `/biblio/<fuente>/<etiqueta>` → empezar (formulario de la biblioteca) (`vercel.json`), con utm_source/utm_content. Se guarda en `localStorage['sa-origen']` (script.js, form.js, llamada.js) y llega a Leads.origen (también en reservas sin formulario).
