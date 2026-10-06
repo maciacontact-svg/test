@@ -76,6 +76,7 @@ async function entrar() {
   const maestro = S.rol === 'maestro';
   $('me').textContent = maestro ? `${S.caller} · Maestro` : S.caller;
   $('kitLink').hidden = !maestro;
+  $('agLink').hidden = true;
   $('tabKpis').textContent = maestro ? 'KPIs del equipo' : 'Mis KPIs';
   document.querySelector('#views [data-v="mios"]').hidden = maestro;
   // se abre al momento con lo último que se vio en este dispositivo; los datos frescos llegan por detrás
@@ -96,6 +97,10 @@ function pintarDatos(r) {
   r.setting = r.setting || { on: false, dias: [] };
   r.ig = r.ig || []; r.setters = r.setters || [];
   D = r;
+  // enlace para agendar al lead en plena llamada (queda asignado a quien lo usa)
+  const mio = (D.enlacesCaller || []).find(x => mismo(x.nombre, S.caller));
+  $('agLink').hidden = !mio;
+  if (mio) $('agLink').href = `https://${web()}/c/${mio.slug}`;
   if (!$('fEstado').dataset.ok || $('fEstado').options.length !== D.estados.length + 2) pintarFiltroEstado();
   render();
   pintarTabSetting();
@@ -139,13 +144,15 @@ async function guardar(id, cambios) {
   const l = D.leads.find(x => x.id === id);
   if (!l) return;
   const antes = {};
-  Object.keys(cambios).forEach(k => { antes[k] = l[k]; });
-  Object.assign(l, cambios);
-  pendientes[id] = { ...(pendientes[id] || {}), ...cambios };
+  const local = { ...cambios };
+  if (local.autoagenda) { local.caller = ''; local.fijo = ''; local.estado = 'Agendado'; }
+  Object.keys(local).forEach(k => { antes[k] = l[k]; });
+  Object.assign(l, local);
+  pendientes[id] = { ...(pendientes[id] || {}), ...local };
   render();
   try {
     const r = await api('update', { id, cambios });
-    Object.keys(cambios).forEach(k => { if (pendientes[id]) delete pendientes[id][k]; });
+    Object.keys(local).forEach(k => { if (pendientes[id]) delete pendientes[id][k]; });
     if (pendientes[id] && !Object.keys(pendientes[id]).length) delete pendientes[id];
     Object.assign(l, r.lead, pendientes[id] || {});
     render();
@@ -193,7 +200,7 @@ function chipRellamar(l) {
 const buenForm = l => l.cualifica && !l.autoagenda && !['Agendado', 'Perdido', 'Invalid'].includes(l.estado);
 
 // ---------- Origen del lead (por qué enlace entró) ----------
-const FUENTES = { youtube: '▶️ YouTube', manychat: '🤖 ManyChat', instagram: '📸 Instagram', ig_dm: '📸 DM Instagram', tiktok: '🎵 TikTok' };
+const FUENTES = { youtube: '▶️ YouTube', manychat: '🤖 ManyChat', instagram: '📸 Instagram', ig_dm: '📸 DM Instagram', tiktok: '🎵 TikTok', llamada: '📞 Agendado en llamada' };
 function origenDe(l) {
   const o = String(l.origen || '');
   if (!o.includes('=')) return { fuente: o ? 'calendly' : 'directo', nombre: o ? '📅 Calendly directo' : 'Directo / sin enlace', etiqueta: '' };
@@ -361,14 +368,25 @@ function fila(l) {
     <td data-label="En qué punto está" class="txt"><span title="${esc(l.punto)}">${esc(l.punto) || '—'}</span></td>
     <td data-label="Qué quiere conseguir" class="txt"><span title="${esc(l.objetivo)}">${esc(l.objetivo) || '—'}</span></td>
     <td data-label="Correo" class="mail">${l.correo ? `<a href="mailto:${esc(l.correo)}" title="${esc(l.correo)}">${esc(l.correo)}</a>` : '—'}</td>
-    <td data-label="Caller">${l.autoagenda
-      ? `<span class="pill locked" title="Se agendó él solo por Calendly: no lleva caller">Autoagendado</span>`
-      : `<select class="pill caller" data-f="caller" aria-label="Caller">${opciones(D.callers, l.caller, '—')}</select>`}</td>
+    <td data-label="Caller">${celdaCaller(l)}</td>
     <td data-label="Estado"><select class="pill estado" data-e="${slug(l.estado) || 'nuevo'}" data-f="estado" aria-label="Estado">${opciones(D.estados, l.estado, 'Nuevo')}</select></td>
     <td data-label="Contacto"><button type="button" class="contact ${l.contacto === '✅' ? 'yes' : 'no'}" data-f="contacto" aria-label="Contactado: ${l.contacto === '✅' ? 'sí' : 'no'}">${l.contacto === '✅' ? '✅' : '❌'}</button></td>
     <td data-label="Nº intentos"><div class="step"><button type="button" data-f="intentos" data-d="-1" aria-label="Menos">−</button><b>${l.intentos}</b><button type="button" data-f="intentos" data-d="1" aria-label="Más">+</button></div></td>
     <td data-label="Notas" class="notes"><textarea data-f="notas" rows="1" placeholder="Añadir nota…">${esc(l.notas)}</textarea></td>
   </tr>`;
+}
+
+// Caller: los autoagendados y los agendados por un caller en llamada (🔒) solo los cambia el maestro
+function celdaCaller(l) {
+  const m = S.rol === 'maestro';
+  if (!m && l.autoagenda) return `<span class="pill locked" title="Se agendó él solo por Calendly: no lleva caller (si es un error, Mario lo cambia)">Autoagendado</span>`;
+  if (!m && l.fijo) return `<span class="pill locked fijo" title="Lo agendó ${esc(l.fijo)} en llamada: solo Mario puede cambiar el caller">🔒 ${esc(l.fijo)}</span>`;
+  const lista = l.caller && !D.callers.includes(l.caller) ? [l.caller, ...D.callers] : D.callers;
+  const actual = l.autoagenda ? '__auto' : l.caller;
+  const op = (v, t) => `<option value="${esc(v)}"${v === actual ? ' selected' : ''}>${esc(t)}</option>`;
+  const tit = l.autoagenda ? 'Autoagendado. Elige un caller si en realidad lo agendó él en llamada' : l.fijo ? `🔒 Fijo: lo agendó ${l.fijo} en llamada (solo tú puedes cambiarlo)` : 'Caller';
+  return `<select class="pill caller${l.autoagenda ? ' auto' : ''}${l.fijo ? ' fijo' : ''}" data-f="caller" aria-label="Caller" title="${esc(tit)}">` +
+    op('', '—') + (m ? op('__auto', '📅 Auto') : '') + lista.map(v => op(v, (l.fijo && v === l.caller ? '🔒 ' : '') + v)).join('') + '</select>';
 }
 
 function autoalto(t) { t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 160) + 'px'; }
@@ -402,7 +420,7 @@ function abrirFicha(id) {
     ${row('Prioridad para llamar', `${prioridad(l)} de 4 · ${PRIOS[prioridad(l)]}`)}
     ${row('Buen form', l.cualifica ? 'Sí: encaja con el perfil (se le ofreció agendar)' : '')}
     ${row('Autoagendado por Calendly', l.autoagenda)}
-    ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' : l.caller)}${row('Estado', l.estado || 'Nuevo')}${row('Notas caller', l.notas)}
+    ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' + (S.rol === 'maestro' ? ' · si lo agendó un caller en llamada, cámbialo en la columna Caller' : '') : l.caller + (l.fijo ? ' · 🔒 lo agendó en llamada' : ''))}${row('Estado', l.estado || 'Nuevo')}${row('Notas caller', l.notas)}
     ${bloqueLlamada(l)}
     ${row('Canal', CANALES[canalDe(l)])}
     ${row('Origen', (o => o.nombre + (o.etiqueta ? ' · ' + o.etiqueta : '') + (l.setter ? ' · setter ' + l.setter : ''))(origenDe(l)))}`;
@@ -423,30 +441,32 @@ function bloqueLlamada(l) {
   return `<div class="kv llamada"><small>📝 Notas llamada <button type="button" class="mini" data-plantilla>Plantilla</button></small>
       <textarea data-ll="${esc(l.id)}" rows="7" placeholder="Puntos importantes de la llamada: situación, objeciones, resultado, próximo paso…">${esc(l.notasLlamada)}</textarea></div>
     <div class="kv grab"><small>📼 Grabaciones${grabs.length ? ` (${grabs.length})` : ''}</small>
-      ${lista ? `<ul>${lista}</ul>` : ''}
+      ${lista || sub ? `<ul>${lista}${sub ? `<li><span>Subiendo ahora · ya puedes escucharla</span><audio controls preload="metadata" src="${subiendo.url}"></audio></li>` : ''}</ul>` : ''}
       ${puedeGrabar(l) ? `<label class="subir${sub ? ' on' : ''}"><input type="file" accept="audio/*,.m4a,.mp3,.wav,.aac" data-subir="${esc(l.id)}" hidden ${sub ? 'disabled' : ''}>
-        ${sub ? esc(subiendo.txt) : '📼 Subir grabación'}</label>
+        <span class="subir-txt">${sub ? esc(subiendo.txt) : '📼 Subir grabación'}</span></label>
         <p class="nota">iPhone: graba la llamada con el botón de grabar de la propia llamada → Notas → la grabación → ⋯ → «Guardar audio en Archivos» → súbela aquí.</p>`
       : '<p class="nota">Solo el caller de este lead puede subir y escuchar sus grabaciones.</p>'}</div>`;
 }
 const aB64 = buf => { let s = ''; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
 const deB64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
 const TROZO = 4 * 1024 * 1024;     // igual que en Code.gs
+// 1) Directa: el navegador sube el archivo de una vez a Drive (Apps Script solo abre la subida) → rápido.
+// 2) Si el navegador no puede (red, permisos), por trozos de 4 MB a través de Apps Script, como antes.
 async function subirGrabacion(id, file) {
   if (!file) return;
   if (file.size > 150 * 1024 * 1024) return toast('La grabación pesa demasiado (máx. 150 MB)', true);
   const tipo = /^audio\//.test(file.type) ? file.type : 'audio/mp4';
-  const partes = Math.ceil(file.size / TROZO);
   const pinta = () => { if ($('drawer').classList.contains('open')) abrirFicha(id); };
-  subiendo = { id, txt: 'Subiendo… 0 %' }; pinta();
+  // el % se cambia sin repintar la ficha (para no cortar el audio si lo están escuchando)
+  const pc = n => { subiendo.txt = `Subiendo… ${Math.min(100, Math.round(n * 100))} %`; const t = $('dBody').querySelector('.subir-txt'); if (t) t.textContent = subiendo.txt; };
+  // mientras sube, ya se puede escuchar el archivo elegido (sale del propio móvil)
+  subiendo = { id, txt: 'Subiendo… 0 %', url: URL.createObjectURL(file) }; pinta();
   try {
-    let sube = '', r;
-    for (let i = 0; i < partes; i++) {
-      const datos = aB64(await file.slice(i * TROZO, (i + 1) * TROZO).arrayBuffer());
-      r = await api('grabacion', { id, parte: i, total: file.size, nombre: file.name, tipo, sube, datos });
-      sube = r.sube || sube;
-      subiendo.txt = `Subiendo… ${Math.round((i + 1) / partes * 100)} %`; pinta();
-    }
+    let r = null;
+    try { r = await subirDirecto(id, file, tipo, pc); } catch (err) { console.warn('Subida directa no disponible:', err); }
+    if (!r) { pc(0); r = await subirPorTrozos(id, file, tipo, pc); }
+    // la vista previa sale del propio archivo: no hace falta volver a bajarlo de Drive
+    if (r.archivo) audios[r.archivo] = subiendo.url;
     const l = D.leads.find(x => x.id === id);
     if (l && r.lead) Object.assign(l, r.lead);
     toast('Grabación guardada');
@@ -456,17 +476,56 @@ async function subirGrabacion(id, file) {
     subiendo = null; pinta();
   }
 }
+async function subirDirecto(id, file, tipo, pc) {
+  if (DEMO) return null;
+  const s0 = await api('grabacion', { id, directo: true, parte: 0, total: file.size, nombre: file.name, tipo, origen: location.origin });
+  if (!s0.url) return null;
+  const subido = await new Promise(ok => {
+    const x = new XMLHttpRequest();
+    x.open('PUT', s0.url);
+    x.setRequestHeader('Content-Type', tipo);
+    x.upload.onprogress = e => e.lengthComputable && pc(e.loaded / e.total * .97);
+    x.onload = () => ok(x.status === 200 || x.status === 201);
+    x.onerror = x.onabort = x.ontimeout = () => ok(false);
+    x.send(file);
+  });
+  // se le pregunta a Drive (desde Apps Script) si el archivo ha llegado entero; si no, se sube por trozos
+  const r = await api('grabacionFin', { id, sube: s0.sube });
+  if (!r.completa) { if (subido) console.warn('Drive no confirma la subida directa'); return null; }
+  return r;
+}
+async function subirPorTrozos(id, file, tipo, pc) {
+  const partes = Math.ceil(file.size / TROZO);
+  let sube = '', r;
+  for (let i = 0; i < partes; i++) {
+    const datos = aB64(await file.slice(i * TROZO, (i + 1) * TROZO).arrayBuffer());
+    r = await api('grabacion', { id, parte: i, total: file.size, nombre: file.name, tipo, sube, datos });
+    sube = r.sube || sube;
+    pc((i + 1) / partes);
+  }
+  return r;
+}
+// Escuchar: se pide el primer trozo y luego el resto a la vez (4 en paralelo), no uno detrás de otro
 async function oirGrabacion(id, archivo, btn) {
   btn.disabled = true; btn.textContent = 'Cargando…';
   try {
-    const trozos = []; let tipo = 'audio/mp4';
-    for (let i = 0; i < 60; i++) {
-      const r = await api('audio', { id, archivo, parte: i });
-      if (r.datos) trozos.push(deB64(r.datos));
-      tipo = r.tipo || tipo;
-      if (r.total) btn.textContent = `Cargando… ${Math.min(100, Math.round((i + 1) * TROZO / r.total * 100))} %`;
-      if (r.fin) break;
-    }
+    const r0 = await api('audio', { id, archivo, parte: 0 });
+    const tipo = r0.tipo || 'audio/mp4';
+    const n = r0.fin || !r0.total ? 1 : Math.ceil(r0.total / TROZO);
+    const trozos = [r0.datos ? deB64(r0.datos) : new Uint8Array()];
+    let hechos = 1;
+    const pinta = () => { btn.textContent = `Cargando… ${Math.round(hechos / n * 100)} %`; };
+    pinta();
+    let sig = 1;
+    const obrero = async () => {
+      while (sig < n) {
+        const i = sig++;
+        const r = await api('audio', { id, archivo, parte: i });
+        trozos[i] = r.datos ? deB64(r.datos) : new Uint8Array();
+        hechos++; pinta();
+      }
+    };
+    await Promise.all([...Array(Math.min(4, Math.max(0, n - 1)))].map(obrero));
     audios[archivo] = URL.createObjectURL(new Blob(trozos, { type: tipo }));
     abrirFicha(id);
   } catch (err) {
@@ -824,7 +883,8 @@ function pintarEnlaces() {
     misEnlaces().map((e, i) => item(`${FUENTES[e.fuente] || e.fuente} · ${e.destino === 'agenda' ? 'agenda' : 'biblioteca'}`, e.etiqueta || 'sin etiqueta', enlace(e.destino, e.fuente, e.etiqueta)) +
       `<button type="button" class="ghost e-del" data-del="${i}">Quitar</button></div>`).join('') +
     D.setters.map(x => item(`🧑‍💻 ${x.nombre} · agenda`, 'Setter (DM de Instagram)', `${web()}/a/${x.slug}`) + '<span></span></div>' +
-      item(`🧑‍💻 ${x.nombre} · biblioteca`, 'Setter (DM de Instagram)', `${web()}/b/${x.slug}`) + '<span></span></div>').join('');
+      item(`🧑‍💻 ${x.nombre} · biblioteca`, 'Setter (DM de Instagram)', `${web()}/b/${x.slug}`) + '<span></span></div>').join('') +
+    (D.enlacesCaller || []).map(x => item(`📞 ${x.nombre} · agendar en llamada`, 'Solo para el caller: queda asignado a él (🔒)', `${web()}/c/${x.slug}`) + '<span></span></div>').join('');
   // De dónde vienen
   const desde = desdePeriodo(ePer);
   const g = {};
@@ -956,7 +1016,19 @@ $('rows').addEventListener('change', e => {
   if (el.tagName !== 'SELECT') return;
   const id = idDe(el), campo = el.dataset.f, val = el.value;
   el.blur();
-  const cambios = { [campo]: val };
+  let cambios = { [campo]: val };
+  if (campo === 'caller') {
+    const l = D.leads.find(x => x.id === id);
+    if (!l) return;
+    // maestro: corregir un autoagendado (lo agendó un caller en llamada) o marcarlo como autoagendado
+    if (val === '__auto') {
+      if (!confirm(`¿Marcar a ${l.nombre} como autoagendado? Se le quita el caller y no contará para nadie.`)) return render();
+      cambios = { autoagenda: 'Sí' };
+    } else if (l.autoagenda && val) {
+      if (!confirm(`¿${l.nombre} lo agendó ${val} en llamada? Dejará de ser autoagendado, contará como agenda de ${val} y quedará fijo (🔒).`)) return render();
+      cambios = { caller: val, autoagenda: '', fijo: val };
+    } else if (l.fijo && val !== l.caller && !confirm(val ? `Este lead lo agendó ${l.fijo} en llamada. ¿Pasárselo a ${val}?` : `¿Quitar el caller (${l.fijo}) a este lead agendado en llamada?`)) return render();
+  }
   // al elegir estado, si nadie lo había marcado como contactado, se marca solo
   if (campo === 'estado' && val && val !== 'Invalid') {
     const l = D.leads.find(x => x.id === id);
@@ -1072,6 +1144,8 @@ function demoApi(action, extra) {
   if (!window.__demo.ig) {
     const h = x => new Date(Date.now() - x * 3600e3).toISOString();
     window.__demo.setters = [{ nombre: 'Mario.e', clave: '🙌🏼', slug: 'mario' }];
+    window.__demo.enlacesCaller = [{ nombre: 'Mario.e', slug: 'mario' }];
+    window.__demo.leads[7].fijo = 'Mario.e';
     window.__demo.leads[0].instagram = '@laura.gz';
     window.__demo.leads[3].instagram = 'alainmartin'; window.__demo.leads[3].setter = 'Mario.e'; window.__demo.leads[3].agendadoEl = h(2);
     window.__demo.ig = [
@@ -1087,7 +1161,7 @@ function demoApi(action, extra) {
   if (action === 'list') {
     const r = JSON.parse(JSON.stringify(db));
     const yo = db.setting.callers.find(c => c.nombre.toUpperCase() === (S.caller || '').toUpperCase());
-    if (!esMaestro) { r.setters = r.setters.filter(x => mismo(x.nombre, S.caller)); r.ig = r.ig.filter(c => mismo(c.setter, S.caller)); }
+    if (!esMaestro) { r.setters = r.setters.filter(x => mismo(x.nombre, S.caller)); r.ig = r.ig.filter(c => mismo(c.setter, S.caller)); r.enlacesCaller = r.enlacesCaller.filter(x => mismo(x.nombre, S.caller)); }
     r.setting = esMaestro ? { on: true, ...r.setting } : yo && yo.on ? { on: true, dias: r.setting.dias.filter(x => x.caller === yo.nombre) } : { on: false, dias: [] };
     return Promise.resolve({ ok: true, rol: esMaestro ? 'maestro' : 'caller', ...r });
   }
@@ -1096,13 +1170,18 @@ function demoApi(action, extra) {
   if (action === 'grabacion') {
     const l = db.leads.find(x => x.id === extra.id);
     if (extra.parte * TROZO + TROZO < extra.total) return new Promise(r => setTimeout(() => r({ ok: true, sube: 'demo', sigue: true }), 300));
-    l.grabaciones = [...(l.grabaciones || []), { archivo: 'demo' + Date.now(), fecha: new Date().toISOString(), por: S.caller, mb: Math.round(extra.total / 104857.6) / 10, tipo: extra.tipo }];
-    return new Promise(r => setTimeout(() => r({ ok: true, lead: { ...l } }), 300));
+    const archivo = 'demo' + Date.now();
+    l.grabaciones = [...(l.grabaciones || []), { archivo, fecha: new Date().toISOString(), por: S.caller, mb: Math.round(extra.total / 104857.6) / 10, tipo: extra.tipo }];
+    return new Promise(r => setTimeout(() => r({ ok: true, archivo, lead: { ...l } }), 300));
   }
   if (action === 'audio') return Promise.reject(new Error('En la demo no hay audio real'));
   if (action === 'update') {
     const l = db.leads.find(x => x.id === extra.id);
-    Object.assign(l, extra.cambios);
+    const c = { ...extra.cambios };
+    if (!esMaestro && (l.fijo && 'caller' in c && c.caller !== l.caller)) return Promise.reject(new Error(`Este lead lo agendó ${l.fijo} en llamada: solo Mario puede cambiar el caller`));
+    if ('autoagenda' in c) { if (c.autoagenda) Object.assign(c, { autoagenda: 'Marcado a mano', caller: '', fijo: '', estado: 'Agendado' }); else if (c.caller) Object.assign(c, { fijo: c.caller, estado: 'Agendado' }); }
+    else if (esMaestro && 'caller' in c && l.fijo) c.fijo = c.caller;
+    Object.assign(l, c);
     return new Promise(r => setTimeout(() => r({ ok: true, lead: { ...l } }), 250));
   }
   return Promise.reject(new Error('Acción desconocida'));

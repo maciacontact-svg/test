@@ -6,6 +6,7 @@
     { "source": "/crm-app/:path*", "destination": "/", "permanent": false },
     { "source": "/crm/:path*", "destination": "/", "permanent": false },
     { "source": "/a/:setter", "destination": "/agendar?s=:setter&utm_source=ig_dm", "permanent": false },
+    { "source": "/c/:caller", "destination": "/agendar?c=:caller&utm_source=llamada", "permanent": false },
     { "source": "/b/:setter", "destination": "/empezar?s=:setter&utm_source=ig_dm", "permanent": false },
     { "source": "/agenda/youtube", "destination": "/youtube?utm_source=youtube", "permanent": false },
     { "source": "/agenda/youtube/:etiqueta", "destination": "/youtube?utm_source=youtube&utm_content=:etiqueta", "permanent": false },

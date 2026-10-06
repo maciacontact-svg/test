@@ -26,18 +26,21 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 - «Cuenta» del alumno = `localStorage['sa-lead']` {id,nombre,correo}; en otro dispositivo, acción `cuenta` por email.
 
 ## CRM
-- `crm/Code.gs` = Apps Script dentro del Google Sheet (pestañas Leads y Ajustes). Acciones: lead, agendado, cuenta, login, list, update, setting, settingOn, ig, grabacion, audio.
+- `crm/Code.gs` = Apps Script dentro del Google Sheet (pestañas Leads y Ajustes). Acciones: lead, agendado, cuenta, login, list, update, setting, settingOn, ig, grabacion, grabacionFin, audio.
   Columnas A–K visibles (orden fijado por el cliente), L–Z ocultas (ver `COL`). Ajustes: A/B callers+PIN, C casilla Setting, D estados, G2 Slack, G3 URL CRM, G4 minutos, G5 menciones, G6 token Calendly, G7/G8 acceso maestro (Mario), G9 clave IG, G10 token IG (se renueva solo cada semana: `renovarTokenInstagram`, estado en G12), G11 frases de propuesta, G13 dominio de la web para enlaces, G14 estado de `conectarInstagram` (suscribe la cuenta a messages/messaging_seen), I–K setters (nombre, palabra clave, código de enlace).
 - Si cambia `Code.gs`, el usuario debe: copiar el archivo (GitHub «Copy raw file») → pegar en Apps Script → ejecutar `configurar` → Implementar › Gestionar › Nueva versión. Avisarle siempre.
 - `crm-app/` = dashboard (login nombre+PIN, rol caller/maestro, rellamadas desde notas, embudo por lead, KPIs por caller).
   Pestaña «Setting» (hoja Setting: día+caller → abiertos, convos, ofertas, agendas, ofertasBib, entradasBib); solo el maestro la activa por caller.
   Ficha del lead: «Notas caller» + «📝 Notas llamada» (columna notasLlamada, con plantilla) + «📼 Grabaciones» (audio subido desde el iPhone → Drive, carpeta privada «CRM · Grabaciones», resumible por trozos de 4 MB; columna grabaciones = JSON; solo el caller del lead o el maestro suben/oyen, filtrado en Code.gs).
   País por teléfono (`prefijo`/`espana`: +34 o 9 cifras por 6/7/9). Vista «🎯 Prioridad»: España buen form → España → LATAM buen form → LATAM (dentro, por llegada).
+  Una ficha por teléfono (`claveTel` = 9 últimas cifras): formulario o Calendly con un número que ya está → se completa esa ficha (`combinar`; el ID nuevo va a la columna alias). `fusionarDuplicados` (lo llama `configurar`) une las que ya hay; las quitadas se copian en la pestaña «Duplicados».
+  Grabaciones: el navegador sube directo a Drive (Apps Script abre la subida con Origin y `grabacionFin` la confirma); si falla, por trozos vía Apps Script. Escuchar = trozos en paralelo; tras subir se oye el archivo local.
+  Enlace de caller `/c/<código>` (agendar en plena llamada; código = el de setter en K o el nombre): `agendado` con `porCaller` → Agendado, caller asignado y fijo (columna fijo, 🔒). Autoagendado y caller fijo solo los cambia el maestro (select de Caller: «📅 Auto» o un caller).
 - Probar Code.gs con un mock de SpreadsheetApp en Node antes de entregar.
 
 ## Instagram (`crm/INSTAGRAM.md`)
 - `api/ig.js` (Vercel, web pública): webhook de Meta (firma con IG_APP_SECRET) → Apps Script `ig` con IG_CRM_KEY. Env: IG_APP_SECRET, IG_VERIFY_TOKEN, IG_CRM_KEY, CRM_API_URL.
-- Todos los setters escriben desde @aleix.ytf **como Aleix**: se distinguen por su marca (emoji/coletilla, NUNCA su nombre) y enlace propio (`/a/<código>` → agendar, `/b/<código>` → empezar, en `vercel.json`; `?s=` se guarda en `sa-setter`).
+- Todos los setters escriben desde @aleix.ytf **como Aleix**: se distinguen por su marca (emoji/coletilla, NUNCA su nombre) y enlace propio (`/a/<código>` → agendar, `/b/<código>` → empezar, `/c/<código>` → agendar en modo caller, en `vercel.json`; `?s=` se guarda en `sa-setter`).
 - Hoja «Instagram» (una fila por convo, ver `IG`). CRM: pestaña Instagram (seguimiento) y Setting = automático + correcciones a mano.
 
 ## Origen y enlaces

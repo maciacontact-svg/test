@@ -24,7 +24,7 @@ const COL = {
   caller: 7, estado: 8, contacto: 9, intentos: 10, notas: 11,
   id: 12, inversion: 13, meta: 14, cuando: 15, instagram: 16, origen: 17, aviso: 18,
   cualifica: 19, autoagenda: 20, rellamar: 21, rellamarAviso: 22, asignado: 23, embudo: 24,
-  setter: 25, agendadoEl: 26, notasLlamada: 27, grabaciones: 28,
+  setter: 25, agendadoEl: 26, notasLlamada: 27, grabaciones: 28, fijo: 29, alias: 30,
 };
 const CABECERA = [
   'Fecha registro', 'Nombre', 'Teléfono', 'En qué punto está', 'Qué quiere conseguir', 'Correo',
@@ -32,6 +32,7 @@ const CABECERA = [
   'ID', 'Inversión al mes', 'Meta a 3-6 meses', 'Cuándo empieza', 'Instagram', 'Origen', 'Aviso Slack',
   'Buen form', 'Autoagendado (Calendly)', 'Volver a llamar (hora)', 'Aviso rellamada', 'Asignado el', 'Embudo',
   'Setter (enlace IG)', 'Agendado el', 'Notas llamada', 'Grabaciones (Drive)',
+  'Caller fijo (agendó en llamada)', 'IDs fusionados',
 ];
 const VISIBLES = 11;
 
@@ -66,12 +67,13 @@ function doPost(e) {
       case 'agendado': return json(autoagendado(b));
       case 'cuenta': return json(buscarCuenta(b));
       case 'login':  { const u = auth(b); return json({ ok: true, caller: u.nombre, rol: u.rol }); }
-      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, web: dominiosWeb()[0], setting: settingDe(u), setters: settersDe(u), ig: listarIg(u) })); }
-      case 'update': return json(actualizar(b, auth(b).nombre));
+      case 'list':   { const u = auth(b); return json(Object.assign(listar(), { rol: u.rol, web: dominiosWeb()[0], setting: settingDe(u), setters: settersDe(u), ig: listarIg(u), enlacesCaller: enlacesCallerDe(u) })); }
+      case 'update': return json(actualizar(b, auth(b)));
       case 'setting':   return json(guardarSetting(b, auth(b)));
       case 'settingOn': return json(activarSetting(b, auth(b)));
       case 'ig':        return json(eventosInstagram(b));
       case 'grabacion': return json(subirGrabacion(b, auth(b)));
+      case 'grabacionFin': return json(terminarGrabacion(b, auth(b)));
       case 'audio':     return json(leerAudio(b, auth(b)));
     }
     return json({ ok: false, error: 'Acción desconocida' });
@@ -102,18 +104,36 @@ function nuevoLead(b) {
     cualifica: b.cualifica === true ? 'Sí' : 'No', autoagenda: '',
     rellamar: '', rellamarAviso: '', asignado: '', embudo: '',
     setter: setterDeSlug(b.setter || paramDe(b.origen, 's')), agendadoEl: '', notasLlamada: '', grabaciones: '',
+    fijo: '', alias: '',
   };
 
   const fila = new Array(CABECERA.length).fill('');
   Object.keys(COL).forEach(k => { fila[COL[k] - 1] = celda(lead[k]); });
 
+  // Mismo teléfono que un lead que ya está → UNA sola ficha: se completa la que había (no se crea otra)
+  let antes = null;
   const lock = LockService.getScriptLock();
   lock.waitLock(15000);
-  try { hoja(HOJA_LEADS).appendRow(fila); }
+  try {
+    const sh = hoja(HOJA_LEADS);
+    const dup = buscarTelefono(sh, telefono);
+    if (dup) {
+      antes = sh.getRange(dup, 1, 1, CABECERA.length).getValues()[0];
+      sh.getRange(dup, 1, 1, CABECERA.length).setValues([combinar(antes, fila).map(celda)]);
+      SpreadsheetApp.flush();
+    } else sh.appendRow(fila);
+  }
   finally { lock.releaseLock(); }
 
-  try { avisarSlack(lead); } catch (err) { console.error('Slack: ' + err); }
-  return { ok: true, id: lead.id };
+  try {
+    if (!antes) avisarSlack(lead);
+    else enviarSlack({ text: '🔁 ' + nombre + ' ha vuelto a rellenar el formulario', blocks: [
+      { type: 'section', text: md('🔁 *' + esc(nombre) + '* ha vuelto a rellenar el formulario (ya estaba en el CRM como *' + esc(antes[COL.nombre - 1]) + '*: se ha actualizado su ficha, no se ha creado otra) · ' +
+        telefonoSlack(telefono) + (antes[COL.caller - 1] ? ' · caller: *' + esc(antes[COL.caller - 1]) + '*' : '')) },
+      botonCrm(),
+    ].filter(Boolean) });
+  } catch (err) { console.error('Slack: ' + err); }
+  return { ok: true, id: antes ? String(antes[COL.id - 1]) : lead.id };
 }
 
 // =====================================================================
@@ -123,6 +143,9 @@ function nuevoLead(b) {
 function autoagendado(b) {
   const id = String(b.id || '');
   const conId = /^[a-z0-9]{8,24}$/i.test(id);
+  // Enlace de caller (<web>/c/<código>): lo ha agendado el caller en plena llamada → se le asigna a él (y queda fijo)
+  const porCaller = b.porCaller ? callerDeSlug(b.porCaller) : '';
+  if (b.porCaller && !porCaller) throw new Error('Enlace de caller no válido (revisa Ajustes → columna A)');
   if (!conId && !b.invitado) throw new Error('Lead no válido');
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -136,13 +159,24 @@ function autoagendado(b) {
       inv = invitadoCalendly(b.invitado);
       if (!inv && !conId) throw new Error('Lead no válido: no se ha podido identificar (revisa el token de Calendly en Ajustes → G6)');
       if (inv && inv.correo) fila = buscarCorreo(sh, inv.correo);
+      if (!fila && inv && inv.telefono) fila = buscarTelefono(sh, inv.telefono);           // mismo número = misma persona
       if (!fila && inv && !conId) fila = leadDesdeCalendly(sh, inv, limpio(b.origen, 200));   // nunca rellenó el formulario
+      else if (fila && inv) anotarOtroNombre(sh, fila, inv);
     }
     if (!fila) throw new Error('Lead no encontrado');
     f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
-    if (f[COL.autoagenda - 1]) return { ok: true, repetido: true };
     cuando = horaLlamada(b.evento);
     const marca = cuando ? 'Llamada ' + cuando : 'Reservado ' + Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm');
+    if (porCaller) return agendadoPorCaller(sh, fila, f, porCaller, marca, cuando, b);
+    if (f[COL.autoagenda - 1]) return { ok: true, repetido: true };
+    if (f[COL.fijo - 1]) {
+      // ya lo había agendado un caller en llamada (p. ej. ha cambiado la hora): sigue siendo suyo
+      const nt = String(f[COL.notas - 1] || '');
+      sh.getRange(fila, COL.notas).setValue(celda('📅 Ha vuelto a reservar en Calendly · ' + marca + (nt ? '\n' + nt : '')));
+      sh.getRange(fila, COL.estado).setValue('Agendado');
+      SpreadsheetApp.flush();
+      return { ok: true, fijo: String(f[COL.fijo - 1]) };
+    }
     sh.getRange(fila, COL.autoagenda).setValue(marca);
     sh.getRange(fila, COL.estado).setValue('Agendado');
     sh.getRange(fila, COL.caller).setValue('');
@@ -168,6 +202,46 @@ function autoagendado(b) {
     });
   } catch (err) { console.error('Slack: ' + err); }
   return { ok: true };
+}
+
+// Agendado por el caller durante la llamada (enlace /c/<código>): Agendado, con ese caller y bloqueado
+// (solo el maestro puede cambiarlo). Cuenta como agenda del caller en sus KPIs.
+function agendadoPorCaller(sh, fila, f, caller, marca, cuando, b) {
+  const v = k => f[COL[k] - 1], set = (k, x) => sh.getRange(fila, COL[k]).setValue(x);
+  const ahora = new Date();
+  set('autoagenda', '');
+  set('estado', 'Agendado');
+  if (String(v('caller')) !== caller || !v('asignado')) set('asignado', ahora);
+  set('caller', caller);
+  set('fijo', caller);
+  set('contacto', '✅');
+  if (!(Number(v('intentos')) > 0)) set('intentos', 1);
+  set('embudo', 'Oferta llamada');
+  set('agendadoEl', ahora);
+  set('rellamar', ''); set('rellamarAviso', '');
+  if (b.origen && !v('origen')) set('origen', celda(limpio(b.origen, 200)));
+  const notas = String(v('notas') || '');
+  set('notas', celda('📞 Agendado en llamada por ' + caller + ' · ' + marca + (notas ? '\n' + notas : '')));
+  SpreadsheetApp.flush();
+  try {
+    enviarSlack({ text: '📞 ' + caller + ' ha agendado a ' + v('nombre'), blocks: [
+      { type: 'section', text: md('📞 *' + esc(caller) + '* ha agendado a *' + esc(v('nombre')) + '* en llamada' + (cuando ? ' · *' + cuando + '*' : '') +
+        '\n' + (v('telefono') ? telefonoSlack(String(v('telefono'))) : esc(v('correo')))) },
+      botonCrm(),
+    ].filter(Boolean) });
+  } catch (err) { console.error('Slack: ' + err); }
+  return { ok: true, caller: caller };
+}
+
+// Reservó en Calendly con otro nombre o email que el de su ficha: se apunta en las notas (para no perderlo)
+function anotarOtroNombre(sh, fila, inv) {
+  const f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
+  const otroNom = inv.nombre && sinTildes(inv.nombre) !== sinTildes(f[COL.nombre - 1]) ? inv.nombre : '';
+  let otroCor = inv.correo && inv.correo !== String(f[COL.correo - 1]).trim().toLowerCase() ? inv.correo : '';
+  if (!f[COL.correo - 1] && otroCor) { sh.getRange(fila, COL.correo).setValue(otroCor); otroCor = ''; }
+  if (!otroNom && !otroCor) return;
+  const notas = String(f[COL.notas - 1] || '');
+  sh.getRange(fila, COL.notas).setValue(celda(notas + (notas ? '\n' : '') + '📎 Reservó en Calendly como ' + [otroNom && '«' + otroNom + '»', otroCor].filter(Boolean).join(' · ')));
 }
 
 // "Ya tengo cuenta": entra a la biblioteca con el email con el que rellenó el formulario (sin repetirlo)
@@ -203,6 +277,7 @@ function leadDesdeCalendly(sh, inv, origen) {
     inversion: '', meta: '', cuando: '', instagram: '', origen: origen ? origen + '&sin_formulario=1' : 'Calendly (sin formulario)', aviso: '—',
     cualifica: 'No', autoagenda: '', rellamar: '', rellamarAviso: '', asignado: '', embudo: '',
     setter: '', agendadoEl: '', notasLlamada: '', grabaciones: '',
+    fijo: '', alias: '',
   };
   const fila = new Array(CABECERA.length).fill('');
   Object.keys(COL).forEach(k => { fila[COL[k] - 1] = celda(lead[k]); });
@@ -299,9 +374,10 @@ function listar() {
   };
 }
 
-function actualizar(b, quien) {
+function actualizar(b, u) {
+  const quien = u.nombre, maestro = u.rol === 'maestro';
   const id = String(b.id || '');
-  const c = b.cambios || {};
+  const c = Object.assign({}, b.cambios || {});
   const permitido = {
     caller: v => (v === '' || equipo().some(p => p.nombre === v)) ? v : err('Caller no válido'),
     estado: v => (v === '' || estados().indexOf(v) >= 0) ? v : err('Estado no válido'),
@@ -320,13 +396,49 @@ function actualizar(b, quien) {
     if (!fila) throw new Error('Lead no encontrado (¿se ha borrado del Sheet?)');
     const antes = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
     const ant = k => antes[COL[k] - 1];
-    if (c.caller && ant('autoagenda'))
-      throw new Error('Este lead se ha agendado él solo por Calendly: no lleva caller');
+    if ('caller' in c) permitido.caller(c.caller);    // antes de tocar nada
+    const ahora = new Date();
+    // Autoagendado y caller fijo: solo el maestro los cambia (p. ej. un caller agendó en llamada con el enlace equivocado)
+    if (!maestro) {
+      if ('autoagenda' in c || 'fijo' in c) throw new Error('Solo Mario puede cambiar esto');
+      if (c.caller && ant('autoagenda')) throw new Error('Este lead se ha agendado él solo por Calendly: no lleva caller (si es un error, que lo cambie Mario)');
+      if ('caller' in c && ant('fijo') && c.caller !== ant('caller'))
+        throw new Error('Este lead lo agendó ' + ant('fijo') + ' en llamada: solo Mario puede cambiar el caller');
+    } else {
+      if (c.caller && ant('autoagenda') && !('autoagenda' in c)) c.autoagenda = '';
+      if (c.autoagenda) c.caller = '';
+    }
+    if (maestro && 'autoagenda' in c) {
+      const notas = String(ant('notas') || '');
+      if (!c.autoagenda && ant('autoagenda')) {
+        // autoagendado → lo agendó el caller: cuenta para él y queda fijo
+        sh.getRange(fila, COL.autoagenda).setValue('');
+        if (c.caller) {
+          sh.getRange(fila, COL.fijo).setValue(c.caller);
+          sh.getRange(fila, COL.estado).setValue('Agendado');
+          if (!ant('agendadoEl')) sh.getRange(fila, COL.agendadoEl).setValue(ahora);
+          if (!('notas' in c)) sh.getRange(fila, COL.notas).setValue(celda(
+            notas.replace(/^📅 Autoagendado por Calendly · /, '📞 Agendado en llamada por ' + c.caller + ' (corregido por ' + quien + ') · ')));
+        }
+      } else if (c.autoagenda && !ant('autoagenda')) {
+        sh.getRange(fila, COL.autoagenda).setValue('Marcado a mano el ' + Utilities.formatDate(ahora, TZ, 'dd/MM HH:mm'));
+        sh.getRange(fila, COL.fijo).setValue('');
+        sh.getRange(fila, COL.estado).setValue('Agendado');
+        if (!ant('agendadoEl')) sh.getRange(fila, COL.agendadoEl).setValue(ahora);
+      }
+      delete c.autoagenda;
+    }
+    // el maestro cambia el caller de un lead fijo → queda fijo al nuevo (o se suelta si se le quita)
+    if (maestro && 'caller' in c && ant('fijo') && !('fijo' in c)) c.fijo = c.caller;
+    if ('fijo' in c) {
+      const quienFijo = c.fijo ? String('caller' in c ? c.caller : ant('caller')) : '';
+      sh.getRange(fila, COL.fijo).setValue(equipo().some(p => p.nombre === quienFijo) ? quienFijo : '');
+      delete c.fijo;
+    }
     Object.keys(c).forEach(k => {
       if (!permitido[k]) return;
       sh.getRange(fila, COL[k]).setValue(permitido[k](c[k]));
     });
-    const ahora = new Date();
     // Asignación: guardamos cuándo se lo ha quedado el caller (para sus KPIs por día)
     if ('caller' in c && c.caller !== ant('caller')) sh.getRange(fila, COL.asignado).setValue(c.caller ? ahora : '');
     // "llamar a las 19:00", "después"… en las notas → hora de volver a llamar
@@ -358,7 +470,107 @@ function buscarFila(sh, id) {
   if (!id || sh.getLastRow() < 2) return 0;
   const m = sh.getRange(2, COL.id, sh.getLastRow() - 1, 1)
     .createTextFinder(id).matchEntireCell(true).findNext();
-  return m ? m.getRow() : 0;
+  if (m) return m.getRow();
+  // ficha fusionada: el ID que tiene guardado su navegador puede ser el de la ficha repetida
+  const a = sh.getRange(2, COL.alias, sh.getLastRow() - 1, 1).createTextFinder(id).findNext();
+  return a ? a.getRow() : 0;
+}
+
+// =====================================================================
+// Una ficha por persona: mismo teléfono = mismo contacto (aunque cambie el nombre o el email)
+// =====================================================================
+// Clave del teléfono: las 9 últimas cifras (así da igual +34, 0034, espacios o guiones)
+function claveTel(t) {
+  let d = String(t || '').replace(/\D/g, '');
+  if (d.indexOf('00') === 0) d = d.slice(2);
+  return d.length >= 7 ? d.slice(-9) : '';
+}
+
+// Primera fila (la más antigua) con ese teléfono
+function buscarTelefono(sh, tel) {
+  const k = claveTel(tel), n = sh.getLastRow() - 1;
+  if (!k || n < 1) return 0;
+  const c = sh.getRange(2, COL.telefono, n, 1).getValues();
+  for (let i = 0; i < n; i++) if (claveTel(c[i][0]) === k) return i + 2;
+  return 0;
+}
+
+// Junta dos filas de la misma persona. a = la ficha que se queda (la más antigua), b = la repetida.
+function combinar(a, b) {
+  const r = a.slice();
+  const v = (x, k) => x[COL[k] - 1], set = (k, x) => { r[COL[k] - 1] = x; };
+  const vacio = x => x === '' || x == null;
+  const txt = x => String(x == null ? '' : x).trim();
+  // datos que faltan en la ficha
+  ['telefono', 'correo', 'origen', 'setter', 'rellamar', 'rellamarAviso', 'asignado', 'agendadoEl', 'aviso', 'fijo']
+    .forEach(k => { if (vacio(v(a, k)) && !vacio(v(b, k))) set(k, v(b, k)); });
+  // respuestas del formulario: mandan las más recientes
+  ['punto', 'objetivo', 'inversion', 'meta', 'cuando', 'instagram'].forEach(k => { if (!vacio(v(b, k))) set(k, v(b, k)); });
+  if (v(b, 'cualifica') === 'Sí') set('cualifica', 'Sí');
+  if (v(b, 'contacto') === '✅') set('contacto', '✅');
+  set('intentos', Math.max(Number(v(a, 'intentos')) || 0, Number(v(b, 'intentos')) || 0));
+  if (EMBUDO.indexOf(v(b, 'embudo')) > EMBUDO.indexOf(v(a, 'embudo'))) set('embudo', v(b, 'embudo'));
+  // caller y agenda: si alguien ya lo lleva, se queda con él (y la reserva cuenta como suya, no como autoagendado)
+  const caller = txt(v(a, 'caller')) || txt(v(b, 'caller'));
+  set('caller', caller);
+  const auto = txt(v(a, 'autoagenda')) || txt(v(b, 'autoagenda'));
+  set('autoagenda', caller ? '' : auto);
+  if (caller && (v(a, 'fijo') || auto)) set('fijo', caller);
+  if (v(a, 'estado') === 'Agendado' || v(b, 'estado') === 'Agendado') set('estado', 'Agendado');
+  else if (!txt(v(a, 'estado'))) set('estado', v(b, 'estado'));
+  // notas, grabaciones e IDs: se suman
+  const otros = [];
+  if (txt(v(b, 'nombre')) && sinTildes(v(b, 'nombre')) !== sinTildes(v(a, 'nombre'))) otros.push('«' + txt(v(b, 'nombre')) + '»');
+  if (txt(v(b, 'correo')) && txt(v(b, 'correo')).toLowerCase() !== txt(r[COL.correo - 1]).toLowerCase()) otros.push(txt(v(b, 'correo')));
+  const notasB = txt(v(b, 'notas')).replace(/📅 Autoagendado por Calendly · /g, caller ? '📅 Reservó en Calendly · ' : '$&');
+  const notas = [txt(v(a, 'notas')), notasB.split('\n').filter(l => txt(v(a, 'notas')).indexOf(l) < 0).join('\n'),
+    otros.length ? '📎 También como ' + otros.join(' · ') + ' (ficha repetida unida el ' + Utilities.formatDate(new Date(), TZ, 'dd/MM') + ')' : '']
+    .filter(Boolean).join('\n');
+  set('notas', limpio(notas, 4000));
+  set('notasLlamada', [txt(v(a, 'notasLlamada')), txt(v(b, 'notasLlamada'))].filter(Boolean).join('\n———\n'));
+  const grabs = grabacionesDe(v(a, 'grabaciones')).concat(grabacionesDe(v(b, 'grabaciones')));
+  set('grabaciones', grabs.length ? JSON.stringify(grabs) : '');
+  set('alias', [txt(v(a, 'alias')), txt(v(b, 'id')), txt(v(b, 'alias'))].filter(Boolean).join(','));
+  return r;
+}
+
+// Une las fichas repetidas que ya hay en el Sheet (mismo teléfono). Lo ejecuta configurar(); también se puede ejecutar solo.
+// Las filas que se quitan se copian antes en la pestaña «Duplicados» (por si hay que revisar algo).
+function fusionarDuplicados() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const ss = SpreadsheetApp.getActive();
+    const sh = hoja(HOJA_LEADS);
+    const n = sh.getLastRow() - 1;
+    if (n < 2) return 0;
+    const datos = sh.getRange(2, 1, n, CABECERA.length).getValues();
+    const primera = {}, quitar = [], unidas = {};
+    datos.forEach((f, i) => {
+      const k = claveTel(f[COL.telefono - 1]);
+      if (!k) return;
+      if (primera[k] == null) { primera[k] = i; return; }
+      datos[primera[k]] = combinar(datos[primera[k]], f);
+      unidas[primera[k]] = true;
+      quitar.push(i);
+    });
+    if (!quitar.length) return 0;
+    let dup = ss.getSheetByName('Duplicados');
+    if (!dup) {
+      dup = ss.insertSheet('Duplicados');
+      dup.getRange(1, 1, 1, CABECERA.length + 1).setValues([['Unido el'].concat(CABECERA)]);
+      estiloCabecera(dup.getRange(1, 1, 1, CABECERA.length + 1));
+      dup.setFrozenRows(1);
+    }
+    const copia = quitar.map(i => [new Date()].concat(datos[i].map(celda)));
+    dup.getRange(dup.getLastRow() + 1, 1, copia.length, CABECERA.length + 1).setValues(copia);
+    Object.keys(unidas).forEach(i => { sh.getRange(Number(i) + 2, 1, 1, CABECERA.length).setValues([datos[i].map(celda)]); });
+    quitar.slice().reverse().forEach(i => sh.deleteRow(i + 2));
+    SpreadsheetApp.flush();
+    return quitar.length;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function filaALead(f) {
@@ -379,6 +591,7 @@ function filaALead(f) {
     embudo: String(v('embudo') || ''),
     setter: String(v('setter') || ''),
     agendadoEl: v('agendadoEl') instanceof Date ? v('agendadoEl').toISOString() : '',
+    fijo: String(v('fijo') || ''),
     notasLlamada: String(v('notasLlamada') || ''),
     grabaciones: grabacionesDe(v('grabaciones')).map(g => ({ archivo: g.archivo, fecha: g.fecha, por: g.por, mb: g.mb })),   // lo justo: la lista se pide cada 15 s
   };
@@ -413,8 +626,55 @@ function carpetaGrab() {
   return it.hasNext() ? it.next() : DriveApp.createFolder(CARPETA_GRAB);
 }
 
+// Abre en Drive una subida reanudable (en tu carpeta, con tu cuenta). Con «origen», Drive deja que el navegador
+// suba el archivo DIRECTAMENTE a esa dirección (mucho más rápido que pasar los trozos por aquí).
+function abrirSubida(nombre, tipo, total, origen) {
+  const hd = { Authorization: 'Bearer ' + ScriptApp.getOAuthToken(), 'X-Upload-Content-Type': tipo, 'X-Upload-Content-Length': String(total) };
+  if (origen) hd.Origin = origen;
+  const r = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,size', {
+    method: 'post', contentType: 'application/json; charset=UTF-8', muteHttpExceptions: true, headers: hd,
+    payload: JSON.stringify({ name: nombre, mimeType: tipo, parents: [carpetaGrab().getId()] }),
+  });
+  const loc = r.getHeaders().Location || r.getHeaders().location;
+  if (r.getResponseCode() !== 200 || !loc) throw new Error('Drive no ha aceptado la subida (' + r.getResponseCode() + ')');
+  return loc;
+}
+
+// Apunta la grabación (ya en Drive) en la ficha del lead
+function apuntarGrabacion(id, u, archivoId, ses) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = hoja(HOJA_LEADS);
+    const l = leadConPermiso(sh, id, u);
+    const lista = grabacionesDe(l.f[COL.grabaciones - 1]);
+    if (!lista.some(g => g.archivo === archivoId))
+      lista.push({ archivo: archivoId, fecha: new Date().toISOString(), por: u.nombre, mb: Math.round(ses.total / 1048576 * 10) / 10, tipo: ses.tipo, nombre: ses.nombre });
+    sh.getRange(l.fila, COL.grabaciones).setValue(JSON.stringify(lista));
+    SpreadsheetApp.flush();
+    return { ok: true, archivo: archivoId, lead: filaALead(sh.getRange(l.fila, 1, 1, CABECERA.length).getValues()[0]) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Subida directa terminada (o cortada): se pregunta a Drive cómo va y, si está completa, se apunta en la ficha.
+// b: { id (lead), sube }
+function terminarGrabacion(b, u) {
+  const ses = JSON.parse(CacheService.getScriptCache().get('sube_' + String(b.sube || '').slice(0, 40)) || 'null');
+  if (!ses || ses.id !== String(b.id) || ses.quien !== u.nombre) throw new Error('La subida ha caducado: vuelve a intentarlo');
+  const r = UrlFetchApp.fetch(ses.url, { method: 'put', muteHttpExceptions: true, followRedirects: false, payload: '',
+    headers: { 'Content-Range': 'bytes */' + ses.total } });
+  const code = r.getResponseCode();
+  if (code !== 200 && code !== 201) return { ok: true, completa: false };
+  const archivo = JSON.parse(r.getContentText());
+  CacheService.getScriptCache().remove('sube_' + b.sube);
+  return Object.assign(apuntarGrabacion(b.id, u, archivo.id, ses), { completa: true });
+}
+
 // Subida por trozos: el primer trozo abre una subida reanudable en Drive y los siguientes la continúan.
 // b: { id (lead), parte (0…), total (bytes), nombre, tipo, sube (lo devuelve el primer trozo), datos (base64) }
+// Con b.directo (y b.origen = web del CRM) solo se abre la subida y se devuelve su dirección: el navegador sube el archivo.
 function subirGrabacion(b, u) {
   const total = Math.round(Number(b.total)), parte = Math.round(Number(b.parte));
   if (!(total > 0 && total <= MAX_GRAB)) throw new Error('La grabación pesa demasiado (máx. ' + (MAX_GRAB >> 20) + ' MB)');
@@ -427,15 +687,13 @@ function subirGrabacion(b, u) {
     const ext = (String(b.nombre || '').match(/\.(m4a|mp3|wav|aac|caf|ogg|opus|webm|mp4|amr|3gp)$/i) || ['', 'm4a'])[1].toLowerCase();
     const nombre = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH.mm') + ' · ' +
       limpio(l.f[COL.nombre - 1], 60).replace(/[\\/:*?"<>|]/g, '') + ' · ' + u.nombre + '.' + ext;
-    const r = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,size', {
-      method: 'post', contentType: 'application/json; charset=UTF-8', muteHttpExceptions: true,
-      headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken(), 'X-Upload-Content-Type': tipo, 'X-Upload-Content-Length': String(total) },
-      payload: JSON.stringify({ name: nombre, mimeType: tipo, parents: [carpetaGrab().getId()] }),
-    });
-    const loc = r.getHeaders().Location || r.getHeaders().location;
-    if (r.getResponseCode() !== 200 || !loc) throw new Error('Drive no ha aceptado la subida (' + r.getResponseCode() + ')');
-    ses = { url: loc, id: String(b.id), quien: u.nombre, total: total, nombre: nombre };
+    const origen = b.directo && /^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(String(b.origen || '')) ? String(b.origen) : '';
+    ses = { url: abrirSubida(nombre, tipo, total, origen), id: String(b.id), quien: u.nombre, total: total, nombre: nombre, tipo: tipo };
     b.sube = Utilities.getUuid();
+    if (b.directo) {
+      cache.put('sube_' + b.sube, JSON.stringify(ses), 21600);
+      return { ok: true, sube: b.sube, url: ses.url };
+    }
   } else {
     ses = JSON.parse(cache.get('sube_' + String(b.sube || '').slice(0, 40)) || 'null');
     if (!ses || ses.id !== String(b.id) || ses.quien !== u.nombre || ses.total !== total) throw new Error('La subida ha caducado: vuelve a intentarlo');
@@ -457,20 +715,7 @@ function subirGrabacion(b, u) {
   if (code !== 200 && code !== 201) throw new Error('Drive no ha terminado la subida (' + code + ')');
   cache.remove('sube_' + b.sube);
   const archivo = JSON.parse(r.getContentText());
-
-  const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
-  try {
-    const sh = hoja(HOJA_LEADS);
-    const l = leadConPermiso(sh, b.id, u);
-    const lista = grabacionesDe(l.f[COL.grabaciones - 1]);
-    lista.push({ archivo: archivo.id, fecha: new Date().toISOString(), por: u.nombre, mb: Math.round(total / 1048576 * 10) / 10, tipo: tipo, nombre: ses.nombre });
-    sh.getRange(l.fila, COL.grabaciones).setValue(JSON.stringify(lista));
-    SpreadsheetApp.flush();
-    return { ok: true, lead: filaALead(sh.getRange(l.fila, 1, 1, CABECERA.length).getValues()[0]) };
-  } finally {
-    lock.releaseLock();
-  }
+  return apuntarGrabacion(b.id, u, archivo.id, Object.assign({ tipo: tipo }, ses));
 }
 
 // Escuchar: el navegador pide el audio en trozos de 4 MB (solo grabaciones de ese lead y con permiso)
@@ -622,6 +867,21 @@ function setterDeSlug(v) {
   if (!s) return '';
   const x = setters().find(y => y.slug === s);
   return x ? x.nombre : '';
+}
+// Enlace de agenda de cada caller para cuando agenda él en plena llamada: <web>/c/<código>.
+// Código = el de su enlace de setter (Ajustes → K) si también es setter; si no, su nombre (Mario.e → mario-e).
+function codigoCaller(nombre) {
+  const st = setters().find(y => y.nombre.toUpperCase() === nombre.toUpperCase());
+  return st ? st.slug : slugDe(nombre);
+}
+function callerDeSlug(v) {
+  const s = slugDe(v);
+  if (!s) return '';
+  const p = equipo().find(x => codigoCaller(x.nombre) === s || slugDe(x.nombre) === s);
+  return p ? p.nombre : '';
+}
+function enlacesCallerDe(u) {
+  return equipo().filter(p => deUsuario(u, p.nombre)).map(p => ({ nombre: p.nombre, slug: codigoCaller(p.nombre) }));
 }
 function paramDe(qs, k) {
   const m = String(qs || '').match(new RegExp('(?:^|[?&])' + k + '=([^&]*)'));
@@ -1149,8 +1409,13 @@ function configurar() {
   ScriptApp.newTrigger('renovarTokenInstagram').timeBased().everyDays(7).atHour(4).create();
   ScriptApp.newTrigger('revisarAvisos').timeBased().everyMinutes(1).create();
 
+  // Fichas repetidas (mismo teléfono) → una sola. Las quitadas quedan copiadas en la pestaña «Duplicados».
+  let unidas = 0;
+  try { unidas = fusionarDuplicados(); } catch (e) { console.error('Duplicados: ' + e); }
+
   ss.setActiveSheet(sh);
-  if (avisoDrive) ss.toast(avisoDrive + ' (mira crm/LEEME.md → Grabaciones)', 'CRM listo, pero sin grabaciones ⚠️', 30);
+  if (unidas) ss.toast(unidas + ' ficha(s) repetida(s) unidas por teléfono (copia en la pestaña «Duplicados»).', 'CRM listo ✅', 20);
+  else if (avisoDrive) ss.toast(avisoDrive + ' (mira crm/LEEME.md → Grabaciones)', 'CRM listo, pero sin grabaciones ⚠️', 30);
   else ss.toast('Siguiente: en "Ajustes" cambia los PIN, pega el webhook de Slack y publica como aplicación web.', 'CRM listo ✅', 15);
 }
 
