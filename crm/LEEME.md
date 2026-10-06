@@ -3,7 +3,7 @@
 ```
 Formulario de la web ──► Google Sheet (solo tú) ──► Dashboard del equipo (web aparte del CRM)
                                │
-                               └──► Slack: aviso al instante + recordatorio si a los 5 min nadie ha llamado
+                               └──► Slack: leads al canal de G2, agendas al de G15
 ```
 
 - **El Sheet es tuyo y solo tuyo.** Nadie más necesita acceso.
@@ -44,9 +44,12 @@ Formulario de la web ──► Google Sheet (solo tú) ──► Dashboard del e
 3. Copia la URL (`https://hooks.slack.com/services/…`) y pégala en **Ajustes → G2**.
 4. En Apps Script, ejecuta **`probarSlack`**: debería llegar un lead de prueba al canal.
 
+5. **Canal de agendas (opcional, recomendado)**: repite el paso 2 eligiendo otro canal (por ejemplo `#agendas`) y pega esa segunda URL en **Ajustes → G15**. Si G15 está vacío, todo va al canal de G2.
+
 Qué llega a Slack:
-- **Al instante**: 🔥 Nuevo lead con nombre, teléfono (clic para llamar), WhatsApp, correo, en qué punto está, qué quiere conseguir, inversión, cuándo empieza y su meta, más «Llámale antes de las HH:MM».
-- **A los 5 minutos**, si nadie ha marcado ✅ ni ha sumado un intento: ⏰ «Fulano lleva 5 min sin llamar».
+- **Canal de leads (G2)**: 🔥 Nuevo lead / ⭐ Buen form con todo su formulario · 🔁 si vuelve a rellenarlo · 📞 «Toca llamar» a la hora que se apuntó en las notas.
+- **Canal de agendas (G15)**: 📅 cada llamada agendada (él solo o por un caller con su enlace /c/), con la hora y todo el formulario (web + respuestas de Calendly).
+- Ya no se avisa de «lleva 5 min sin llamar».
 
 ## 4. Publica el script (para que la web pueda hablar con él)
 

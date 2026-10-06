@@ -434,7 +434,9 @@ let subiendo = null;               // { id, txt } mientras se sube una grabació
 const puedeGrabar = l => S.rol === 'maestro' || !l.caller || l.caller.toUpperCase() === S.caller.toUpperCase();
 function bloqueLlamada(l) {
   const grabs = l.grabaciones || [];
-  const lista = grabs.map(g => `<li data-archivo="${esc(g.archivo)}"><span>${fecha(g.fecha)} · ${esc(g.por)}${g.mb ? ' · ' + g.mb + ' MB' : ''}</span>
+  const quitar = g => S.rol === 'maestro' || puedeGrabar(l) || mismo(g.por, S.caller);
+  const lista = grabs.map(g => `<li data-archivo="${esc(g.archivo)}"><span>${fecha(g.fecha)} · ${esc(g.por)}${g.mb ? ' · ' + g.mb + ' MB' : ''}${quitar(g)
+      ? ` <button type="button" class="mini quitar" data-quitar="${esc(g.archivo)}" title="Quitar esta grabación">🗑 Quitar</button>` : ''}</span>
     ${audios[g.archivo] ? `<audio controls preload="metadata" src="${audios[g.archivo]}"></audio>`
       : puedeGrabar(l) ? `<button type="button" class="mini" data-oir="${esc(g.archivo)}">▶ Escuchar</button>` : ''}</li>`).join('');
   const sub = subiendo && subiendo.id === l.id;
@@ -506,6 +508,21 @@ async function subirPorTrozos(id, file, tipo, pc) {
   return r;
 }
 // Escuchar: se pide el primer trozo y luego el resto a la vez (4 en paralelo), no uno detrás de otro
+async function quitarGrabacion(id, archivo, btn) {
+  if (!confirm('¿Quitar esta grabación del CRM? Se borra de la ficha y el archivo va a la papelera de Drive (30 días para recuperarlo).')) return;
+  btn.disabled = true; btn.textContent = 'Quitando…';
+  try {
+    const r = await api('borrarGrabacion', { id, archivo });
+    const l = D.leads.find(x => x.id === id);
+    if (l && r.lead) Object.assign(l, r.lead);
+    delete audios[archivo];
+    toast('Grabación quitada');
+    abrirFicha(id);
+  } catch (err) {
+    btn.disabled = false; btn.textContent = '🗑 Quitar';
+    toast('No se ha quitado: ' + err.message, true);
+  }
+}
 async function oirGrabacion(id, archivo, btn) {
   btn.disabled = true; btn.textContent = 'Cargando…';
   try {
@@ -552,6 +569,8 @@ $('drawer').addEventListener('click', e => {
     if (t && !t.value.trim()) t.value = PLANTILLA;
     return t && t.focus();
   }
+  const qt = e.target.closest('[data-quitar]');
+  if (qt) return quitarGrabacion($('dBody').querySelector('[data-ll]').dataset.ll, qt.dataset.quitar, qt);
   const oir = e.target.closest('[data-oir]');
   if (oir) return oirGrabacion($('dBody').querySelector('[data-ll]').dataset.ll, oir.dataset.oir, oir);
   const b = e.target.closest('[data-etapa]');
@@ -1173,6 +1192,11 @@ function demoApi(action, extra) {
     const archivo = 'demo' + Date.now();
     l.grabaciones = [...(l.grabaciones || []), { archivo, fecha: new Date().toISOString(), por: S.caller, mb: Math.round(extra.total / 104857.6) / 10, tipo: extra.tipo }];
     return new Promise(r => setTimeout(() => r({ ok: true, archivo, lead: { ...l } }), 300));
+  }
+  if (action === 'borrarGrabacion') {
+    const l = db.leads.find(x => x.id === extra.id);
+    l.grabaciones = (l.grabaciones || []).filter(g => g.archivo !== extra.archivo);
+    return new Promise(r => setTimeout(() => r({ ok: true, lead: { ...l } }), 250));
   }
   if (action === 'audio') return Promise.reject(new Error('En la demo no hay audio real'));
   if (action === 'update') {

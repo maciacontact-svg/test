@@ -440,6 +440,7 @@ html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%;
 .grab ul { list-style: none; margin: 8px 0 0; display: grid; gap: 8px; }
 .grab li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; padding: 8px 10px; border-radius: 12px; background: var(--white); border: 1px solid var(--hair); }
 .grab li .mini { margin: 0; }
+.grab li .mini.quitar { margin-left: 6px; color: #a52714; border-color: #f0c9c3; }
 .grab audio { width: 100%; height: 36px; }
 .subir { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; height: 38px; padding: 0 16px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; }
 .subir.on { opacity: .7; cursor: progress; }

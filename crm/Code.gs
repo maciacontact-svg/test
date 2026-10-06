@@ -48,7 +48,7 @@ const CIERRAN = ['Agendado', 'Perdido', 'Invalid'];       // estados que quitan 
 
 // Celdas de la pestaña "Ajustes"
 const AJ = { callers: 'A2:A', pins: 'B2:B', setting: 'C2:C', estados: 'D2:D', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8',
-  igClave: 'G9', igToken: 'G10', igFrases: 'G11', igRenovado: 'G12', web: 'G13', setters: 'I2:K' };
+  igClave: 'G9', igToken: 'G10', igFrases: 'G11', igRenovado: 'G12', web: 'G13', webhookAgendas: 'G15', setters: 'I2:K' };
 
 // =====================================================================
 // Web app: el formulario y el dashboard hablan con estas dos funciones
@@ -74,6 +74,7 @@ function doPost(e) {
       case 'ig':        return json(eventosInstagram(b));
       case 'grabacion': return json(subirGrabacion(b, auth(b)));
       case 'grabacionFin': return json(terminarGrabacion(b, auth(b)));
+      case 'borrarGrabacion': return json(borrarGrabacion(b, auth(b)));
       case 'audio':     return json(leerAudio(b, auth(b)));
     }
     return json({ ok: false, error: 'Acción desconocida' });
@@ -149,12 +150,11 @@ function autoagendado(b) {
   if (!conId && !b.invitado) throw new Error('Lead no válido');
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
-  let f, cuando;
+  let f, cuando, inv = null;
   try {
     const sh = hoja(HOJA_LEADS);
     let fila = conId ? buscarFila(sh, id) : 0;
     // Sin ID (p. ej. agenda desde la biblioteca en otro dispositivo): se busca por el email de Calendly
-    let inv = null;
     if (!fila) {
       inv = invitadoCalendly(b.invitado);
       if (!inv && !conId) throw new Error('Lead no válido: no se ha podido identificar (revisa el token de Calendly en Ajustes → G6)');
@@ -167,7 +167,7 @@ function autoagendado(b) {
     f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
     cuando = horaLlamada(b.evento);
     const marca = cuando ? 'Llamada ' + cuando : 'Reservado ' + Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm');
-    if (porCaller) return agendadoPorCaller(sh, fila, f, porCaller, marca, cuando, b);
+    if (porCaller) { const r = agendadoPorCaller(sh, fila, f, porCaller, marca, cuando, b); lock.releaseLock(); slackAgenda(f, '📞 *' + esc(porCaller) + '* ha agendado a *' + esc(f[COL.nombre - 1]) + '* en llamada', cuando, inv || invitadoCalendly(b.invitado)); return r; }
     if (f[COL.autoagenda - 1]) return { ok: true, repetido: true };
     if (f[COL.fijo - 1]) {
       // ya lo había agendado un caller en llamada (p. ej. ha cambiado la hora): sigue siendo suyo
@@ -190,18 +190,34 @@ function autoagendado(b) {
   } finally {
     lock.releaseLock();
   }
+  slackAgenda(f, '📅 *' + esc(f[COL.nombre - 1]) + '* ha agendado él solo su llamada · _autoagendado, sin caller_', cuando, inv || invitadoCalendly(b.invitado));
+  return { ok: true };
+}
+
+// Aviso de agenda en el canal de AGENDAS (Ajustes → G15): quién, cuándo y todo su formulario (web + Calendly)
+function slackAgenda(f, titulo, cuando, inv) {
   try {
+    const v = k => String(f[COL[k] - 1] || '').trim();
+    const campo = (t, x) => md('*' + t + '*\n' + esc(x || '—'));
+    const o = v('origen'), fuente = paramDe(o, 'utm_source') || (o ? 'Calendly directo' : 'Directo');
+    const qa = (inv && inv.qa || []).filter(q => !/tel[eé]fono|whatsapp|m[oó]vil|phone/i.test(q.p));
+    const sinForm = !v('punto') && !v('objetivo') && !v('inversion');
     enviarSlack({
-      text: '📅 ' + f[COL.nombre - 1] + ' ha agendado su llamada',
+      text: '📅 Agenda: ' + v('nombre') + (cuando ? ' · ' + cuando : ''),
       blocks: [
-        { type: 'section', text: md(mencion() + '📅 *' + esc(f[COL.nombre - 1]) + '* ha agendado él solo su llamada' +
-          (cuando ? ' · *' + cuando + '*' : '') + '\n' + (f[COL.telefono - 1] ? telefonoSlack(String(f[COL.telefono - 1])) : esc(f[COL.correo - 1])) +
-          ' · _Autoagendado: sin caller_') },
+        { type: 'header', text: { type: 'plain_text', text: '📅 Agenda: ' + v('nombre').slice(0, 120) + (cuando ? ' · ' + cuando : '') } },
+        { type: 'section', text: md(mencion() + titulo + '\n' + (v('telefono') ? telefonoSlack(v('telefono')) : '') + (v('correo') ? ' · ' + esc(v('correo')) : '')) },
+        sinForm ? { type: 'context', elements: [md('_No rellenó el formulario de la web._')] } : { type: 'section', fields: [
+          campo('En qué punto está', v('punto')), campo('Qué quiere conseguir', v('objetivo')),
+          campo('Inversión al mes', v('inversion')), campo('Cuándo empieza', v('cuando')),
+          campo('Buen form', v('cualifica') === 'Sí' ? '⭐ Sí' : 'No'), campo('Origen', fuente + (v('setter') ? ' · setter ' + v('setter') : '')),
+        ] },
+        v('meta') ? { type: 'section', text: md('*Meta a 3-6 meses*\n>' + esc(v('meta')).replace(/\n/g, '\n>')) } : null,
+        qa.length ? { type: 'section', text: md('*Respuestas en Calendly*\n' + qa.map(q => '• _' + esc(q.p) + '_\n' + esc(q.r)).join('\n')) } : null,
         botonCrm(),
       ].filter(Boolean),
-    });
+    }, 'agendas');
   } catch (err) { console.error('Slack: ' + err); }
-  return { ok: true };
 }
 
 // Agendado por el caller durante la llamada (enlace /c/<código>): Agendado, con ese caller y bloqueado
@@ -223,13 +239,6 @@ function agendadoPorCaller(sh, fila, f, caller, marca, cuando, b) {
   const notas = String(v('notas') || '');
   set('notas', celda('📞 Agendado en llamada por ' + caller + ' · ' + marca + (notas ? '\n' + notas : '')));
   SpreadsheetApp.flush();
-  try {
-    enviarSlack({ text: '📞 ' + caller + ' ha agendado a ' + v('nombre'), blocks: [
-      { type: 'section', text: md('📞 *' + esc(caller) + '* ha agendado a *' + esc(v('nombre')) + '* en llamada' + (cuando ? ' · *' + cuando + '*' : '') +
-        '\n' + (v('telefono') ? telefonoSlack(String(v('telefono'))) : esc(v('correo')))) },
-      botonCrm(),
-    ].filter(Boolean) });
-  } catch (err) { console.error('Slack: ' + err); }
   return { ok: true, caller: caller };
 }
 
@@ -294,7 +303,8 @@ function invitadoCalendly(uri) {
   (r.questions_and_answers || []).forEach(q => {
     if (!tel && /tel[eé]fono|whatsapp|m[oó]vil|phone/i.test(q.question || '')) tel = q.answer || '';
   });
-  return { nombre: limpio(r.name, 80), correo: limpio(r.email, 120).toLowerCase(), telefono: limpio(tel, 40) };
+  const qa = (r.questions_and_answers || []).filter(q => q.answer).map(q => ({ p: limpio(q.question, 150), r: limpio(q.answer, 600) }));
+  return { nombre: limpio(r.name, 80), correo: limpio(r.email, 120).toLowerCase(), telefono: limpio(tel, 40), qa: qa };
 }
 
 function calendlyGet(uri, patron) {
@@ -718,6 +728,33 @@ function subirGrabacion(b, u) {
   return apuntarGrabacion(b.id, u, archivo.id, Object.assign({ tipo: tipo }, ses));
 }
 
+// Quitar una grabación (p. ej. se subió a otro lead): sale de la ficha y el archivo va a la papelera de Drive
+// (se puede recuperar 30 días). Pueden el caller del lead, quien la subió y el maestro.
+function borrarGrabacion(b, u) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = hoja(HOJA_LEADS);
+    const fila = buscarFila(sh, String(b.id || ''));
+    if (!fila) throw new Error('Lead no encontrado');
+    const f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
+    const lista = grabacionesDe(f[COL.grabaciones - 1]);
+    const g = lista.find(x => x.archivo === String(b.archivo || ''));
+    if (!g) throw new Error('Grabación no encontrada');
+    const caller = String(f[COL.caller - 1] || '');
+    const suya = String(g.por || '').toUpperCase() === u.nombre.toUpperCase();
+    if (u.rol !== 'maestro' && !suya && caller && caller.toUpperCase() !== u.nombre.toUpperCase())
+      throw new Error('Solo quien la subió, el caller del lead o Mario pueden quitarla');
+    const resto = lista.filter(x => x !== g);
+    sh.getRange(fila, COL.grabaciones).setValue(resto.length ? JSON.stringify(resto) : '');
+    SpreadsheetApp.flush();
+    try { DriveApp.getFileById(g.archivo).setTrashed(true); } catch (e) { console.error('Drive papelera: ' + e); }
+    return { ok: true, lead: filaALead(sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0]) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // Escuchar: el navegador pide el audio en trozos de 4 MB (solo grabaciones de ese lead y con permiso)
 // b: { id (lead), archivo (ID de Drive), parte }
 function leerAudio(b, u) {
@@ -1134,8 +1171,6 @@ function horaEnNota(nota, ahora) {
 // Slack
 // =====================================================================
 function avisarSlack(lead) {
-  const min = minutosAviso();
-  const limite = Utilities.formatDate(new Date(lead.fecha.getTime() + min * 60000), TZ, 'HH:mm');
   const buen = lead.cualifica === 'Sí';
   enviarSlack({
     text: (buen ? 'Buen form: ' : 'Nuevo lead: ') + lead.nombre + ' · ' + lead.telefono,
@@ -1151,21 +1186,22 @@ function avisarSlack(lead) {
       ] },
       lead.meta ? { type: 'section', text: md('*Meta a 3-6 meses*\n>' + esc(lead.meta).replace(/\n/g, '\n>')) } : null,
       { type: 'context', elements: [md(mencion() + (buen
-        ? '📅 Encaja: se le ha ofrecido agendar llamada. Si a las *' + limite + '* no ha agendado, te aviso para llamarle.'
-        : '⏱️ Llámale antes de las *' + limite + '* (' + min + ' min)'))] },
+        ? '📅 Encaja: se le ha ofrecido agendar llamada (si agenda, llegará al canal de agendas).'
+        : '📞 Por llamar'))] },
       botonCrm(),
     ].filter(Boolean),
   });
 }
 
-// Se ejecuta cada minuto (activador que crea configurar()): avisa si un lead lleva X minutos sin llamar.
+// Se ejecuta cada minuto (activador que crea configurar()): avisa cuando toca volver a llamar (hora de las notas).
+// (El aviso de «lleva X min sin llamar» se ha quitado.)
 function revisarAvisos() {
   const sh = hoja(HOJA_LEADS);
   const n = sh.getLastRow() - 1;
   if (n < 1) return;
   const desde = Math.max(1, n - 300);                  // solo miramos los últimos 300 leads
   const datos = sh.getRange(desde + 1, 1, n - desde + 1, CABECERA.length).getValues();
-  const min = minutosAviso(), ahora = Date.now();
+  const ahora = Date.now();
   datos.forEach((f, i) => {
     // Hora de volver a llamar (de las notas)
     const rl = f[COL.rellamar - 1];
@@ -1182,28 +1218,14 @@ function revisarAvisos() {
       });
       sh.getRange(desde + 1 + i, COL.rellamarAviso).setValue(Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm'));
     }
-    const fecha = f[COL.fecha - 1];
-    if (f[COL.aviso - 1] || !(fecha instanceof Date)) return;
-    const pasado = (ahora - fecha.getTime()) / 60000;
-    if (pasado < min) return;
-    const fila = desde + 1 + i;
-    const llamado = f[COL.contacto - 1] === '✅' || Number(f[COL.intentos - 1]) > 0;
-    if (llamado || f[COL.autoagenda - 1] || pasado > 60) { sh.getRange(fila, COL.aviso).setValue('—'); return; }
-    const buen = f[COL.cualifica - 1] === 'Sí';
-    enviarSlack({
-      text: (buen ? '⭐ Buen form no agendado: ' : '⏰ ') + f[COL.nombre - 1] + ' lleva ' + min + ' min sin llamar',
-      blocks: [
-        { type: 'section', text: md(mencion() + (buen ? '⭐ *Buen form NO agendado* · *' : '⏰ *') + esc(f[COL.nombre - 1]) + '* lleva *' + Math.round(pasado) + ' min* sin ' + (buen ? 'agendar ni ' : '') + 'llamar · ' +
-          telefonoSlack(String(f[COL.telefono - 1])) + (f[COL.caller - 1] ? ' · caller: *' + esc(f[COL.caller - 1]) + '*' : '')) },
-        botonCrm(),
-      ].filter(Boolean),
-    });
-    sh.getRange(fila, COL.aviso).setValue(Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm'));
   });
 }
 
-function enviarSlack(payload) {
-  const url = String(hoja(HOJA_AJUSTES).getRange(AJ.webhook).getValue()).trim();
+// canal: 'leads' (G2: leads por llamar, rellamadas…) o 'agendas' (G15; si está vacío, también va a G2)
+function enviarSlack(payload, canal) {
+  const aj = hoja(HOJA_AJUSTES);
+  const deAgendas = canal === 'agendas' ? String(aj.getRange(AJ.webhookAgendas).getValue()).trim() : '';
+  const url = /^https:\/\/hooks\.slack\.com\//.test(deAgendas) ? deAgendas : String(aj.getRange(AJ.webhook).getValue()).trim();
   if (!/^https:\/\/hooks\.slack\.com\//.test(url)) return;
   const r = UrlFetchApp.fetch(url, {
     method: 'post', contentType: 'application/json', payload: JSON.stringify(payload), muteHttpExceptions: true,
@@ -1251,7 +1273,7 @@ let AJM = null;
 function ajM() {
   if (!AJM) {
     const sh = hoja(HOJA_AJUSTES);
-    const r = sh.getRange(1, 1, Math.max(sh.getLastRow(), 14), 11);
+    const r = sh.getRange(1, 1, Math.max(sh.getLastRow(), 15), 11);
     AJM = { v: r.getValues(), d: r.getDisplayValues() };
   }
   return AJM;
@@ -1340,6 +1362,7 @@ function configurar() {
     ]);
   }
   if (!aj.getRange('F12').getValue()) aj.getRange('F12').setValue('Instagram: estado del token (se renueva solo cada semana)');
+  if (!aj.getRange('F15').getValue()) aj.getRange('F15:G15').setValues([['Webhook de Slack para AGENDAS (otro canal; vacío = al de G2)', '']]);
   if (!aj.getRange('F13').getValue()) aj.getRange('F13:G13').setValues([['Dominio de la web para los enlaces (sin https; varios con comas)', 'biblioteca.systemacademy.es']]);
   if (!aj.getRange('I1').getValue()) {
     aj.getRange('I1:K1').setValues([['Setter (nombre del CRM)', 'Marca en sus mensajes (emoji o coletilla, NO su nombre; varias con comas)', 'Código de su enlace']]);
