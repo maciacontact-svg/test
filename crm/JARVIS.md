@@ -30,12 +30,13 @@ Un bot de Telegram es gratis, no necesita número de teléfono ni aprobación de
 ### 1. Sheet
 Copia `crm/Code.gs` en Apps Script → ejecuta `configurar` (crea la pestaña «Ideas») → Implementar › Gestionar › **Nueva versión**.
 
-### 2. Claves en Vercel (proyecto de la web pública → Settings → Environment Variables)
-| Variable | Qué es |
-|---|---|
-| `ANTHROPIC_API_KEY` | console.anthropic.com → API Keys (es lo que ordena y explica las ideas) |
-| `TRANSCRIBE_API_KEY` | para los audios: clave de OpenAI (platform.openai.com). Más barato: Groq, y entonces también `TRANSCRIBE_URL=https://api.groq.com/openai/v1/audio/transcriptions` y `TRANSCRIBE_MODEL=whisper-large-v3-turbo` |
-| `CRM_API_URL`, `IG_CRM_KEY` | ya están (Instagram). La clave es Ajustes → G9 |
+### 2. Clave de IA en Vercel (gratis, sin tarjeta)
+1. Entra en **console.groq.com** (con Google o tu email) → **API Keys** → **Create API Key** → copia la clave (`gsk_…`).
+2. Vercel → proyecto de la web → Settings → Environment Variables → `GROQ_API_KEY` = esa clave.
+   Con esa sola clave Jarvis entiende las ideas **y** pasa las notas de voz a texto.
+   (`CRM_API_URL` e `IG_CRM_KEY` ya están, de Instagram.)
+- Opcional (de pago): si algún día pones `ANTHROPIC_API_KEY`, las ideas las ordena Claude en vez de Groq.
+- Si Groq retira el modelo por defecto, pon otro en `GROQ_MODEL` (console.groq.com → Models).
 
 ### 3. Telegram (5 minutos)
 1. En Telegram abre **@BotFather** → `/newbot` → nombre «Jarvis» → usuario acabado en `bot` (p. ej. `jarvis_systemacademy_bot`).
@@ -54,9 +55,10 @@ Copia `crm/Code.gs` en Apps Script → ejecuta `configurar` (crea la pestaña «
    `message.channels` (y `message.groups` si el canal es privado) → Save.
 4. En el canal: `/invite @Jarvis`. Lo que se escriba (o se grabe como clip de audio) se guarda; las respuestas en hilos no.
 
-## Coste aproximado
-Cada mensaje = 1 llamada corta a Claude (2 si es una pregunta) + 1 transcripción si es audio. Con uso normal, pocos euros al mes.
-Telegram: gratis.
+## Coste
+**0 €.** Telegram, Vercel (plan Hobby), Apps Script y Groq (plan gratis, sin tarjeta) no cobran.
+El plan gratis de Groq tiene un límite por minuto y por día muy por encima de lo que usa una persona apuntando ideas;
+si alguna vez se pasa, Jarvis contesta «prueba en un momento».
 
 ## Archivos
 `api/_jarvis.js` (cerebro: Claude + transcripción + Sheet) · `api/jarvis-tg.js` · `api/jarvis-slack.js` ·

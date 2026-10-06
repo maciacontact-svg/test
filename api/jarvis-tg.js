@@ -76,7 +76,8 @@ module.exports = async (req, res) => {
     if (!secreto || q.get('setup') !== secreto) { res.statusCode = 403; return res.end('{"error":"Forbidden"}'); }
     // Conecta el bot con esta URL y dice qué falta por configurar (sin enseñar claves)
     const d = {};
-    ['ANTHROPIC_API_KEY', 'TRANSCRIBE_API_KEY', 'CRM_API_URL', 'TG_TOKEN'].forEach(k => { d[k] = process.env[k] ? 'ok' : 'FALTA'; });
+    d.IA = process.env.ANTHROPIC_API_KEY ? 'ok: Claude' : process.env.GROQ_API_KEY ? 'ok: Groq (gratis)' : 'FALTA GROQ_API_KEY (gratis en console.groq.com)';
+    ['CRM_API_URL', 'TG_TOKEN'].forEach(k => { d[k] = process.env[k] ? 'ok' : 'FALTA'; });
     d.TG_SECRET = /^[A-Za-z0-9_-]{1,256}$/.test(secreto) ? 'ok' : 'solo letras, números, - y _';
     d.TG_MARIO = permitidos().length ? permitidos().length + ' ID(s)' : 'FALTA: escribe al bot y te dirá tu ID';
     d.clave_CRM = process.env.JARVIS_CRM_KEY || process.env.IG_CRM_KEY ? 'ok' : 'FALTA (JARVIS_CRM_KEY o IG_CRM_KEY = Ajustes G9)';

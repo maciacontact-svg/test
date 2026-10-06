@@ -4,11 +4,10 @@
 // se guarda / busca en la pestaña «Ideas» del Sheet (Apps Script) → se devuelve el texto de respuesta.
 // (El guion bajo hace que Vercel no publique este archivo como una URL.)
 // Variables de entorno en Vercel (nunca en el repo):
-//   ANTHROPIC_API_KEY  → clave de la API de Claude (console.anthropic.com)
-//   TRANSCRIBE_API_KEY → clave para pasar los audios a texto (OpenAI por defecto; ver TRANSCRIBE_URL)
-//   TRANSCRIBE_URL     → opcional. Por defecto https://api.openai.com/v1/audio/transcriptions
-//                        (Groq, más barato: https://api.groq.com/openai/v1/audio/transcriptions)
-//   TRANSCRIBE_MODEL   → opcional. Por defecto whisper-1 (Groq: whisper-large-v3-turbo)
+//   GROQ_API_KEY       → GRATIS, sin tarjeta (console.groq.com → API Keys). Entiende las ideas y pasa los audios a texto.
+//   GROQ_MODEL         → opcional. Modelo de texto de Groq (por defecto openai/gpt-oss-120b)
+//   ANTHROPIC_API_KEY  → opcional (de pago). Si está, las ideas las ordena Claude en vez de Groq.
+//   TRANSCRIBE_API_KEY / TRANSCRIBE_URL / TRANSCRIBE_MODEL → opcional: otro servicio para los audios (por defecto, Groq)
 //   CRM_API_URL        → la URL del Apps Script (la misma que config.js)
 //   JARVIS_CRM_KEY     → opcional: la clave de Ajustes → G9 (si no está, se usa IG_CRM_KEY, que es la misma)
 const Anthropic = require('@anthropic-ai/sdk');
@@ -78,7 +77,7 @@ function sistemaEntender(quien) {
   return `${NEGOCIO}
 
 Eres Jarvis, el segundo cerebro de la empresa. ${mario
-    ? 'Te escribe Mario (fundador) por Telegram, a menudo con notas de voz transcritos (puede haber errores de transcripción).'
+    ? 'Te escribe Mario (fundador) por Telegram, a menudo con notas de voz transcritas (puede haber errores de transcripción).'
     : 'Te escribe alguien del equipo en el canal de ideas de Slack.'}
 Decide qué es el mensaje y rellena el JSON:
 - tipo "ideas": propone o apunta una o varias ideas. Separa cada idea distinta en su propio elemento (un audio puede traer varias).
@@ -98,6 +97,50 @@ Decide qué es el mensaje y rellena el JSON:
 Rellena siempre todos los campos: los que no apliquen, vacíos ([] , "", 0).`;
 }
 
+// ---------- Groq (gratis): API compatible con OpenAI ----------
+async function groq(system, user, esquema) {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) throw new Error('Falta GROQ_API_KEY en Vercel (gratis en console.groq.com)');
+  const pedir = async formato => {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b', temperature: 0.2, max_completion_tokens: 6000,
+        messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+        ...(formato ? { response_format: formato } : {}),
+      }),
+    });
+    const j = await r.json().catch(() => ({}));
+    return { ok: r.ok, status: r.status, j };
+  };
+  let res = await pedir(esquema ? { type: 'json_schema', json_schema: { name: 'jarvis', strict: true, schema: esquema } } : null);
+  // si el modelo no admite esquema estricto, JSON normal con el esquema en las instrucciones
+  if (!res.ok && esquema && res.status === 400) {
+    system += '\n\nResponde SOLO con un objeto JSON que cumpla este esquema:\n' + JSON.stringify(esquema);
+    res = await pedir({ type: 'json_object' });
+  }
+  if (res.status === 429) throw new Error('Groq: límite gratis de este minuto alcanzado, prueba en un momento');
+  if (!res.ok) throw new Error('Groq: ' + ((res.j.error && res.j.error.message) || res.status));
+  return String((res.j.choices && res.j.choices[0] && res.j.choices[0].message && res.j.choices[0].message.content) || '').trim();
+}
+
+// Lo que devuelva el modelo, con la forma que espera el resto (por si falta algún campo)
+function normalizar(x) {
+  x = x && typeof x === 'object' ? x : {};
+  const c = x.consulta || {}, e = x.estado || {};
+  return {
+    tipo: ['ideas', 'consulta', 'estado', 'otro'].includes(x.tipo) ? x.tipo : 'otro',
+    ideas: (Array.isArray(x.ideas) ? x.ideas : []).filter(i => i && (i.titulo || i.idea)).map(i => ({
+      titulo: String(i.titulo || '').trim() || String(i.idea).slice(0, 60), categoria: CATEGORIAS.includes(i.categoria) ? i.categoria : 'Otros',
+      paraQue: String(i.paraQue || ''), idea: String(i.idea || i.titulo || ''), paso: String(i.paso || ''),
+      prioridad: ['Alta', 'Media', 'Baja'].includes(i.prioridad) ? i.prioridad : 'Media',
+    })),
+    consulta: { ambito: ['mias', 'equipo', 'todas'].includes(c.ambito) ? c.ambito : 'mias', categoria: CATEGORIAS.includes(c.categoria) ? c.categoria : '', pregunta: String(c.pregunta || '') },
+    estado: { n: Number(e.n) || 0, estado: ESTADOS.includes(e.estado) ? e.estado : '' },
+  };
+}
+
 // Lee el JSON de la respuesta (structured outputs). Si Claude declina, se avisa.
 function jsonDe(r) {
   if (r.stop_reason === 'refusal') throw new Error('Claude no ha querido procesar este mensaje');
@@ -106,6 +149,7 @@ function jsonDe(r) {
 }
 
 async function entender(texto, quien) {
+  if (!process.env.ANTHROPIC_API_KEY) return normalizar(JSON.parse(await groq(sistemaEntender(quien), texto, ESQUEMA)));
   const r = await claude().beta.messages.create({
     model: MODELO,
     max_tokens: 8000,
@@ -115,25 +159,28 @@ async function entender(texto, quien) {
     system: sistemaEntender(quien),
     messages: [{ role: 'user', content: texto }],
   });
-  return jsonDe(r);
+  return normalizar(jsonDe(r));
 }
 
 async function responder(pregunta, ideas, ambito) {
-  const r = await claude().beta.messages.create({
-    model: MODELO,
-    max_tokens: 4000,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    output_config: { effort: 'medium' },
-    system: `${NEGOCIO}
+  const system = `${NEGOCIO}
 
 Eres Jarvis, el segundo cerebro de la empresa. Contesta en español, corto y ordenado, para leer en el móvil
 (Telegram/Slack: *negrita* con un asterisco, listas con «•», sin # ni tablas).
 Usa SOLO las ideas que te paso (no inventes ideas nuevas). Cita cada una por su número (#12).
 Si pide una lista, agrúpalas por categoría con el título y para qué sirve en una línea.
 Si pide una idea concreta, explícala entera: qué es, para qué sirve y los pasos para ejecutarla.
-${ambito === 'todas' ? 'Hay ideas de Mario y del equipo: di de quién es cada una.' : ''}`,
-    messages: [{ role: 'user', content: `Pregunta: ${pregunta}\n\nIdeas guardadas (JSON):\n${JSON.stringify(ideas)}` }],
+${ambito === 'todas' ? 'Hay ideas de Mario y del equipo: di de quién es cada una.' : ''}`;
+  const user = `Pregunta: ${pregunta}\n\nIdeas guardadas (JSON):\n${JSON.stringify(ideas)}`;
+  if (!process.env.ANTHROPIC_API_KEY) return groq(system, user, null);
+  const r = await claude().beta.messages.create({
+    model: MODELO,
+    max_tokens: 4000,
+    betas: ['server-side-fallback-2026-07-01'],
+    fallbacks: 'default',
+    output_config: { effort: 'medium' },
+    system,
+    messages: [{ role: 'user', content: user }],
   });
   if (r.stop_reason === 'refusal') throw new Error('Claude no ha querido contestar');
   return r.content.filter(b => b.type === 'text').map(b => b.text).join('').trim();
@@ -141,13 +188,15 @@ ${ambito === 'todas' ? 'Hay ideas de Mario y del equipo: di de quién es cada un
 
 // ---------- Audio → texto ----------
 async function transcribir(buf, mime, nombre) {
-  const key = process.env.TRANSCRIBE_API_KEY;
-  if (!key) throw new Error('Falta TRANSCRIBE_API_KEY en Vercel (para entender audios)');
+  const propio = process.env.TRANSCRIBE_API_KEY;
+  const key = propio || process.env.GROQ_API_KEY;
+  if (!key) throw new Error('Falta GROQ_API_KEY en Vercel (para entender audios)');
   const form = new FormData();
   form.append('file', new Blob([buf], { type: mime || 'audio/ogg' }), nombre || 'audio.ogg');
-  form.append('model', process.env.TRANSCRIBE_MODEL || 'whisper-1');
+  form.append('model', process.env.TRANSCRIBE_MODEL || (propio ? 'whisper-1' : 'whisper-large-v3-turbo'));
   form.append('language', 'es');
-  const r = await fetch(process.env.TRANSCRIBE_URL || 'https://api.openai.com/v1/audio/transcriptions', {
+  const url = process.env.TRANSCRIBE_URL || (propio ? 'https://api.openai.com/v1/audio/transcriptions' : 'https://api.groq.com/openai/v1/audio/transcriptions');
+  const r = await fetch(url, {
     method: 'POST', headers: { Authorization: 'Bearer ' + key }, body: form,
   });
   const j = await r.json().catch(() => ({}));
