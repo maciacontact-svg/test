@@ -830,7 +830,7 @@ $('tabs').addEventListener('click', e => {
 });
 
 // ---------- Ideas (segundo cerebro · solo maestro) ----------
-// Jarvis (api/jarvis-wa.js y api/jarvis-slack.js) las guarda ya clasificadas en la pestaña «Ideas» del Sheet.
+// Jarvis (api/jarvis-tg.js y api/jarvis-slack.js) las guarda ya clasificadas en la pestaña «Ideas» del Sheet.
 let I = { ideas: [], categorias: [], estados: [], prioridades: [] }, iDe = 'Mario', iCat = '', iEst = 'abiertas', iQ = '', iCargando = false, iVisto = 0;
 const I_EMOJI = { Funnel: '🧲', Contenido: '🎬', Ventas: '💰', 'Formación': '🎓', Marketing: '📣', Equipo: '👥', 'Tecnología': '⚙️', Otros: '🗂️' };
 async function cargarIdeas(fondo) {
@@ -864,7 +864,7 @@ function pintarIdeas() {
         <div><b>#${x.n} · ${esc(x.titulo)}</b>
           <div class="i-meta"><span class="tag prio-${esc(x.prioridad).toLowerCase()}">${esc(x.prioridad)}</span>
             <span class="tag ${x.de === 'Equipo' ? 'eq' : 'yo'}">${x.de === 'Equipo' ? '👥 ' + esc(x.autor || 'Equipo') : '🧠 Mía'}</span>
-            <span class="tag src">${x.canal === 'Slack' ? '# Slack' : '🟢 WhatsApp'}</span><small title="${fecha(x.fecha)}">${hace(x.fecha)}</small></div></div>
+            <span class="tag src">${x.canal === 'Slack' ? '# Slack' : x.canal === 'Telegram' ? '✈️ Telegram' : esc(x.canal)}</span><small title="${fecha(x.fecha)}">${hace(x.fecha)}</small></div></div>
         <div class="i-ctl">
           <select class="pill" data-k="estado" aria-label="Estado">${opts(I.estados, x.estado)}</select>
           <select class="pill" data-k="prioridad" aria-label="Prioridad">${opts(I.prioridades, x.prioridad)}</select>
@@ -877,7 +877,7 @@ function pintarIdeas() {
       ${x.original ? `<details><summary>Lo que dijo${x.original.startsWith('🎙️') ? ' (audio)' : ''}</summary><p>${esc(x.original)}</p></details>` : ''}
     </article>`).join('')).join('');
   $('iEmpty').hidden = ls.length > 0;
-  $('iEmpty').textContent = I.ideas.length ? 'No hay ideas que coincidan.' : 'Aún no hay ideas. Mándale una a Jarvis por WhatsApp o escríbela en el canal de ideas de Slack (crm/JARVIS.md).';
+  $('iEmpty').textContent = I.ideas.length ? 'No hay ideas que coincidan.' : 'Aún no hay ideas. Mándale una a Jarvis por Telegram o escríbela en el canal de ideas de Slack (crm/JARVIS.md).';
 }
 $('iDe').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -1547,9 +1547,9 @@ function demoApi(action, extra) {
     if (!window.__demo.ideas) {
       const h = x => new Date(Date.now() - x * 3600e3).toISOString();
       window.__demo.ideas = [
-        { n: 1, fecha: h(70), de: 'Mario', autor: 'Mario', canal: 'WhatsApp', categoria: 'Funnel', titulo: 'Quiz antes del formulario', paraQue: 'Cualificar mejor y que lleguen a la llamada con el problema claro.', idea: 'Antes del formulario, 4 preguntas tipo test que le digan en qué punto está y qué nicho le encaja. Al final, el formulario de siempre.', paso: 'Escribir las 4 preguntas y los 3 resultados posibles.', prioridad: 'Alta', estado: 'Nueva', original: '🎙️ Oye, se me ha ocurrido poner un quiz antes del formulario…' },
-        { n: 2, fecha: h(30), de: 'Mario', autor: 'Mario', canal: 'WhatsApp', categoria: 'Contenido', titulo: 'Reel: «no tengo tiempo»', paraQue: 'Atacar la objeción más repetida en las llamadas y traer leads de Instagram.', idea: 'Reel enseñando la semana real de alguien que lo hace con 1 hora al día, con palabra clave de ManyChat para la guía.', paso: 'Guion de 70 s con el formato de dolor → solución.', prioridad: 'Media', estado: 'En marcha', original: 'Reel sobre la objeción del tiempo' },
-        { n: 3, fecha: h(5), de: 'Mario', autor: 'Mario', canal: 'WhatsApp', categoria: 'Ventas', titulo: 'Recordatorio WhatsApp 1 h antes', paraQue: 'Bajar los no-shows de las llamadas.', idea: 'Mensaje del caller una hora antes de la llamada con el enlace y una pregunta para que conteste.', paso: 'Redactar el mensaje y probarlo una semana.', prioridad: 'Alta', estado: 'Nueva', original: 'Mandar recordatorio por WhatsApp una hora antes' },
+        { n: 1, fecha: h(70), de: 'Mario', autor: 'Mario', canal: 'Telegram', categoria: 'Funnel', titulo: 'Quiz antes del formulario', paraQue: 'Cualificar mejor y que lleguen a la llamada con el problema claro.', idea: 'Antes del formulario, 4 preguntas tipo test que le digan en qué punto está y qué nicho le encaja. Al final, el formulario de siempre.', paso: 'Escribir las 4 preguntas y los 3 resultados posibles.', prioridad: 'Alta', estado: 'Nueva', original: '🎙️ Oye, se me ha ocurrido poner un quiz antes del formulario…' },
+        { n: 2, fecha: h(30), de: 'Mario', autor: 'Mario', canal: 'Telegram', categoria: 'Contenido', titulo: 'Reel: «no tengo tiempo»', paraQue: 'Atacar la objeción más repetida en las llamadas y traer leads de Instagram.', idea: 'Reel enseñando la semana real de alguien que lo hace con 1 hora al día, con palabra clave de ManyChat para la guía.', paso: 'Guion de 70 s con el formato de dolor → solución.', prioridad: 'Media', estado: 'En marcha', original: 'Reel sobre la objeción del tiempo' },
+        { n: 3, fecha: h(5), de: 'Mario', autor: 'Mario', canal: 'Telegram', categoria: 'Ventas', titulo: 'Recordatorio WhatsApp 1 h antes', paraQue: 'Bajar los no-shows de las llamadas.', idea: 'Mensaje del caller una hora antes de la llamada con el enlace y una pregunta para que conteste.', paso: 'Redactar el mensaje y probarlo una semana.', prioridad: 'Alta', estado: 'Nueva', original: 'Mandar recordatorio por WhatsApp una hora antes' },
         { n: 4, fecha: h(20), de: 'Equipo', autor: 'Aleix', canal: 'Slack', categoria: 'Formación', titulo: 'Plantilla de guion en Skool', paraQue: 'Que los alumnos publiquen antes su primer vídeo.', idea: 'Una plantilla de guion rellenable dentro del módulo 2.', paso: 'Pasar la plantilla que usamos nosotros a Skool.', prioridad: 'Media', estado: 'Nueva', original: 'Subir la plantilla de guion a Skool' },
         { n: 5, fecha: h(90), de: 'Equipo', autor: 'Mario.e', canal: 'Slack', categoria: 'Ventas', titulo: 'Guion para la objeción del precio', paraQue: 'Cerrar más llamadas que se quedan en «me lo pienso».', idea: 'Tres respuestas cortas a «es mucho dinero» con ejemplos del propio lead.', paso: 'Escribirlas y probarlas en las llamadas de esta semana.', prioridad: 'Baja', estado: 'Hecha', original: '' },
       ];

@@ -48,7 +48,7 @@ si no → `acceso.html` (Loom + portada, `acceso.js`) → `recursos.html` (bibli
 - Hoja «Instagram» (una fila por convo, ver `IG`). CRM: pestaña Instagram (seguimiento) y Setting = automático + correcciones a mano.
 
 ## Jarvis · segundo cerebro (`crm/JARVIS.md`)
-- Ideas por WhatsApp de Mario (`api/jarvis-wa.js`, API oficial Cloud, solo números de WA_MARIO) → «Mario»; canal de Slack (`api/jarvis-slack.js`) → «Equipo». Audio → texto (TRANSCRIBE_*), Claude (`api/_jarvis.js`, ANTHROPIC_API_KEY) clasifica: ideas / consulta / estado.
+- Ideas por Telegram de Mario (`api/jarvis-tg.js`, bot propio, solo IDs de TG_MARIO; conectar con `/api/jarvis-tg?setup=<TG_SECRET>`) → «Mario»; versión WhatsApp descartada en `original/api/jarvis-wa.js`; canal de Slack (`api/jarvis-slack.js`) → «Equipo». Audio → texto (TRANSCRIBE_*), Claude (`api/_jarvis.js`, ANTHROPIC_API_KEY) clasifica: ideas / consulta / estado.
 - Hoja «Ideas» (ver `IDEA` en Code.gs; clave G9): acciones ideaGuardar, ideasBuscar, ideaEstado (con clave), ideas, ideaEditar (maestro). En Slack solo salen ideas del equipo; Mario pide «mías» (defecto), «equipo» o «todas».
 - CRM: pestaña «Ideas» (solo maestro). `package.json` raíz = dependencias de las funciones (@anthropic-ai/sdk, @vercel/functions).
 

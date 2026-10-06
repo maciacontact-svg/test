@@ -1,5 +1,5 @@
 // ===== System Academy · Jarvis (segundo cerebro) =====
-// Lo comparten api/jarvis-wa.js (WhatsApp de Mario) y api/jarvis-slack.js (canal de ideas del equipo).
+// Lo comparten api/jarvis-tg.js (Telegram de Mario) y api/jarvis-slack.js (canal de ideas del equipo).
 // Un mensaje (texto o audio ya transcrito) → Claude decide si son ideas nuevas, una pregunta o un cambio de estado →
 // se guarda / busca en la pestaña «Ideas» del Sheet (Apps Script) → se devuelve el texto de respuesta.
 // (El guion bajo hace que Vercel no publique este archivo como una URL.)
@@ -78,7 +78,7 @@ function sistemaEntender(quien) {
   return `${NEGOCIO}
 
 Eres Jarvis, el segundo cerebro de la empresa. ${mario
-    ? 'Te escribe Mario (fundador) por WhatsApp, a menudo con audios transcritos (puede haber errores de transcripción).'
+    ? 'Te escribe Mario (fundador) por Telegram, a menudo con notas de voz transcritos (puede haber errores de transcripción).'
     : 'Te escribe alguien del equipo en el canal de ideas de Slack.'}
 Decide qué es el mensaje y rellena el JSON:
 - tipo "ideas": propone o apunta una o varias ideas. Separa cada idea distinta en su propio elemento (un audio puede traer varias).
@@ -128,7 +128,7 @@ async function responder(pregunta, ideas, ambito) {
     system: `${NEGOCIO}
 
 Eres Jarvis, el segundo cerebro de la empresa. Contesta en español, corto y ordenado, para leer en el móvil
-(WhatsApp/Slack: *negrita* con un asterisco, listas con «•», sin # ni tablas).
+(Telegram/Slack: *negrita* con un asterisco, listas con «•», sin # ni tablas).
 Usa SOLO las ideas que te paso (no inventes ideas nuevas). Cita cada una por su número (#12).
 Si pide una lista, agrúpalas por categoría con el título y para qué sirve en una línea.
 Si pide una idea concreta, explícala entera: qué es, para qué sirve y los pasos para ejecutarla.
