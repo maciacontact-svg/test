@@ -10,7 +10,9 @@
 const { waitUntil } = require('@vercel/functions');
 const jarvis = require('./_jarvis');
 
-const api = m => `https://api.telegram.org/bot${process.env.TG_TOKEN}/${m}`;
+// el token tal cual lo da @BotFather (se quitan espacios, comillas o un «bot» delante si se pegó así)
+const token = () => String(process.env.TG_TOKEN || '').trim().replace(/^["']|["']$/g, '').replace(/^bot(?=\d)/, '');
+const api = m => `https://api.telegram.org/bot${token()}/${m}`;
 const permitidos = () => String(process.env.TG_MARIO || '').split(',').map(x => x.replace(/\D/g, '')).filter(Boolean);
 
 function cuerpo(req) {
@@ -39,7 +41,7 @@ async function contestar(chat, texto, idOriginal) {
 
 async function bajarAudio(fileId) {
   const f = await tg('getFile', { file_id: fileId });
-  const r = await fetch(`https://api.telegram.org/file/bot${process.env.TG_TOKEN}/${f.file_path}`);
+  const r = await fetch(`https://api.telegram.org/file/bot${token()}/${f.file_path}`);
   if (!r.ok) throw new Error('No puedo bajar el audio (' + r.status + ')');
   return { buf: Buffer.from(await r.arrayBuffer()), nombre: String(f.file_path).split('/').pop() || 'audio.ogg' };
 }
@@ -87,9 +89,11 @@ module.exports = async (req, res) => {
       await tg('setWebhook', { url, secret_token: secreto, allowed_updates: ['message'], drop_pending_updates: true });
       const bot = await tg('getMe', {});
       d.bot = `ok: @${bot.username} conectado a ${url}`;
-    } catch (err) { d.bot = err.message; }
+    } catch (err) {
+      d.bot = /Not Found|Unauthorized/i.test(err.message) ? 'TG_TOKEN no es válido: copia de nuevo el token de @BotFather (si lo revocaste, el nuevo) y haz Redeploy' : err.message;
+    }
     try { await jarvis.crm('ideasBuscar', { quien: 'mario', ambito: 'mias' }); d.apps_script = 'ok: la pestaña Ideas responde'; }
-    catch (err) { d.apps_script = err.message; }
+    catch (err) { d.apps_script = /desconocida/i.test(err.message) ? 'Falta pegar el Code.gs nuevo en Apps Script → configurar → Implementar › Gestionar › Nueva versión' : err.message; }
     return res.end(JSON.stringify(d, null, 2));
   }
   if (req.method !== 'POST') { res.statusCode = 405; return res.end(); }
