@@ -11,7 +11,11 @@ const leer = st => { try { return JSON.parse(st.getItem('sa-lead') || 'null'); }
 // Enlace de caller (<web>/c/<código> → ?c=<código>): el caller agenda al lead en plena llamada desde SU móvil/ordenador.
 // No se usa nada guardado en este navegador (sería del caller, no del lead) y en el CRM queda asignado a ese caller.
 const CALLER = (new URLSearchParams(location.search).get('c') || '').trim();
-const lead = CALLER ? {} : (leer(sessionStorage) || leer(localStorage) || {});
+// Desde la ficha del CRM llegan además su ID, nombre y email (&l=, &n=, &e=) para dejarlos ya puestos en Calendly
+const qp = new URLSearchParams(location.search);
+const lead = CALLER
+  ? { id: /^[a-z0-9]{8,24}$/i.test(qp.get('l') || '') ? qp.get('l') : '', nombre: (qp.get('n') || '').slice(0, 80), correo: (qp.get('e') || '').slice(0, 120) }
+  : (leer(sessionStorage) || leer(localStorage) || {});
 
 // Setter que le pasó el enlace por Instagram (systemacademy.es/a/<código> → ?s=<código>)
 let setter = CALLER ? '' : new URLSearchParams(location.search).get('s') || '';
@@ -20,7 +24,7 @@ try { if (CALLER) {} else if (setter) localStorage.setItem('sa-setter', setter);
 // ===== Origen: por qué enlace ha llegado (YouTube, ManyChat, setter…). Se recuerda en este navegador =====
 const ORIGEN = (() => {
   const q = location.search.slice(1);
-  if (CALLER) return q;
+  if (CALLER) return 'c=' + encodeURIComponent(CALLER) + '&utm_source=llamada';
   try {
     if (/(^|&)(utm_source|s)=/.test(q)) localStorage.setItem('sa-origen', q);
     return /(^|&)(utm_source|s)=/.test(q) ? q : (localStorage.getItem('sa-origen') || '');

@@ -410,6 +410,7 @@ function abrirFicha(id) {
     <small class="d-when">${fecha(l.fecha)} · ${hace(l.fecha)}</small>
     <h2 id="dName">${esc(l.nombre)}</h2>
     <div class="d-actions">${telLinks(l.telefono)}${l.correo ? `<a class="mailbtn" href="mailto:${esc(l.correo)}">${esc(l.correo)}</a>` : ''}</div>
+    ${enlaceAgendarLead(l)}
     ${chipRellamar(l) ? `<div class="d-rell">${chipRellamar(l)}</div>` : ''}
     <div class="kv embudo-kv"><small>Hasta dónde ha llegado ${l.autoagenda ? '(autoagendado: no cuenta para ningún caller)' : ''}</small>
       <div class="pasos" data-id="${esc(l.id)}">${pasos}</div></div>
@@ -561,6 +562,16 @@ $('drawer').addEventListener('focusout', e => {
   if (l && t.value.trim() !== (l.notasLlamada || '')) guardar(l.id, { notasLlamada: t.value.trim() }).then(ok => ok && toast('Notas de la llamada guardadas'));
 });
 
+// Botón «Agendar llamada» en la ficha: abre la agenda en modo caller con su nombre y email ya puestos
+// (queda asignado a quien la usa, 🔒). Solo para quien tiene enlace de caller.
+function enlaceAgendarLead(l) {
+  const mio = (D.enlacesCaller || []).find(x => mismo(x.nombre, S.caller));
+  if (!mio) return '';
+  const p = new URLSearchParams({ c: mio.slug, utm_source: 'llamada', l: l.id });
+  if (l.nombre) p.set('n', l.nombre);
+  if (l.correo) p.set('e', l.correo);
+  return `<a class="agendar-btn" href="https://${esc(web())}/agendar?${esc(p.toString())}" target="_blank" rel="noopener">📞 Agendar llamada con ${esc(String(l.nombre).split(' ')[0] || 'este lead')}</a>`;
+}
 function cerrarFicha() { $('drawer').classList.remove('open'); $('drawer').setAttribute('aria-hidden', 'true'); }
 $('drawer').addEventListener('click', e => {
   if (e.target.closest('[data-close]')) return cerrarFicha();
