@@ -207,13 +207,15 @@ async function transcribir(buf, mime, nombre) {
 // ---------- Sheet (Apps Script) ----------
 async function crm(action, datos) {
   if (!process.env.CRM_API_URL) throw new Error('Falta CRM_API_URL en Vercel');
-  const r = await fetch(process.env.CRM_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action, clave: process.env.JARVIS_CRM_KEY || process.env.IG_CRM_KEY || '', ...datos }),
-  });
-  const j = await r.json().catch(() => null);
-  if (!j) throw new Error('El Apps Script no responde (HTTP ' + r.status + '): ¿está publicada la versión nueva?');
+  const body = JSON.stringify({ action, clave: process.env.JARVIS_CRM_KEY || process.env.IG_CRM_KEY || '', ...datos });
+  let r, j = null;
+  // Google a veces falla un momento (p. ej. mientras se publica una versión): un reintento
+  for (let intento = 0; intento < 2 && !j; intento++) {
+    if (intento) await new Promise(ok => setTimeout(ok, 2000));
+    r = await fetch(String(process.env.CRM_API_URL).trim(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
+    j = await r.json().catch(() => null);
+  }
+  if (!j) throw new Error('El Apps Script no responde (HTTP ' + r.status + '): revisa que CRM_API_URL en Vercel sea la URL /exec de Apps Script (la misma que config.js)');
   if (!j.ok) throw new Error(j.error || 'Error del CRM');
   return j;
 }
