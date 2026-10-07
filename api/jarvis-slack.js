@@ -105,6 +105,19 @@ async function diagnostico(req, res) {
   }
   try { await jarvis.crm('ideasBuscar', { quien: 'equipo', ambito: 'equipo' }); d.apps_script = 'ok'; }
   catch (err) { d.apps_script = err.message; }
+  // ?diag=…&prueba=1 → escribe en el canal y entiende una idea de prueba (sin guardarla): comprueba la salida de punta a punta
+  if (new URL(req.url, 'https://x').searchParams.get('prueba')) {
+    try {
+      const r = await jarvis.entender('Idea: probar que Jarvis funciona en Slack', 'equipo');
+      d.prueba_IA = 'ok: lo entiende como «' + r.tipo + '»';
+    } catch (err) { d.prueba_IA = err.message; }
+    const canal = canalesIdeas()[0];
+    if (canal) {
+      try { await slack('chat.postMessage', { channel: canal, text: '🧪 Prueba de Jarvis: puedo escribir en este canal. Escribe una idea y te contesto en el hilo.' }); d.prueba_canal = 'ok: mira el canal'; }
+      catch (err) { d.prueba_canal = /not_in_channel/.test(err.message) ? 'Jarvis no está en el canal: /invite @Jarvis' : err.message; }
+    }
+    d.recibidos = 'Si la prueba sale bien pero no contesta a tus mensajes, Slack no está enviando los avisos: Socket Mode OFF, Event Subscriptions guardado y Reinstall. En Vercel → Logs (filtra /api/jarvis-slack) se ve cada aviso que llega.';
+  }
   d.siguiente = 'Si todo está ok y no contesta: Event Subscriptions → Request URL «Verified», bot events message.channels (y message.groups), Save Changes y Reinstall; luego /invite @Jarvis en el canal.';
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   return res.end(JSON.stringify(d, null, 2));
@@ -125,6 +138,7 @@ module.exports = async (req, res) => {
   }
   let body;
   try { body = JSON.parse(raw.toString('utf8')); } catch (e) { res.statusCode = 400; return res.end(); }
+  console.log('Slack: llega', body.type, body.event ? `${body.event.type}${body.event.subtype ? '/' + body.event.subtype : ''} en ${body.event.channel}` : '', req.headers['x-slack-retry-num'] ? '(reintento)' : '');
 
   // Slack comprueba la URL al configurarla
   if (body.type === 'url_verification') {
