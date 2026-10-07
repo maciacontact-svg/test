@@ -512,6 +512,10 @@ html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%;
 .pipe .dia input:focus, .pipe .link-ll input:focus { border-color: var(--ink); }
 .pipe .dia small, .pipe .dia .urge { display: inline-block; margin-top: 4px; font-size: 11px; color: var(--muted); }
 .pipe .dia .urge { color: #fff; }
+.pipe .dia .conf { display: flex; align-items: center; justify-content: center; width: 100%; margin-top: 6px; height: 30px; border-radius: 999px; border: 0; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.pipe .dia .conf.no { background: #fce8b2; color: #6b4e00; }
+.pipe .dia .conf.si { background: #2f6b4f; color: #e2f4e6; }
+.pipe .dia .conf:disabled { opacity: .75; cursor: not-allowed; }
 .pipe .link-ll a { display: inline-block; margin-top: 4px; font-size: 12px; font-weight: 500; text-decoration: underline; }
 .pipe input:disabled, .pipe textarea:disabled, .pipe select:disabled { opacity: .75; cursor: not-allowed; }
 .pill.fuente { font-weight: 600; letter-spacing: .03em; }

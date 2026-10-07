@@ -27,7 +27,7 @@ const COL = {
   cualifica: 19, autoagenda: 20, rellamar: 21, rellamarAviso: 22, asignado: 23, embudo: 24,
   setter: 25, agendadoEl: 26, notasLlamada: 27, grabaciones: 28, fijo: 29, alias: 30,
   // Pipeline de closers (lead agendado → pasa al closer)
-  closer: 31, closerEstado: 32, closerNotas: 33, linkLlamada: 34, conclusiones: 35, diaAgenda: 36, fuente: 37,
+  closer: 31, closerEstado: 32, closerNotas: 33, linkLlamada: 34, conclusiones: 35, diaAgenda: 36, fuente: 37, confirmada: 38,
 };
 const CABECERA = [
   'Fecha registro', 'Nombre', 'Teléfono', 'En qué punto está', 'Qué quiere conseguir', 'Correo',
@@ -36,7 +36,7 @@ const CABECERA = [
   'Buen form', 'Autoagendado (Calendly)', 'Volver a llamar (hora)', 'Aviso rellamada', 'Asignado el', 'Embudo',
   'Setter (enlace IG)', 'Agendado el', 'Notas llamada', 'Grabaciones (Drive)',
   'Caller fijo (agendó en llamada)', 'IDs fusionados',
-  'Closer', 'Estado closer', 'Notas closer', 'Link de llamada (Fathom)', 'Conclusiones', 'Día de la agenda', 'UTM source (pipeline)',
+  'Closer', 'Estado closer', 'Notas closer', 'Link de llamada (Fathom)', 'Conclusiones', 'Día de la agenda', 'UTM source (pipeline)', 'Confirmada (WhatsApp)',
 ];
 const VISIBLES = 11;
 
@@ -52,7 +52,8 @@ const CIERRAN = ['Agendado', 'Perdido', 'Invalid'];       // estados que quitan 
 // Pipeline de closers
 const ESTADOS_CLOSER = ['Pendiente', 'Reagendado', 'No show', 'Se lo piensa', 'Seguimiento', 'Pagado', 'No cierra', 'Cancelado'];
 const FUENTES_CLOSER = ['SETTING', 'COLD', 'YT', 'IG'];
-const CAMPOS_CLOSER = ['closer', 'closerEstado', 'closerNotas', 'linkLlamada', 'conclusiones', 'diaAgenda', 'fuente'];
+const CAMPOS_CLOSER = ['closer', 'closerEstado', 'closerNotas', 'linkLlamada', 'conclusiones', 'diaAgenda', 'fuente', 'confirmada'];
+const CONFIRMADA = ['Sí', 'No'];   // el closer confirma la llamada por WhatsApp (vacío = sin confirmar)
 
 // Celdas de la pestaña "Ajustes"
 const AJ = { callers: 'A2:A', pins: 'B2:B', setting: 'C2:C', estados: 'D2:D', closers: 'E2:E', closerDef: 'G16', webhook: 'G2', crmUrl: 'G3', minutos: 'G4', mencion: 'G5', calendly: 'G6', maestro: 'G7', maestroPin: 'G8',
@@ -182,7 +183,11 @@ function autoagendado(b) {
     f = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
     const ini = inicioLlamada(b.evento);
     cuando = ini ? Utilities.formatDate(ini, TZ, 'dd/MM HH:mm') : '';
-    if (ini) sh.getRange(fila, COL.diaAgenda).setValue(ini);
+    if (ini) {
+      const prev = f[COL.diaAgenda - 1];
+      if (!(prev instanceof Date) || +prev !== +ini) sh.getRange(fila, COL.confirmada).setValue('');   // nueva hora: hay que volver a confirmar
+      sh.getRange(fila, COL.diaAgenda).setValue(ini);
+    }
     const marca = cuando ? 'Llamada ' + cuando : 'Reservado ' + Utilities.formatDate(new Date(), TZ, 'dd/MM HH:mm');
     if (porCaller) { const r = agendadoPorCaller(sh, fila, f, porCaller, marca, cuando, b); lock.releaseLock(); slackAgenda(f, '📞 *' + esc(porCaller) + '* ha agendado a *' + esc(f[COL.nombre - 1]) + '* en llamada', cuando, inv || invitadoCalendly(b.invitado)); return r; }
     if (f[COL.autoagenda - 1]) return { ok: true, repetido: true };
@@ -465,6 +470,7 @@ function actualizar(b, u) {
     conclusiones: v => celda(limpio(v, 2000)),
     diaAgenda: v => { if (!v) return ''; const d = new Date(v); return isNaN(d) ? err('Fecha no válida') : d; },
     fuente: v => (v === '' || FUENTES_CLOSER.indexOf(v) >= 0) ? v : err('UTM source no válido'),
+    confirmada: v => (v === '' || CONFIRMADA.indexOf(v) >= 0) ? v : err('Confirmación no válida'),
   };
 
   const lock = LockService.getScriptLock();
@@ -483,6 +489,11 @@ function actualizar(b, u) {
         if (!yo || !yo.closer) throw new Error('No tienes acceso al pipeline de closers (lo activa Mario)');
         const suyo = String(ant('closer') || '') || closerPorDefecto();
         if (!mismoNombre(suyo, quien)) throw new Error('Este lead lo lleva otro closer' + (suyo ? ' (' + suyo + ')' : ''));
+      }
+      // si cambia el día de la agenda, la llamada vuelve a estar sin confirmar
+      if ('diaAgenda' in c && !('confirmada' in c)) {
+        const nuevo = permitido.diaAgenda(c.diaAgenda), viejo = ant('diaAgenda');
+        if (+nuevo !== +(viejo instanceof Date ? viejo : 0)) c.confirmada = '';
       }
       CAMPOS_CLOSER.forEach(k => {
         if (!(k in c)) return;
@@ -598,7 +609,7 @@ function combinar(a, b) {
   const txt = x => String(x == null ? '' : x).trim();
   // datos que faltan en la ficha
   ['telefono', 'correo', 'origen', 'setter', 'rellamar', 'rellamarAviso', 'asignado', 'agendadoEl', 'aviso', 'fijo',
-    'closer', 'closerEstado', 'closerNotas', 'linkLlamada', 'conclusiones', 'diaAgenda', 'fuente']
+    'closer', 'closerEstado', 'closerNotas', 'linkLlamada', 'conclusiones', 'diaAgenda', 'fuente', 'confirmada']
     .forEach(k => { if (vacio(v(a, k)) && !vacio(v(b, k))) set(k, v(b, k)); });
   // respuestas del formulario: mandan las más recientes
   ['punto', 'objetivo', 'inversion', 'meta', 'cuando', 'instagram'].forEach(k => { if (!vacio(v(b, k))) set(k, v(b, k)); });
@@ -694,6 +705,7 @@ function filaALead(f) {
     linkLlamada: String(v('linkLlamada') || ''), conclusiones: String(v('conclusiones') || ''),
     diaAgenda: v('diaAgenda') instanceof Date ? v('diaAgenda').toISOString() : '',
     fuente: String(v('fuente') || ''),
+    confirmada: String(v('confirmada') || ''),
   };
 }
 
