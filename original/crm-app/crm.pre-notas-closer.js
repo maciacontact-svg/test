@@ -453,15 +453,11 @@ function abrirFicha(id) {
     ${row('Prioridad para llamar', `${prioridad(l)} de 4 · ${PRIOS[prioridad(l)]}`)}
     ${row('Buen form', l.cualifica ? 'Sí: encaja con el perfil (se le ofreció agendar)' : '')}
     ${row('Autoagendado por Calendly', l.autoagenda)}
-    ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' + (S.rol === 'maestro' ? ' · si lo agendó un caller en llamada, cámbialo en la columna Caller' : '') : l.caller + (l.fijo ? ' · 🔒 lo agendó en llamada' : ''))}${row('Estado', l.estado || 'Nuevo')}
-    ${enPipeline(l) ? '<p class="cc-tit">📞 Cold calling</p>' : ''}${row('Notas caller', l.notas)}
+    ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' + (S.rol === 'maestro' ? ' · si lo agendó un caller en llamada, cámbialo en la columna Caller' : '') : l.caller + (l.fijo ? ' · 🔒 lo agendó en llamada' : ''))}${row('Estado', l.estado || 'Nuevo')}${row('Notas caller', l.notas)}
     ${bloqueLlamada(l)}
     ${enPipeline(l) ? `<div class="kv pipe-kv"><small>🎯 Pipeline de closer</small><p>${esc([l.closer ? 'Closer: ' + l.closer : 'Sin closer',
       diaAgendaDe(l) ? 'Llamada: ' + fecha(diaAgendaDe(l).toISOString()) : '', 'Estado: ' + (l.closerEstado || 'Sin contactar')].filter(Boolean).join(' · '))}</p>
-      ${l.conclusiones ? `<p>${esc(l.conclusiones)}</p>` : ''}${/^https:\/\//.test(l.linkLlamada) ? `<p><a href="${esc(l.linkLlamada)}" target="_blank" rel="noopener">▶ Ver la llamada (Fathom)</a></p>` : ''}</div>
-    <div class="kv pipe-kv"><small>🎯 Notas closer <span class="nota">(aparte de las del cold calling)</span></small>
-      ${puedeCerrar(l) ? `<textarea data-cn="${esc(l.id)}" rows="4" placeholder="Qué ha pasado con él: confirmación, llamada, objeciones, siguiente paso…">${esc(l.closerNotas)}</textarea>`
-        : `<p>${esc(l.closerNotas) || '—'}</p>`}</div>` : ''}
+      ${l.conclusiones ? `<p>${esc(l.conclusiones)}</p>` : ''}${/^https:\/\//.test(l.linkLlamada) ? `<p><a href="${esc(l.linkLlamada)}" target="_blank" rel="noopener">▶ Ver la llamada (Fathom)</a></p>` : ''}</div>` : ''}
     ${row('Canal', CANALES[canalDe(l)])}
     ${row('Origen', (o => o.nombre + (o.etiqueta ? ' · ' + o.etiqueta : '') + (l.setter ? ' · setter ' + l.setter : ''))(origenDe(l)))}`;
   $('drawer').classList.add('open');
@@ -480,8 +476,8 @@ function bloqueLlamada(l) {
     ${audios[g.archivo] ? `<audio controls preload="metadata" src="${audios[g.archivo]}"></audio>`
       : puedeGrabar(l) ? `<button type="button" class="mini" data-oir="${esc(g.archivo)}">▶ Escuchar</button>` : ''}</li>`).join('');
   const sub = subiendo && subiendo.id === l.id;
-  return `<div class="kv llamada"><small>📝 Notas llamada${puedeGrabar(l) ? ' <button type="button" class="mini" data-plantilla>Plantilla</button>' : ' <span class="nota">(del caller · solo lectura)</span>'}</small>
-      <textarea data-ll="${esc(l.id)}" rows="7" placeholder="Situación, temporalidad, objetivo / visión, puente, tiempo y dinero, oferta…"${puedeGrabar(l) ? '' : ' readonly title="Las escribe el caller del lead"'}>${esc(l.notasLlamada)}</textarea></div>
+  return `<div class="kv llamada"><small>📝 Notas llamada <button type="button" class="mini" data-plantilla>Plantilla</button></small>
+      <textarea data-ll="${esc(l.id)}" rows="7" placeholder="Situación, temporalidad, objetivo / visión, puente, tiempo y dinero, oferta…">${esc(l.notasLlamada)}</textarea></div>
     <div class="kv grab"><small>📼 Grabaciones${grabs.length ? ` (${grabs.length})` : ''}</small>
       ${lista || sub ? `<ul>${lista}${sub ? `<li><span>Subiendo ahora · ya puedes escucharla</span><audio controls preload="metadata" src="${subiendo.url}"></audio></li>` : ''}</ul>` : ''}
       ${puedeGrabar(l) ? `<label class="subir${sub ? ' on' : ''}"><input type="file" accept="audio/*,.m4a,.mp3,.wav,.aac" data-subir="${esc(l.id)}" hidden ${sub ? 'disabled' : ''}>
@@ -595,14 +591,8 @@ $('drawer').addEventListener('change', e => {
   if (i) subirGrabacion(i.dataset.subir, i.files[0]);
 });
 $('drawer').addEventListener('focusout', e => {
-  const cn = e.target.closest('[data-cn]');
-  if (cn) {
-    const l = D.leads.find(x => x.id === cn.dataset.cn);
-    if (l && cn.value.trim() !== (l.closerNotas || '')) guardar(l.id, { closerNotas: cn.value.trim() }).then(ok => ok && toast('Notas del closer guardadas'));
-    return;
-  }
   const t = e.target.closest('[data-ll]');
-  if (!t || t.readOnly) return;
+  if (!t) return;
   const l = D.leads.find(x => x.id === t.dataset.ll);
   if (l && t.value.trim() !== (l.notasLlamada || '')) guardar(l.id, { notasLlamada: t.value.trim() }).then(ok => ok && toast('Notas de la llamada guardadas'));
 });
@@ -1018,19 +1008,10 @@ function filaPipe(l) {
     <td data-label="Propietario">${prop}</td>
     <td data-label="Estado">${sel('closerEstado', (D.pipeline.estados || []).filter(e => e !== 'Sin contactar'), l.closerEstado === 'Sin contactar' ? '' : l.closerEstado, 'Sin contactar', 'estado c-' + slug(l.closerEstado || 'sin contactar'))}</td>
     <td data-label="Closer">${S.rol === 'maestro' || ed ? sel('closer', D.pipeline.closers || [], l.closer, '— Sin closer', 'closer') : `<span class="pill prop">${esc(l.closer || '—')}</span>`}</td>
-    <td data-label="Info CC" class="cc-td">${infoCC(l)}</td>
-    <td data-label="Notas closer" class="notes"><textarea data-p="closerNotas" rows="1" placeholder="Tus notas (aparte de las del CC)…"${dis}>${esc(l.closerNotas)}</textarea></td>
+    <td data-label="Notas" class="notes"><textarea data-p="closerNotas" rows="1" placeholder="Notas…"${dis}>${esc(l.closerNotas)}</textarea></td>
     <td data-label="Link de llamada" class="link-ll"><input type="url" data-p="linkLlamada" value="${esc(l.linkLlamada)}" placeholder="https://fathom.video/…"${dis}>${/^https:\/\//.test(l.linkLlamada) ? `<a href="${esc(l.linkLlamada)}" target="_blank" rel="noopener">Abrir ↗</a>` : ''}</td>
     <td data-label="Conclusiones" class="notes"><textarea data-p="conclusiones" rows="1" placeholder="Qué pasa ahora: pagado, reagenda, se lo piensa…"${dis}>${esc(l.conclusiones)}</textarea></td>
   </tr>`;
-}
-// Resumen de lo que hizo el caller en el cold calling (solo lectura): al tocarlo se abre la ficha completa
-function infoCC(l) {
-  const quien = l.autoagenda ? '📅 Autoagendado' : (l.fijo || l.caller) ? '📞 ' + (l.fijo || l.caller) : '';
-  const notas = String(l.notas || '').trim(), ll = String(l.notasLlamada || '').replace(/^[^:\n]+:[ \t]*$/gm, '').trim();
-  const partes = [quien && `<b>Caller</b><span>${esc(quien)}</span>`, ll && `<b>Notas llamada</b><span>${esc(ll)}</span>`,
-    notas && `<b>Notas caller</b><span>${esc(notas)}</span>`].filter(Boolean).join('');
-  return `<button type="button" class="cc${ll || notas ? '' : ' vacio'}" data-ficha="${esc(l.id)}" title="Ver toda la info del lead">${partes || '<span>Sin notas del CC</span>'}<i>Ver ficha completa →</i></button>`;
 }
 function guardarPipe(el) {
   const id = el.closest('tr')?.dataset.id, campo = el.dataset.p;

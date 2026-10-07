@@ -486,6 +486,11 @@ function actualizar(b, u) {
     const antes = sh.getRange(fila, 1, 1, CABECERA.length).getValues()[0];
     const ant = k => antes[COL[k] - 1];
     if ('caller' in c) permitido.caller(c.caller);    // antes de tocar nada
+    // Notas del cold calling: solo las cambia el caller del lead (o el maestro). El closer escribe las suyas en closerNotas.
+    if (!maestro && ('notas' in c || 'notasLlamada' in c)) {
+      const dueno = String('caller' in c ? c.caller : (ant('caller') || ant('fijo') || ''));
+      if (dueno && !mismoNombre(dueno, quien)) throw new Error('Las notas del cold calling solo las cambia su caller (' + dueno + '). Escribe las tuyas en «Notas closer».');
+    }
     // Pipeline: el maestro, o el closer del lead si tiene el acceso activado
     if (CAMPOS_CLOSER.some(k => k in c)) {
       if (!maestro) {
