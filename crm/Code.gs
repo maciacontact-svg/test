@@ -50,7 +50,11 @@ const CONTACTO = ['✅', '❌'];
 const EMBUDO = ['', 'Conversación', 'Oferta llamada'];   // además de Contactado (intentos), Respondió (✅) y Agendado (estado)
 const CIERRAN = ['Agendado', 'Perdido', 'Invalid'];       // estados que quitan la hora de volver a llamar
 // Pipeline de closers
-const ESTADOS_CLOSER = ['Pendiente', 'Reagendado', 'No show', 'Se lo piensa', 'Seguimiento', 'Pagado', 'No cierra', 'Cancelado'];
+const ESTADOS_CLOSER = ['Sin contactar', 'Contactado', 'Respondió', 'Confirma', 'Ghost', 'Asiste', 'Cancela', 'Pagado', 'Seguimiento', 'Reagenda', 'No cierra', 'Plan de acción'];
+const ANTES_LLAMADA = ['', 'Sin contactar', 'Contactado', 'Respondió', 'Confirma'];             // aún no ha tocado la llamada
+const LLAMADA_HECHA = ['Asiste', 'Pagado', 'No cierra', 'Seguimiento', 'Plan de acción', 'Se lo piensa'];
+const NO_SHOW = ['Ghost', 'No show'];
+const ESTADOS_CLOSER_VIEJOS = { 'Pendiente': '', 'Reagendado': 'Reagenda', 'No show': 'Ghost', 'Se lo piensa': 'Seguimiento', 'Cancelado': 'Cancela' };
 const FUENTES_CLOSER = ['SETTING', 'COLD', 'YT', 'IG'];
 const CAMPOS_CLOSER = ['closer', 'closerEstado', 'closerNotas', 'linkLlamada', 'conclusiones', 'diaAgenda', 'fuente', 'confirmada'];
 const CONFIRMADA = ['Sí', 'No'];   // el closer confirma la llamada por WhatsApp (vacío = sin confirmar)
@@ -490,6 +494,9 @@ function actualizar(b, u) {
         const suyo = String(ant('closer') || '') || closerPorDefecto();
         if (!mismoNombre(suyo, quien)) throw new Error('Este lead lo lleva otro closer' + (suyo ? ' (' + suyo + ')' : ''));
       }
+      // estado «Confirma» = llamada confirmada; y al confirmar con el botón, si aún no había llamada, pasa a «Confirma»
+      if (c.closerEstado === 'Confirma' && !('confirmada' in c)) c.confirmada = 'Sí';
+      if (c.confirmada === 'Sí' && !('closerEstado' in c) && ANTES_LLAMADA.indexOf(String(ant('closerEstado') || '')) >= 0) c.closerEstado = 'Confirma';
       // si cambia el día de la agenda, la llamada vuelve a estar sin confirmar
       if ('diaAgenda' in c && !('confirmada' in c)) {
         const nuevo = permitido.diaAgenda(c.diaAgenda), viejo = ant('diaAgenda');
@@ -1487,7 +1494,7 @@ const HOJA_INFORME = 'Informe semanal';
 const INF = [
   ['leads', 'Leads nuevos'], ['buen', '⭐ Buen form'], ['asignados', 'Asignados a caller'], ['contactados', 'Contactados (algún intento)'],
   ['respondieron', 'Respondieron'], ['ofertas', 'Ofertas de llamada'], ['agCaller', 'Agendados por caller'], ['auto', 'Autoagendados'],
-  ['agendas', 'Agendas totales'], ['llamadas', 'Llamadas de closer'], ['noShow', 'No show'], ['pagados', 'Pagados'],
+  ['agendas', 'Agendas totales'], ['llamadas', 'Llamadas de closer'], ['noShow', 'Ghost (no show)'], ['pagados', 'Pagados'],
 ];
 const INF_PCT = [
   ['pContacto', '% contacto (respondieron / asignados)'], ['pLlamadaAgenda', '% llamada → agenda (agendados / respondieron)'],
@@ -1523,9 +1530,9 @@ function metricasSemana(L, desde, hasta) {
     const dA = diaAgendaDe(l);
     if (enPipeline(l) && dA && en(dA.toISOString())) {
       m.llamadas++;
-      if (l.closerEstado === 'No show') m.noShow++;
+      if (NO_SHOW.indexOf(l.closerEstado) >= 0) m.noShow++;
       if (l.closerEstado === 'Pagado') m.pagados++;
-      if (['Pagado', 'No cierra', 'Se lo piensa', 'Seguimiento'].indexOf(l.closerEstado) >= 0) hechas++;
+      if (LLAMADA_HECHA.indexOf(l.closerEstado) >= 0) hechas++;
     }
   });
   const p = (a, b) => b ? Math.round(a / b * 100) : 0;
@@ -1860,6 +1867,13 @@ function configurar() {
   // Fichas repetidas (mismo teléfono) → una sola. Las quitadas quedan copiadas en la pestaña «Duplicados».
   let unidas = 0;
   try { unidas = fusionarDuplicados(); } catch (e) { console.error('Duplicados: ' + e); }
+  // Estados de closer antiguos → los nuevos (Pendiente → vacío = Sin contactar, No show → Ghost…)
+  if (sh.getLastRow() > 1) {
+    const rg = sh.getRange(2, COL.closerEstado, sh.getLastRow() - 1, 1), vs = rg.getValues();
+    let cambia = false;
+    vs.forEach(r => { if (r[0] in ESTADOS_CLOSER_VIEJOS) { r[0] = ESTADOS_CLOSER_VIEJOS[r[0]]; cambia = true; } });
+    if (cambia) rg.setValues(vs);
+  }
 
   ss.setActiveSheet(sh);
   if (unidas) ss.toast(unidas + ' ficha(s) repetida(s) unidas por teléfono (copia en la pestaña «Duplicados»).', 'CRM listo ✅', 20);

@@ -527,9 +527,13 @@ html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%;
 .pill.prop { display: inline-flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #3a3a3a; color: #fff; background-image: none; cursor: default; padding: 0 12px; font-size: 11.5px; letter-spacing: .03em; text-transform: uppercase; }
 .pill.prop.auto { background: #2f6b4f; color: #e2f4e6; text-transform: none; }
 .pill.estado.c-pagado { background-color: #2f6b4f; color: #e2f4e6; }
-.pill.estado.c-no-show, .pill.estado.c-no-cierra, .pill.estado.c-cancelado { background-color: #f8d0cb; color: #a52714; }
+.pill.estado.c-confirma { background-color: #d6efdf; color: #2f6b4f; }
+.pill.estado.c-contactado { background-color: #e6e6e6; color: #333; }
+.pill.estado.c-respondio, .pill.estado.c-reagenda, .pill.estado.c-reagendado { background-color: #cfe2f6; color: #1b4f8a; }
+.pill.estado.c-asiste { background-color: #e4d7f3; color: #5b3a8c; }
+.pill.estado.c-ghost, .pill.estado.c-no-show, .pill.estado.c-cancela, .pill.estado.c-cancelado, .pill.estado.c-no-cierra { background-color: #f8d0cb; color: #a52714; }
 .pill.estado.c-se-lo-piensa, .pill.estado.c-seguimiento { background-color: #fce8b2; color: #6b4e00; }
-.pill.estado.c-reagendado { background-color: #cfe2f6; color: #1b4f8a; }
+.pill.estado.c-plan-de-accion { background-color: #f6c27a; color: #4d2e00; }
 .pipe-kv p + p { margin-top: 6px; white-space: pre-line; }
 @media (max-width: 760px) {
   .leads.pipe { min-width: 0; }

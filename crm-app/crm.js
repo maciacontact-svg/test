@@ -456,7 +456,7 @@ function abrirFicha(id) {
     ${row('Caller', l.autoagenda ? 'Ninguno (autoagendado)' + (S.rol === 'maestro' ? ' · si lo agendó un caller en llamada, cámbialo en la columna Caller' : '') : l.caller + (l.fijo ? ' · 🔒 lo agendó en llamada' : ''))}${row('Estado', l.estado || 'Nuevo')}${row('Notas caller', l.notas)}
     ${bloqueLlamada(l)}
     ${enPipeline(l) ? `<div class="kv pipe-kv"><small>🎯 Pipeline de closer</small><p>${esc([l.closer ? 'Closer: ' + l.closer : 'Sin closer',
-      diaAgendaDe(l) ? 'Llamada: ' + fecha(diaAgendaDe(l).toISOString()) : '', 'Estado: ' + (l.closerEstado || 'Pendiente')].filter(Boolean).join(' · '))}</p>
+      diaAgendaDe(l) ? 'Llamada: ' + fecha(diaAgendaDe(l).toISOString()) : '', 'Estado: ' + (l.closerEstado || 'Sin contactar')].filter(Boolean).join(' · '))}</p>
       ${l.conclusiones ? `<p>${esc(l.conclusiones)}</p>` : ''}${/^https:\/\//.test(l.linkLlamada) ? `<p><a href="${esc(l.linkLlamada)}" target="_blank" rel="noopener">▶ Ver la llamada (Fathom)</a></p>` : ''}</div>` : ''}
     ${row('Canal', CANALES[canalDe(l)])}
     ${row('Origen', (o => o.nombre + (o.etiqueta ? ' · ' + o.etiqueta : '') + (l.setter ? ' · setter ' + l.setter : ''))(origenDe(l)))}`;
@@ -744,7 +744,7 @@ function pintarKpisVista() {
 const INF = [
   ['leads', 'Leads nuevos', 1], ['buen', '⭐ Buen form', 1], ['asignados', 'Asignados a caller'], ['contactados', 'Contactados (algún intento)'],
   ['respondieron', 'Respondieron'], ['ofertas', 'Ofertas de llamada'], ['agCaller', 'Agendados por caller'], ['auto', 'Autoagendados', 1],
-  ['agendas', 'Agendas totales', 1], ['llamadas', 'Llamadas de closer', 1], ['noShow', 'No show', 1], ['pagados', 'Pagados', 1],
+  ['agendas', 'Agendas totales', 1], ['llamadas', 'Llamadas de closer', 1], ['noShow', 'Ghost (no show)', 1], ['pagados', 'Pagados', 1],
 ];
 const INF_PCT = [
   ['pContacto', '% contacto (respondieron / asignados)'], ['pLlamadaAgenda', '% llamada → agenda (agendados / respondieron)'],
@@ -769,9 +769,9 @@ function metricasSemana(L, desde, hasta) {
     const dA = diaAgendaDe(l);
     if (enPipeline(l) && dA && en(dA.toISOString())) {
       m.llamadas++;
-      if (l.closerEstado === 'No show') m.noShow++;
+      if (NO_SHOW.includes(l.closerEstado)) m.noShow++;
       if (l.closerEstado === 'Pagado') m.pagados++;
-      if (['Pagado', 'No cierra', 'Se lo piensa', 'Seguimiento'].includes(l.closerEstado)) hechas++;
+      if (LLAMADA_HECHA.includes(l.closerEstado)) hechas++;
     }
   });
   m.pContacto = pct(m.respondieron, m.asignados);
@@ -902,7 +902,10 @@ $('iList').addEventListener('change', async e => {
 // Los agendados (por un caller o él solo) salen de «Leads» y llegan aquí. El closer rellena estado, notas, link de Fathom
 // y conclusiones (Fathom las rellena solo si está conectado: api/fathom.js). Cada closer ve los suyos; el maestro, todos.
 let pVista = 'proximas', pQ = '', pEst = '', pClo = '', pendientePipe = false;
-const FINALES = ['Pagado', 'No cierra', 'Cancelado'];
+const FINALES = ['Pagado', 'No cierra', 'Cancela', 'Cancelado'];
+const ANTES_LLAMADA = ['', 'Sin contactar', 'Contactado', 'Respondió', 'Confirma', 'Pendiente'];   // aún no ha tocado la llamada
+const LLAMADA_HECHA = ['Asiste', 'Pagado', 'No cierra', 'Seguimiento', 'Plan de acción', 'Se lo piensa'];
+const NO_SHOW = ['Ghost', 'No show'];
 const COLOR_FUENTE = { SETTING: 'setting', COLD: 'cold', YT: 'yt', IG: 'ig' };
 // Día de la agenda: el de Calendly; si es un lead antiguo, se saca de «Llamada 03/10 18:00» (autoagendado o notas)
 function diaAgendaDe(l) {
@@ -944,7 +947,7 @@ function pintarPipe() {
       '<p class="k-note">Añade personas en la pestaña Ajustes del Sheet (columna A).</p>';
   }
   const selE = $('pEstado');
-  if (!selE.dataset.ok) { selE.innerHTML = '<option value="">Todos los estados</option><option value="__sin">Sin estado</option>' + (P.estados || []).map(e => `<option>${esc(e)}</option>`).join(''); selE.dataset.ok = 1; }
+  if (!selE.dataset.ok) { selE.innerHTML = '<option value="">Todos los estados</option>' + (P.estados || []).map(e => `<option>${esc(e)}</option>`).join(''); selE.dataset.ok = 1; }
   $('pCloser').hidden = !m;
   if (m) { $('pCloser').innerHTML = '<option value="">Todos los closers</option><option value="__sin">Sin closer</option>' + (P.closers || []).map(c => `<option${c === pClo ? ' selected' : ''}>${esc(c)}</option>`).join(''); $('pCloser').value = pClo; }
 
@@ -953,7 +956,7 @@ function pintarPipe() {
   const todos = pipeLeads();
   const esHoy = l => { const d = diaAgendaDe(l); return d && d >= hoy0 && d < manana; };
   const proxima = l => { const d = diaAgendaDe(l); return !FINALES.includes(l.closerEstado) && (!d || d >= hoy0); };
-  const pend = l => { const d = diaAgendaDe(l); return (!l.closerEstado || l.closerEstado === 'Pendiente') && d && d < Date.now(); };
+  const pend = l => { const d = diaAgendaDe(l); return ANTES_LLAMADA.includes(l.closerEstado || '') && d && d < Date.now(); };
   $('nProx').textContent = todos.filter(proxima).length || '';
   $('nHoyP').textContent = todos.filter(esHoy).length || '';
   $('nPend').textContent = todos.filter(pend).length || '';
@@ -962,20 +965,20 @@ function pintarPipe() {
   const t = (l, sin) => { const d = diaAgendaDe(l); return d ? +d : sin; };
   const ls = todos
     .filter(l => pVista === 'todas' || (pVista === 'hoy' ? esHoy(l) : pVista === 'pend' ? pend(l) : proxima(l)))
-    .filter(l => !pEst || (pEst === '__sin' ? !l.closerEstado : l.closerEstado === pEst))
+    .filter(l => !pEst || (pEst === 'Sin contactar' ? ['', 'Sin contactar', 'Pendiente'].includes(l.closerEstado || '') : l.closerEstado === pEst))
     .filter(l => !qq || n([l.nombre, l.correo, l.telefono, l.id].join(' ')).includes(qq))
     .sort((a, b) => pVista === 'todas' ? t(b, 0) - t(a, 0) : t(a, 9e15) - t(b, 9e15));   // próximas: la más cercana arriba; todas: la más reciente
 
   // resumen
-  const hechas = todos.filter(l => ['Pagado', 'No cierra', 'Se lo piensa', 'Seguimiento'].includes(l.closerEstado)).length;
-  const pag = todos.filter(l => l.closerEstado === 'Pagado').length, ns = todos.filter(l => l.closerEstado === 'No show').length;
+  const hechas = todos.filter(l => LLAMADA_HECHA.includes(l.closerEstado)).length;
+  const pag = todos.filter(l => l.closerEstado === 'Pagado').length, ns = todos.filter(l => NO_SHOW.includes(l.closerEstado)).length;
   const k = (label, val, sub, cls = '') => `<div class="kpi ${cls}"><small>${label}</small><b>${val}</b><span>${sub}</span></div>`;
   const sinConf = todos.filter(l => proxima(l) && diaAgendaDe(l) && l.confirmada !== 'Sí').length;
   $('pKpis').innerHTML = k('Hoy', todos.filter(esHoy).length, 'Llamadas agendadas para hoy', 'hot') +
     k('Próximas', todos.filter(proxima).length, sinConf ? `${sinConf} sin confirmar por WhatsApp` : 'Todas confirmadas') +
     k('Sin estado', todos.filter(pend).length, 'Ya pasaron: rellena cómo fue') +
     k('Pagados', pag, `${pct(pag, hechas)} % de las llamadas hechas`) +
-    k('No show', ns, `${pct(ns, ns + hechas)} % de las que tocaban`) +
+    k('Ghost', ns, `${pct(ns, ns + hechas)} % de las que tocaban`) +
     k('Total agendados', todos.length, 'En este pipeline');
 
   $('pRows').innerHTML = ls.map(filaPipe).join('');
@@ -1003,7 +1006,7 @@ function filaPipe(l) {
     <td data-label="Día de la agenda" class="dia"><input type="datetime-local" data-p="diaAgenda" value="${localDT(d)}"${dis}>${cuando}${conf}</td>
     <td data-label="UTM source">${sel('fuente', D.pipeline.fuentes || [], fu, '—', 'fuente f-' + (COLOR_FUENTE[fu] || 'x'))}${!l.fuente && fu ? '<small class="auto-tag">auto</small>' : ''}</td>
     <td data-label="Propietario">${prop}</td>
-    <td data-label="Estado">${sel('closerEstado', D.pipeline.estados || [], l.closerEstado, 'Pendiente', 'estado c-' + slug(l.closerEstado || 'pendiente'))}</td>
+    <td data-label="Estado">${sel('closerEstado', (D.pipeline.estados || []).filter(e => e !== 'Sin contactar'), l.closerEstado === 'Sin contactar' ? '' : l.closerEstado, 'Sin contactar', 'estado c-' + slug(l.closerEstado || 'sin contactar'))}</td>
     <td data-label="Closer">${S.rol === 'maestro' || ed ? sel('closer', D.pipeline.closers || [], l.closer, '— Sin closer', 'closer') : `<span class="pill prop">${esc(l.closer || '—')}</span>`}</td>
     <td data-label="Notas" class="notes"><textarea data-p="closerNotas" rows="1" placeholder="Notas…"${dis}>${esc(l.closerNotas)}</textarea></td>
     <td data-label="Link de llamada" class="link-ll"><input type="url" data-p="linkLlamada" value="${esc(l.linkLlamada)}" placeholder="https://fathom.video/…"${dis}>${/^https:\/\//.test(l.linkLlamada) ? `<a href="${esc(l.linkLlamada)}" target="_blank" rel="noopener">Abrir ↗</a>` : ''}</td>
@@ -1508,7 +1511,7 @@ function demoApi(action, extra) {
         embudo: ['', '', 'Conversación', '', 'Conversación', '', 'Oferta llamada', 'Oferta llamada', 'Conversación'][i],
         rellamar: i === 4 ? min(5) : i === 6 ? new Date(Date.now() + 150 * 60000).toISOString() : '',
         notasLlamada: i === 2 ? 'Situación: trabaja en hostelería, 0 experiencia en YouTube\nTemporalidad: quiere empezar este mes\nObjetivo / visión: ingreso extra en 6 meses y dejar turnos de noche\nPuente: le falta método y constancia\nTiempo y dinero: 1 h al día · 200-400 €/mes\nOferta: le encaja, lo habla con su pareja' : '',
-        closer: [3, 7].includes(i) ? 'Mario.e' : '', closerEstado: i === 7 ? 'Se lo piensa' : '',
+        closer: [3, 7].includes(i) ? 'Mario.e' : '', closerEstado: i === 7 ? 'Seguimiento' : i === 3 ? 'Confirma' : '',
         closerNotas: i === 7 ? 'Muy interesado, duda por el precio' : '', linkLlamada: i === 7 ? 'https://fathom.video/share/demo' : '',
         conclusiones: i === 7 ? '🤖 Fathom: Quiere empezar en noviembre.\nLe preocupa el tiempo que necesita a la semana.\nSe lo piensa: rellamar el viernes.' : '',
         diaAgenda: i === 3 ? new Date(Date.now() + 26 * 3600e3).toISOString() : i === 7 ? min(1440) : '', fuente: '', confirmada: i === 3 ? 'Sí' : '',
@@ -1516,7 +1519,7 @@ function demoApi(action, extra) {
       })),
     };
   }
-  if (!window.__demo.pipeline) window.__demo.pipeline = { estados: ['Pendiente', 'Reagendado', 'No show', 'Se lo piensa', 'Seguimiento', 'Pagado', 'No cierra', 'Cancelado'],
+  if (!window.__demo.pipeline) window.__demo.pipeline = { estados: ['Sin contactar', 'Contactado', 'Respondió', 'Confirma', 'Ghost', 'Asiste', 'Cancela', 'Pagado', 'Seguimiento', 'Reagenda', 'No cierra', 'Plan de acción'],
     fuentes: ['SETTING', 'COLD', 'YT', 'IG'], closers: ['Mario.e'], acceso: [{ nombre: 'Mario.e', on: true }], porDefecto: 'Mario.e' };
   if (!window.__demo.setting) {
     const d = i => { const x = new Date(); x.setDate(x.getDate() - i); return diaKey(x); };
@@ -1587,6 +1590,8 @@ function demoApi(action, extra) {
     if (!esMaestro && (l.fijo && 'caller' in c && c.caller !== l.caller)) return Promise.reject(new Error(`Este lead lo agendó ${l.fijo} en llamada: solo Mario puede cambiar el caller`));
     if ('autoagenda' in c) { if (c.autoagenda) Object.assign(c, { autoagenda: 'Marcado a mano', caller: '', fijo: '', estado: 'Agendado' }); else if (c.caller) Object.assign(c, { fijo: c.caller, estado: 'Agendado' }); }
     else if (esMaestro && 'caller' in c && l.fijo) c.fijo = c.caller;
+    if (c.closerEstado === 'Confirma' && !('confirmada' in c)) c.confirmada = 'Sí';
+    if (c.confirmada === 'Sí' && !('closerEstado' in c) && ANTES_LLAMADA.includes(l.closerEstado || '')) c.closerEstado = 'Confirma';
     if ('diaAgenda' in c && !('confirmada' in c) && c.diaAgenda !== l.diaAgenda) c.confirmada = '';
     Object.assign(l, c);
     return new Promise(r => setTimeout(() => r({ ok: true, lead: { ...l } }), 250));
