@@ -87,9 +87,9 @@ const RECURSOS = [
   { fase: 6, tipo: 'enlace', titulo: 'Prompt: analizar canales y sacar ideas ganadoras',
     desc: 'Saca los patrones virales de un canal de referencia y te propone un ranking de ideas nuevas para tu nicho.',
     url: 'https://docs.google.com/document/d/1XubNFRSNKhCLGNzPSqYxBeVrFChLtSTVNcMbwbYH2IE/edit?usp=sharing', boton: 'Abrir prompt' },
-  { fase: 6, tipo: 'enlace', titulo: 'Prompt: crear guiones que retienen',
-    desc: 'Escribe guiones nuevos con los patrones virales del nicho, pensados para maximizar la retención.',
-    url: 'https://docs.google.com/document/d/13dCaCNTWy9zPHMQKyNnDl8sI9sdgfYH6xYnqFl0hbbU/edit?usp=sharing', boton: 'Abrir prompt' },
+  { fase: 6, tipo: 'enlace', titulo: 'Prompt: escribir guiones completos listos para voz',
+    desc: 'Le das nicho e idea (y si quieres un outlier de referencia) y te devuelve títulos, hooks y el guion entero palabra por palabra.',
+    url: '/prompt-guiones', boton: 'Abrir prompt' },
 
   // ---------- 7 · IAs por tarea ----------
   { fase: 7, tipo: 'herramientas', titulo: 'IAs para analizar canales y buscar nichos',

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt de guiones · System Academy</title>
+<meta name="description" content="Prompt para escribir guiones completos de YouTube faceless, listos para poner voz.">
+<link rel="icon" href="img/logo/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f3f3f3; --ink: #111; --ink-2: #3a3a3a; --muted: #707070; --hair: #e3e3e3; --card: #fafafa; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Poppins", system-ui, sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; line-height: 1.65; font-size: 15px; }
+  em { font-style: italic; font-weight: 500; }
+  a { color: inherit; text-underline-offset: 3px; }
+  .wrap { width: min(820px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 64px; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; margin-bottom: 36px; }
+  h1 { font-size: clamp(30px, 6vw, 44px); line-height: 1.1; letter-spacing: -0.03em; font-weight: 600; margin-bottom: 10px; }
+  .sub { color: var(--muted); margin-bottom: 28px; }
+  .card { background: var(--card); border-radius: 22px; padding: 26px 28px; box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 24px 48px -40px rgba(0,0,0,.4); margin-bottom: 14px; }
+  h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 10px; }
+  p { color: var(--ink-2); }
+  p + p, p + ol, ol + p { margin-top: 10px; }
+  ol { padding-left: 20px; color: var(--ink-2); }
+  li + li { margin-top: 6px; }
+  b { color: var(--ink); font-weight: 600; }
+  .bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .btn { font: inherit; font-weight: 600; font-size: 14px; border: 0; border-radius: 999px; padding: 12px 22px; cursor: pointer; background: var(--ink); color: #fff; text-decoration: none; }
+  .btn.alt { background: #fff; color: var(--ink); box-shadow: 0 0 0 1px var(--hair); }
+  .ok { font-size: 13px; color: var(--muted); }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.6; color: var(--ink); background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 0 0 1px var(--hair); max-height: 70vh; overflow: auto; }
+  .foot { margin-top: 30px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #a8a8a8; }
+  @media (max-width: 560px) { .card { padding: 20px 18px; } pre { padding: 16px; font-size: 12.5px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a href="/recursos" class="logo" aria-label="Volver a la biblioteca">
+    <svg viewBox="0 0 100 100" width="36" height="36" aria-hidden="true">
+      <defs><mask id="saCut"><rect width="100" height="100" fill="#fff"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#000" stroke-width="5.5" stroke-linecap="round"/></mask></defs>
+      <rect width="100" height="100" rx="26" fill="#111"/>
+      <path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round" mask="url(#saCut)"/>
+    </svg>
+    System Academy
+  </a>
+
+  <h1>Prompt de <em>guiones</em></h1>
+  <p class="sub">Te devuelve el guion completo, palabra por palabra, listo para poner voz. Sin rodeos ni análisis eternos.</p>
+
+  <section class="card">
+    <h2>Cómo usarlo</h2>
+    <ol>
+      <li>Pulsa <b>Copiar prompt</b> y pégalo en tu IA de texto.</li>
+      <li>Rellena lo que está entre <b>[corchetes]</b>. Lo mínimo: nicho, idioma y la idea o título del vídeo.</li>
+      <li>Si tienes un <b>vídeo outlier</b> de referencia (el que sacaste con el prompt de análisis), pega su transcripción: el guion copiará su estructura, no su contenido.</li>
+      <li>Para la siguiente parte o el siguiente vídeo, escribe <b>«siguiente»</b> o <b>«otro guion: [idea]»</b> en el mismo chat.</li>
+    </ol>
+  </section>
+
+  <div class="bar">
+    <button class="btn" id="copiar" type="button">Copiar prompt</button>
+    <a class="btn alt" href="/recursos">← Volver a la biblioteca</a>
+    <span class="ok" id="ok" aria-live="polite"></span>
+  </div>
+
+<pre id="prompt"># ROL
+Eres un guionista profesional de YouTube faceless (vídeos con voz en off, sin cara a cámara) especializado en canales de alto rendimiento. Tu trabajo NO es analizar ni dar consejos: es ENTREGAR GUIONES COMPLETOS, palabra por palabra, listos para pasar a voz con IA y editar. Dominas el análisis de lo que retiene (hooks, bucles abiertos, ritmo, giros) y lo aplicas directamente al escribir.
+
+# DATOS DEL VÍDEO
+- Nicho: [TU NICHO]
+- Idioma del guion: [español / inglés / alemán…]
+- Idea o título del vídeo: [EL TEMA. Si no lo tienes, escribe «propónmelo» y elige tú la mejor idea del nicho]
+- Duración objetivo: [ej. 10 minutos]
+- Público: [edad, intereses, nivel de conocimiento]
+- Tono de voz: [ej. narrativo intenso / documental serio / cercano y con humor / misterio]
+- Objetivo del canal: [retención / suscriptores / autoridad]
+
+# REFERENCIA (opcional, muy recomendable)
+Transcripción de un vídeo outlier del nicho o guiones antiguos del canal (con título y views si los tienes):
+&lt;&lt;&lt;
+[PEGA AQUÍ LA TRANSCRIPCIÓN O DÉJALO VACÍO]
+&gt;&gt;&gt;
+
+# QUÉ TIENES QUE ENTREGAR (en este orden, todo en una sola respuesta)
+
+## 1. Patrón de la referencia (máximo 6 líneas)
+Solo si hay referencia: qué promete el hook, cómo está estructurado, dónde mete los giros y qué recurso repite. Nada más. Úsalo como plantilla de estructura y ritmo, NUNCA copies frases, datos ni la historia.
+Si no hay referencia, sáltate este punto.
+
+## 2. Títulos y miniatura
+- 3 títulos estilo YouTube (curiosidad concreta, sin clickbait vacío). Marca el mejor.
+- 1 idea de miniatura: imagen principal + texto de máximo 3 palabras (que no repita el título).
+
+## 3. Hooks
+3 hooks alternativos para los primeros 15 segundos, cada uno con un enfoque distinto (pregunta imposible, dato chocante, escena en mitad de la acción). Elige el más fuerte, explica por qué en una línea y úsalo en el guion.
+
+## 4. GUION COMPLETO
+- Longitud: unas 150 palabras por minuto de duración objetivo (10 min ≈ 1.500 palabras). Cumple la longitud: no resumas.
+- Escrito para la VOZ: frases cortas, fáciles de leer en voz alta, sin acotaciones dentro del texto que se narra.
+- Dividido en bloques con su título y timestamp aproximado: [0:00 HOOK] · [0:15 PROMESA] · [BLOQUE 1…] · … · [CIERRE].
+- En los primeros 30 segundos: hook + promesa clara de lo que va a ver + por qué quedarse hasta el final.
+- Bucles abiertos marcados con [LOOP] y su resolución con [CIERRE LOOP]. Siempre debe haber al menos un loop abierto hasta el final.
+- Un re-hook cada 60-90 segundos (giro, dato inesperado, pregunta, cambio de escena) para frenar las caídas de retención.
+- Notas de edición y visuales entre corchetes en una línea aparte: [VISUAL: …] [MÚSICA: …] [SFX: …]. Pensadas para imágenes, B-roll o animación (no hay nadie en cámara).
+- CTA de suscripción integrado de forma natural a mitad del vídeo, ligado al tema, nunca un «suscríbete» pegado al final.
+- Cierre que resuelve el loop principal y deja con ganas del siguiente vídeo.
+
+## 5. Revisión rápida
+Comprueba el guion contra esta lista y corrige antes de entregarlo (no me enseñes la lista, entrega ya la versión corregida):
+- ¿El hook engancha en menos de 10 segundos?
+- ¿Hay algún bloque de relleno, repetición o explicación innecesaria? Quítalo o reescríbelo.
+- ¿Hay frases genéricas de IA? Fuera.
+- ¿Cumple la longitud?
+Al final pon solo: número de palabras, duración estimada y los 2 puntos más fuertes del guion.
+
+# REGLAS
+- Escribe directamente. No me hagas preguntas antes de empezar: si falta algún dato, asume lo más lógico para el nicho, dilo en una línea y sigue.
+- Contenido 100 % original: la referencia es para la estructura, nunca para copiar.
+- Prohibidas las frases de IA: «en el mundo de hoy», «sumérgete en», «sin más preámbulos», «en conclusión», «es importante destacar», «descubre», «fascinante viaje».
+- Nada de inventar datos que parezcan reales: si das una cifra o un hecho, que sea correcto; si no estás seguro, márcalo con [VERIFICAR].
+- Sé específico: nombres, lugares, cifras y escenas concretas en vez de generalidades.
+- Si el guion es muy largo y no cabe en una respuesta, entrega la primera parte entera y termina con «Escribe SIGUIENTE para continuar». Nunca lo cortes a mitad de bloque.
+- Cuando te diga «otro guion: [idea]», repite todo el proceso con la nueva idea, manteniendo el nicho, el tono y el patrón.
+
+Empieza ya.</pre>
+
+  <p class="foot">System Academy</p>
+</main>
+<script>
+  document.getElementById('copiar').addEventListener('click', async () => {
+    const txt = document.getElementById('prompt').innerText;
+    const ok = document.getElementById('ok');
+    try { await navigator.clipboard.writeText(txt); }
+    catch (e) {
+      const r = document.createRange(); r.selectNodeContents(document.getElementById('prompt'));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy');
+    }
+    ok.textContent = '✓ Copiado. Pégalo en tu IA y rellena los corchetes.';
+    setTimeout(() => { ok.textContent = ''; }, 4000);
+  });
+</script>
+</body>
+</html>
