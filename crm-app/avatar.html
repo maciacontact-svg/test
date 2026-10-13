@@ -160,6 +160,85 @@ h3 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.
 .ruta p { font-size: 14px; color: var(--ink-2); margin-top: 6px; }
 .ruta code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; background: var(--bg); padding: 1px 6px; border-radius: 6px; }
 
+/* Por qué te compran */
+.porque { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.pilar { display: flex; flex-direction: column; gap: 12px; }
+.pilar .ico { font-size: 28px; line-height: 1; }
+.pilar .n { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.pilar h3 { font-size: 19px; }
+.pilar p, .pilar li { font-size: 13.5px; color: var(--ink-2); }
+.pilar ul { padding-left: 18px; display: grid; gap: 3px; }
+.pilar .pp { display: grid; gap: 6px; }
+.pilar .pp div { background: var(--bg); border-radius: 10px; padding: 8px 11px; font-size: 13px; color: var(--ink-2); }
+.pilar .pp b { color: var(--ink); }
+.pilar .fases { font-size: 12.5px; color: var(--muted); }
+.pilar .control { font-size: 13.5px; font-style: italic; font-weight: 500; color: var(--ink); border-top: 1px solid var(--line); padding-top: 10px; }
+.editable { min-height: 60px; font-size: 13.5px; color: var(--ink); background: #fafafa; border: 1px dashed var(--line-soft); border-radius: 10px; padding: 9px 11px; white-space: pre-wrap; outline: none; }
+.editable:focus { border-style: solid; border-color: var(--ink); background: #fff; }
+.editable:empty::before { content: attr(data-ph); color: #9a9a9a; }
+.control-pieza { margin-top: 14px; padding: 14px 18px; font-size: 14.5px; }
+.control-pieza b { font-weight: 600; }
+
+/* Objeciones */
+.obj-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.obj-col { display: flex; flex-direction: column; gap: 10px; }
+.obj-col > .tag { align-self: flex-start; }
+.obj { border-left: 4px solid var(--a); padding: 14px 16px; display: grid; gap: 8px; position: relative; }
+.obj.B { border-left-color: var(--b); }
+.obj .q { font-size: 15px; font-weight: 600; font-style: italic; outline: none; padding-right: 26px; }
+.obj .q:empty::before { content: "«Escribe la objeción tal cual la dicen»"; color: #9a9a9a; }
+.obj label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.obj .editable { min-height: 38px; }
+.obj .borrar { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 50%; color: var(--muted); font-size: 15px; }
+.obj .borrar:hover { background: var(--bg); color: #b3261e; }
+.boton { align-self: flex-start; background: var(--ink); color: #fff; border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 500; }
+.boton.sec { background: #fff; color: var(--ink); border: 1px solid var(--line-soft); }
+.guardado { font-size: 12px; color: var(--muted); }
+
+/* Calendario */
+.cal-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 12px; }
+.cal-barra h3 { font-size: 22px; min-width: 190px; text-transform: capitalize; }
+.cal-barra .flecha { width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 1px solid var(--line-soft); font-size: 16px; }
+.cal-barra .sep { flex: 1; }
+.cal-resumen { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); margin-bottom: 12px; }
+.cal-resumen b { color: var(--ink); }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cal .cab { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 0 4px 2px; }
+.dia-c { background: #fff; border-radius: 12px; min-height: 128px; padding: 8px; display: flex; flex-direction: column; gap: 5px; text-align: left; border: 1px solid transparent; box-shadow: 0 1px 0 rgba(0,0,0,.04); }
+.dia-c:hover { border-color: var(--line-soft); }
+.dia-c.fuera { visibility: hidden; }
+.dia-c.hoy { border-color: var(--ink); }
+.dia-c .num { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: var(--muted); }
+.dia-c .num .nd { display: none; }
+.dia-c .chips-d { display: flex; flex-wrap: wrap; gap: 3px; }
+.pill { font-size: 10.5px; font-weight: 600; letter-spacing: .03em; padding: 2px 7px; border-radius: 999px; background: var(--bg); color: var(--ink); white-space: nowrap; }
+.pill.TOFU { background: #111; color: #fff; }
+.pill.MOFU { background: #6b6b6b; color: #fff; }
+.pill.BOFU { background: #fff; color: #111; box-shadow: inset 0 0 0 1.5px #111; }
+.dia-c .msg-d { font-size: 12px; line-height: 1.35; color: var(--ink); font-weight: 500; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.dia-c .hook-d { font-size: 11.5px; line-height: 1.35; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dia-c .vacio-d { font-size: 12px; color: #b5b5b5; margin: auto 0; text-align: center; }
+.dia-c .est { font-size: 10.5px; color: var(--muted); margin-top: auto; }
+.dia-c.publicado { background: #fafafa; }
+.dia-c.publicado .msg-d { color: var(--muted); }
+
+dialog.ed { border: 0; border-radius: 20px; padding: 0; width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); box-shadow: 0 30px 80px -20px rgba(0,0,0,.45); }
+dialog.ed::backdrop { background: rgba(17,17,17,.35); }
+.ed form { padding: 20px; display: grid; gap: 12px; }
+.ed h3 { font-size: 19px; }
+.ed .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ed label { display: grid; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ed select, .ed input, .ed textarea { font: inherit; font-size: 14px; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--ink); padding: 9px 11px; border: 1px solid var(--line-soft); border-radius: 10px; background: #fafafa; width: 100%; }
+.ed textarea { resize: vertical; min-height: 64px; }
+.ed .mensaje textarea { min-height: 84px; font-weight: 500; background: #fff; border: 1.5px solid var(--ink); }
+.ed .pista { font-size: 12.5px; color: var(--ink-2); background: var(--bg); border-radius: 10px; padding: 9px 11px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.ed .pista b { font-weight: 600; }
+.ed .sug { display: flex; flex-wrap: wrap; gap: 5px; }
+.ed .sug button { font-size: 12px; background: var(--bg); border-radius: 999px; padding: 4px 10px; text-align: left; }
+.ed .sug button:hover { background: #e6e6e6; }
+.ed .acc { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.ed .acc .izq { margin-right: auto; color: #b3261e; font-size: 13px; }
+
 footer { font-size: 12px; color: var(--muted); padding: 40px 0 50px; }
 
 @media (max-width: 860px) {
@@ -167,6 +246,7 @@ footer { font-size: 12px; color: var(--muted); padding: 40px 0 50px; }
   .viaje { grid-template-columns: 1fr; }
   .viaje > div { border-right: 0; border-bottom: 1px solid var(--line); }
   .fila { grid-template-columns: 1fr; }
+  .porque, .obj-cols { grid-template-columns: 1fr; }
   .semana { grid-template-columns: repeat(4, 1fr); }
   .tabla thead { display: none; }
   .tabla, .tabla tbody, .tabla tr, .tabla th, .tabla td { display: block; width: auto; }
@@ -175,9 +255,19 @@ footer { font-size: 12px; color: var(--muted); padding: 40px 0 50px; }
   .tabla td::before { content: attr(data-l); display: block; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   .tabla tr { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
 }
+@media (max-width: 720px) {
+  .cal { grid-template-columns: 1fr; }
+  .cal .cab, .dia-c.fuera { display: none; }
+  .cal-barra h3 { min-width: 0; flex: 1; font-size: 20px; }
+  .cal-barra .sep { flex-basis: 100%; height: 0; }
+  .cal-barra .boton { padding: 7px 12px; font-size: 12.5px; }
+  .dia-c { min-height: 0; }
+  .dia-c .num .nd { display: inline; }
+  .ed .g2 { grid-template-columns: 1fr; }
+}
 @media print {
   body { background: #fff; }
-  .top .salir, .filtros, .indice { display: none; }
+  .top .salir, .filtros, .indice, .cal-barra .boton, .cal-barra .flecha, .obj .borrar, [data-nueva] { display: none; }
   .card { box-shadow: none; border: 1px solid var(--line); }
   .fase, .perfil, .celda { break-inside: avoid; }
 }
@@ -214,10 +304,13 @@ footer { font-size: 12px; color: var(--muted); padding: 40px 0 50px; }
   </p>
   <nav class="indice">
     <a href="#perfiles">Los 2 perfiles</a>
+    <a href="#porque">Por qué te compran</a>
     <a href="#viaje">Las 3 fases</a>
     <a href="#mapa">Mapa de contenido</a>
     <a href="#mensaje">Mensaje correcto</a>
+    <a href="#objeciones">Objeciones</a>
     <a href="#semana">Semana tipo</a>
+    <a href="#calendario">📅 Calendario</a>
     <a href="#ruta">A dónde lleva cada pieza</a>
   </nav>
 
@@ -279,6 +372,64 @@ footer { font-size: 12px; color: var(--muted); padding: 40px 0 50px; }
     </article>
   </div>
 
+  <h2 id="porque">¿Por qué te compra una persona?</h2>
+  <p class="lead" style="padding-top:0;margin-bottom:14px">Por <b>tres razones</b>, y hacen falta las tres. Si le caes bien pero no cree que puedas llevarle, no compra. Si cree que puedes pero no le gusta cómo está presentado, se va a otra academia. Cada pieza del calendario debería <em>sumar en una</em>.</p>
+  <div class="porque">
+    <article class="card pilar">
+      <span class="ico">💛</span>
+      <div><div class="n">Razón 1 · Afinidad</div><h3>Porque le <em>caes bien</em></h3></div>
+      <p>La gente compra a personas. Antes de confiar en el método, confía en quien lo cuenta: que sea alguien como él, honesto y que diga lo que piensa.</p>
+      <ul>
+        <li>Cara a cámara de Mario y Aleix, con opiniones propias.</li>
+        <li>Vuestra historia real: de dónde venís, qué os salió mal.</li>
+        <li>Detrás de cámaras, día a día, humor.</li>
+        <li>Responder comentarios y DMs con nombre propio.</li>
+      </ul>
+      <div class="pp">
+        <div><b>Perfil A:</b> «es como yo, también estaba harto de su curro».</div>
+        <div><b>Perfil B:</b> «este no me vende humo, dice lo que no funciona».</div>
+      </div>
+      <p class="fases">Sobre todo en TOFU e historias.</p>
+      <div class="editable" contenteditable="plaintext-only" data-k="nota-afinidad" data-ph="Vuestras notas: anécdotas, opiniones, temas personales que podéis contar…"></div>
+    </article>
+    <article class="card pilar">
+      <span class="ico">🎯</span>
+      <div><div class="n">Razón 2 · Capacidad</div><h3>Porque cree que puedes llevarle <em>de A a B</em></h3></div>
+      <p>Tiene que ver claro dónde está (A), dónde quiere estar (B) y que vosotros tenéis el camino. Se gana enseñando, no diciendo.</p>
+      <ul>
+        <li>El método en pantalla: nicho, outliers, guion, métricas.</li>
+        <li>Vuestros resultados reales, con captura.</li>
+        <li>Casos de alumnos reales (con permiso): de dónde venían y dónde están.</li>
+        <li>Plazos honestos y qué se mide antes del dinero.</li>
+      </ul>
+      <div class="pp">
+        <div><b>Perfil A:</b> «alguien sin experiencia lo ha hecho siguiendo esto».</div>
+        <div><b>Perfil B:</b> «saben más que yo y me pueden decir qué falla en mi canal».</div>
+      </div>
+      <p class="fases">Sobre todo en MOFU y BOFU.</p>
+      <div class="editable" contenteditable="plaintext-only" data-k="nota-capacidad" data-ph="Vuestras notas: pruebas que tenéis, casos que podéis contar, resultados con captura…"></div>
+    </article>
+    <article class="card pilar">
+      <span class="ico">🍎</span>
+      <div><div class="n">Razón 3 · Empaquetado</div><h3>Porque le encanta <em>cómo está presentado</em></h3></div>
+      <p>Psicología Apple: no vende especificaciones, vende una experiencia simple, bonita y coherente. El mismo contenido bien empaquetado vale más.</p>
+      <ul>
+        <li>Nombre propio para el método y sus fases.</li>
+        <li>Una promesa clara en una frase. Menos es más.</li>
+        <li>Marca constante: gris, negro, Poppins, el logo. En todo.</li>
+        <li>Entregables cuidados: biblioteca, guía, portadas de Skool, bienvenida.</li>
+        <li>Experiencia desde el primer DM hasta la primera semana dentro.</li>
+      </ul>
+      <div class="pp">
+        <div><b>Perfil A:</b> «se ve fácil, son pasos claros».</div>
+        <div><b>Perfil B:</b> «esto es profesional, no es un curso más».</div>
+      </div>
+      <p class="fases">En todas las fases; pesa más en BOFU.</p>
+      <div class="editable" contenteditable="plaintext-only" data-k="nota-empaquetado" data-ph="Vuestras notas: nombre del método, qué mejorar del empaquetado…"></div>
+    </article>
+  </div>
+  <p class="card control-pieza">Pregunta de control para cada pieza: <b>¿hace que le caiga mejor 💛, que crea más que puedo llevarle 🎯 o que desee más cómo lo ofrezco 🍎?</b> Si no hace ninguna de las tres, no se publica.</p>
+
   <h2 id="viaje">Las 3 fases del viaje</h2>
   <div class="viaje">
     <div><span class="f">TOFU · DESCUBRIMIENTO</span><h4>Que pare y piense «esto va de mí»</h4><p>Audiencia fría. Mucha gente, poca intención. Ganas atención y curiosidad.</p><p class="pensa">«¿Esto existe? ¿Y yo podría?»</p><div class="barra"></div></div>
@@ -308,6 +459,13 @@ footer { font-size: 12px; color: var(--muted); padding: 40px 0 50px; }
     </tbody>
   </table>
   <p class="nota">Solo <b>NICHOS</b> está confirmada en ManyChat. SISTEMA, NICHO, GUION y CANAL son propuestas: confirmadlas antes de publicar.</p>
+
+  <h2 id="objeciones">Objeciones y cómo rebatirlas</h2>
+  <p class="lead" style="padding-top:0;margin-bottom:14px">Cada objeción es un vídeo de MOFU. Escribidla <b>tal cual la dicen</b> en llamada, qué hay debajo y cómo darle la vuelta. Todo se puede editar: haced clic en el texto. <span class="guardado" id="objGuardado"></span></p>
+  <div class="obj-cols">
+    <div class="obj-col" id="objA"></div>
+    <div class="obj-col" id="objB"></div>
+  </div>
 
   <h2 id="semana">Semana tipo y antes de publicar</h2>
   <div class="dos">
@@ -342,6 +500,49 @@ footer { font-size: 12px; color: var(--muted); padding: 40px 0 50px; }
       <p class="listo" id="listo"></p>
     </div>
   </div>
+
+  <h2 id="calendario">Calendario de contenido</h2>
+  <p class="lead" style="padding-top:0;margin-bottom:14px">Qué toca subir cada día. Lo importante es <b>el mensaje</b>: qué tiene que pensar o sentir esa persona al terminar de verlo. Pulsa un día para editarlo.</p>
+  <div class="card">
+    <div class="cal-barra">
+      <button class="flecha" id="calPrev" type="button" aria-label="Mes anterior">‹</button>
+      <h3 id="calMes"></h3>
+      <button class="flecha" id="calNext" type="button" aria-label="Mes siguiente">›</button>
+      <button class="boton sec" id="calHoy" type="button">Hoy</button>
+      <span class="sep"></span>
+      <button class="boton sec" id="calRellenar" type="button">Rellenar vacíos con la semana tipo</button>
+      <button class="boton sec" id="calVaciar" type="button">Vaciar mes</button>
+    </div>
+    <div class="cal-resumen" id="calResumen"></div>
+    <div class="cal" id="cal"></div>
+    <p class="nota">Se guarda en este navegador. Para pasarlo a otro dispositivo o hacer copia: <button class="boton sec" id="exportar" type="button" style="padding:4px 12px;font-size:12px">Exportar copia</button> <button class="boton sec" id="importarBtn" type="button" style="padding:4px 12px;font-size:12px">Importar</button><input type="file" id="importar" accept="application/json" hidden></p>
+  </div>
+
+<dialog class="ed" id="ed">
+  <form method="dialog" id="edForm">
+    <h3 id="edTitulo"></h3>
+    <div class="g2">
+      <label>Fase<select id="edFase"><option value="">—</option><option>TOFU</option><option>MOFU</option><option>BOFU</option></select></label>
+      <label>Perfil<select id="edPerfil"><option value="">—</option><option value="A">A · Quiere salir</option><option value="B">B · Va en serio</option><option value="AB">Los dos (solo BOFU)</option></select></label>
+      <label>Construye<select id="edPilar"><option value="">—</option><option value="💛">💛 Caer bien</option><option value="🎯">🎯 De A a B</option><option value="🍎">🍎 Empaquetado</option></select></label>
+      <label>Formato<select id="edFormato"><option value="">—</option><option>Reel</option><option>Carrusel</option><option>Historias</option><option>YouTube largo</option><option>Short</option><option>Directo</option></select></label>
+    </div>
+    <div class="pista" id="edPista"></div>
+    <label class="mensaje">Mensaje · qué tiene que pensar al terminar<textarea id="edMensaje" placeholder="«Si alguien sin experiencia lo ha hecho, yo también puedo.»"></textarea></label>
+    <label>Hook / título<input id="edHook" placeholder="La primera frase, con sus palabras"></label>
+    <div class="sug" id="edSug"></div>
+    <div class="g2">
+      <label>CTA / palabra clave<input id="edCta" placeholder="Comenta NICHOS"></label>
+      <label>Estado<select id="edEstado"><option>Idea</option><option>Guion</option><option>Grabado</option><option>Publicado</option></select></label>
+    </div>
+    <label>Notas<textarea id="edNotas" placeholder="Capturas, referencias, enlace…"></textarea></label>
+    <div class="acc">
+      <button class="izq" type="button" id="edBorrar">Borrar día</button>
+      <button class="boton sec" value="cancel" type="submit">Cancelar</button>
+      <button class="boton" id="edGuardar" value="ok" type="submit">Guardar</button>
+    </div>
+  </form>
+</dialog>
 
   <h2 id="ruta">A dónde lleva cada pieza</h2>
   <div class="ruta">
@@ -513,6 +714,220 @@ $('check').addEventListener('change', () => {
   const t = $('check').querySelectorAll('input').length, h = $('check').querySelectorAll('input:checked').length;
   $('listo').textContent = h === t ? '✅ Lista para publicar.' : h ? `${h} de ${t}` : '';
 });
+
+/* ---------- Datos editables (calendario, objeciones, notas): se guardan en este navegador ---------- */
+const CLAVE = 'sa-contenido';
+const OBJ_INICIAL = {
+  A: [
+    { q: '«No sé si voy a ser capaz.»', debajo: 'Miedo a fallar otra vez. Cree que hace falta talento.', rebatir: 'Es un proceso repetible, no talento. Los primeros 30 vídeos existen para aprender a producir. Enseñar el primer vídeo frente al 30.', pieza: 'MOFU · «Mi primer vídeo vs el número 30»' },
+    { q: '«No tengo tiempo, trabajo todo el día.»', debajo: 'Su horario ya le ahoga; no quiere otro trabajo.', rebatir: 'Enseñar cuánto lleva de verdad un vídeo con IA, cronometrado. La IA hace el trabajo pesado; se trabaja por bloques.', pieza: 'MOFU · Vídeo cronometrado de principio a fin' },
+    { q: '«No quiero endeudarme sin saber si me va a dar resultados.»', debajo: 'Aversión a la deuda. Legítimo: no minimizar.', rebatir: 'Qué hace falta de verdad para empezar y qué no. Cómo se valida un canal antes de meter más dinero.', pieza: 'MOFU · «Lo que necesitas (y no) para empezar»' },
+    { q: '«Me lo quiero pensar, tengo un buen trabajo.»', debajo: 'Sin dolor activo. Comodidad.', rebatir: 'El coste de dejarlo para luego: un año más igual. Sin drama ni falsa urgencia.', pieza: 'TOFU · «Y el año que viene, otra vez igual»' },
+    { q: '«¿Esto no es otro "hazte rico" de internet?»', debajo: 'Ha visto mucho humo en redes.', rebatir: 'Hablar de trabajo real, plazos honestos y para quién NO es. Enseñar, no prometer.', pieza: 'MOFU · «Lo que nadie te cuenta de YouTube faceless»' },
+    { q: '«No quiero salir en cámara.»', debajo: 'Vergüenza o miedo a que le vean en el trabajo.', rebatir: 'Justamente: faceless. Voz con IA, sin cara y sin exponerse.', pieza: 'TOFU · Canal sin cara que factura (datos reales)' }
+  ],
+  B: [
+    { q: '«Ya me han estafado antes con el mismo sistema.»', debajo: 'Herida abierta. Escepticismo ganado, con razón.', rebatir: 'Validar entero. Enseñar a detectar la estafa: promesas, canales llave en mano, sin seguimiento.', pieza: 'MOFU · «Cómo detectar una estafa de canales»' },
+    { q: '«Me vendieron un canal montado y a los 6 meses sigue muerto.»', debajo: 'Compró un activo, no aprendió a operarlo.', rebatir: 'Un canal sin criterio es un activo muerto. La diferencia entre comprar un canal y saber operarlo.', pieza: 'MOFU · «Comprar un canal vs aprender a operarlo»' },
+    { q: '«Voy a mirar otras academias que ofrecen lo mismo.»', debajo: 'No ve la diferencia.', rebatir: 'Darle criterio para comparar: qué preguntar a cualquier academia. Gana quien enseña a elegir.', pieza: 'MOFU · «5 preguntas antes de pagar a una academia»' },
+    { q: '«No sé si es rentable ni en cuánto tiempo veré resultados.»', debajo: 'Quiere números.', rebatir: 'Plazos honestos. Qué se mide antes del dinero: CTR, retención. RPM por nicho.', pieza: 'MOFU · «Qué mirar antes del dinero»' },
+    { q: '«La comunidad no me aporta, quiero seguimiento.»', debajo: 'Ha estado en comunidades muertas.', rebatir: 'Enseñar cómo es el seguimiento real: una revisión de canal (con permiso).', pieza: 'BOFU · Revisión de canal de un alumno' },
+    { q: '«Llevo mucho tiempo, es imposible que no lo saque solo.»', debajo: 'Ego. Cree que es cuestión de esfuerzo.', rebatir: 'El cuello de botella no es esfuerzo, es criterio y feedback. Diagnóstico de un canal atascado.', pieza: 'MOFU · «Por qué tu canal no despega»' },
+    { q: '«¿Hay mercado para tanta gente? Llego tarde.»', debajo: 'Miedo a la saturación.', rebatir: 'La demanda no se reparte, se genera. Canales pequeños con vídeos que revientan su media (outliers).', pieza: 'TOFU · «¿Hay mercado para tanta gente?» con datos' }
+  ]
+};
+const MENSAJE = {
+  'TOFU-A': '«Esto existe, y alguien como yo podría hacerlo.»',
+  'TOFU-B': '«Este sabe de lo que habla; esto no lo había visto así.»',
+  'MOFU-A': '«No es tan difícil como creía y no necesito experiencia.»',
+  'MOFU-B': '«Lo que me pasó tiene explicación, y aquí lo hacen distinto.»',
+  'BOFU-A': '«Quiero hacerlo, y quiero hacerlo con ellos.»',
+  'BOFU-B': '«Esta vez sí: tienen el método y el seguimiento que me faltó.»',
+  'BOFU-AB': '«Quiero hacerlo, y quiero hacerlo con ellos.»'
+};
+const CENTRAL = { A: 'Tu tiempo no tiene por qué depender de un horario: un canal es un sistema donde lo que haces determina lo que sale.', B: 'No te faltó esfuerzo, te faltó criterio y feedback: aquí aprendes a operar el canal, no a comprarlo.' };
+/* Semana tipo (lunes → domingo) */
+const SEMANA = [['TOFU', 'A'], ['MOFU', 'B'], ['TOFU', 'A'], ['TOFU', 'B'], ['MOFU', 'A'], ['TOFU', 'A'], ['BOFU', 'AB']];
+const PILAR_FASE = { TOFU: '💛', MOFU: '🎯', BOFU: '🍎' };
+const CTA_FASE = { TOFU: 'Comenta NICHOS', MOFU: 'Comenta CANAL / guía', BOFU: 'Agenda tu llamada' };
+
+let BD = { cal: {}, obj: null, notas: {} };
+try { Object.assign(BD, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
+if (!BD.obj) BD.obj = JSON.parse(JSON.stringify(OBJ_INICIAL));
+let tGuardar;
+function guardar() {
+  try { localStorage.setItem(CLAVE, JSON.stringify(BD)); } catch (e) {}
+  const g = $('objGuardado'); if (g) { g.textContent = 'Guardado ✓'; clearTimeout(tGuardar); tGuardar = setTimeout(() => g.textContent = '', 1500); }
+}
+const h = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function editable(el) { el.contentEditable = 'plaintext-only'; if (el.contentEditable !== 'plaintext-only') el.contentEditable = 'true'; }
+
+/* Notas de los 3 pilares */
+document.querySelectorAll('.pilar .editable').forEach(el => {
+  editable(el);
+  el.textContent = BD.notas[el.dataset.k] || '';
+  el.addEventListener('input', () => { BD.notas[el.dataset.k] = el.innerText.trim(); guardar(); });
+});
+
+/* Objeciones */
+function pintarObj() {
+  ['A', 'B'].forEach(p => {
+    const col = $('obj' + p);
+    col.innerHTML = `<span class="tag" style="display:inline-block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border-radius:999px;color:#fff;background:var(--${p.toLowerCase()})">Perfil ${p} · ${p === 'A' ? 'Quiere salir' : 'Va en serio'}</span>` +
+      BD.obj[p].map((o, i) => `<article class="card obj ${p}" data-p="${p}" data-i="${i}">
+        <button class="borrar" type="button" title="Quitar objeción">✕</button>
+        <div class="q" data-f="q">${h(o.q)}</div>
+        <div><label>Qué hay debajo</label><div class="editable" data-f="debajo" data-ph="Lo que de verdad le preocupa…">${h(o.debajo)}</div></div>
+        <div><label>Cómo rebatirla</label><div class="editable" data-f="rebatir" data-ph="Ideas, datos, pruebas, el giro…">${h(o.rebatir)}</div></div>
+        <div><label>Pieza de contenido</label><div class="editable" data-f="pieza" data-ph="Fase · título del vídeo">${h(o.pieza)}</div></div>
+      </article>`).join('') +
+      `<button class="boton sec" type="button" data-nueva="${p}">+ Añadir objeción</button>`;
+    col.querySelectorAll('[data-f]').forEach(editable);
+  });
+}
+['objA', 'objB'].forEach(id => {
+  const col = $(id);
+  col.addEventListener('input', e => {
+    const f = e.target.closest('[data-f]'), c = e.target.closest('.obj'); if (!f || !c) return;
+    BD.obj[c.dataset.p][+c.dataset.i][f.dataset.f] = f.innerText.trim(); guardar();
+  });
+  col.addEventListener('click', e => {
+    const nueva = e.target.closest('[data-nueva]');
+    if (nueva) { const p = nueva.dataset.nueva; BD.obj[p].push({ q: '', debajo: '', rebatir: '', pieza: '' }); guardar(); pintarObj(); const qs = $('obj' + p).querySelectorAll('.q'); qs[qs.length - 1].focus(); return; }
+    const b = e.target.closest('.borrar'); if (!b) return;
+    const c = b.closest('.obj'), o = BD.obj[c.dataset.p][+c.dataset.i];
+    if ((o.q || o.rebatir) && !confirm('¿Quitar esta objeción?')) return;
+    BD.obj[c.dataset.p].splice(+c.dataset.i, 1); guardar(); pintarObj();
+  });
+});
+
+/* Calendario */
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const DIAS_L = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+const hoy = new Date();
+let vista = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+const iso = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+const diaSemana = (y, m, d) => (new Date(y, m, d).getDay() + 6) % 7; // 0 = lunes
+const perfilTxt = p => p === 'AB' ? 'A+B' : p;
+
+function pintarCal() {
+  const y = vista.getFullYear(), m = vista.getMonth(), n = new Date(y, m + 1, 0).getDate(), ini = diaSemana(y, m, 1);
+  $('calMes').textContent = `${MESES[m]} ${y}`;
+  let html = DIAS.map(d => `<div class="cab">${d}</div>`).join('');
+  for (let i = 0; i < ini; i++) html += '<div class="dia-c fuera"></div>';
+  const cuenta = { TOFU: 0, MOFU: 0, BOFU: 0, A: 0, B: 0, '💛': 0, '🎯': 0, '🍎': 0, sinMsg: 0, pub: 0, total: 0 };
+  for (let d = 1; d <= n; d++) {
+    const k = iso(y, m, d), e = BD.cal[k], esHoy = k === iso(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    if (e && e.fase) {
+      cuenta.total++; cuenta[e.fase]++;
+      if (e.perfil === 'A' || e.perfil === 'AB') cuenta.A++;
+      if (e.perfil === 'B' || e.perfil === 'AB') cuenta.B++;
+      if (e.pilar) cuenta[e.pilar]++;
+      if (!e.mensaje) cuenta.sinMsg++;
+      if (e.estado === 'Publicado') cuenta.pub++;
+    }
+    const cont = e && (e.fase || e.mensaje || e.hook) ? `
+      <div class="chips-d">${e.fase ? `<span class="pill ${e.fase}">${e.fase}</span>` : ''}${e.perfil ? `<span class="pill">${perfilTxt(e.perfil)}</span>` : ''}${e.pilar ? `<span class="pill">${e.pilar}</span>` : ''}${e.formato ? `<span class="pill">${h(e.formato)}</span>` : ''}</div>
+      ${e.mensaje ? `<div class="msg-d">${h(e.mensaje)}</div>` : '<div class="hook-d" style="color:#b3261e">✍️ Falta el mensaje</div>'}
+      ${e.hook ? `<div class="hook-d">${h(e.hook)}</div>` : ''}
+      <div class="est">${h(e.estado || 'Idea')}</div>` : '<div class="vacio-d">+</div>';
+    html += `<button type="button" class="dia-c${esHoy ? ' hoy' : ''}${e && e.estado === 'Publicado' ? ' publicado' : ''}" data-k="${k}">
+      <div class="num"><span><span class="nd">${DIAS_L[diaSemana(y, m, d)]} </span>${d}</span></div>${cont}</button>`;
+  }
+  $('cal').innerHTML = html;
+  const pct = x => cuenta.total ? Math.round(x / cuenta.total * 100) + ' %' : '–';
+  $('calResumen').innerHTML = cuenta.total ? `
+    <span><b>${cuenta.total}</b> piezas</span>
+    <span>TOFU <b>${pct(cuenta.TOFU)}</b> · MOFU <b>${pct(cuenta.MOFU)}</b> · BOFU <b>${pct(cuenta.BOFU)}</b></span>
+    <span>Perfil A <b>${cuenta.A}</b> · B <b>${cuenta.B}</b></span>
+    <span>💛 ${cuenta['💛']} · 🎯 ${cuenta['🎯']} · 🍎 ${cuenta['🍎']}</span>
+    <span>Publicadas <b>${cuenta.pub}</b></span>
+    ${cuenta.sinMsg ? `<span style="color:#b3261e">✍️ ${cuenta.sinMsg} sin mensaje</span>` : '<span>✅ Todas con mensaje</span>'}` :
+    '<span>Mes vacío. Pulsa un día o «Rellenar vacíos con la semana tipo».</span>';
+}
+$('calPrev').addEventListener('click', () => { vista = new Date(vista.getFullYear(), vista.getMonth() - 1, 1); pintarCal(); });
+$('calNext').addEventListener('click', () => { vista = new Date(vista.getFullYear(), vista.getMonth() + 1, 1); pintarCal(); });
+$('calHoy').addEventListener('click', () => { vista = new Date(hoy.getFullYear(), hoy.getMonth(), 1); pintarCal(); });
+$('calRellenar').addEventListener('click', () => {
+  const y = vista.getFullYear(), m = vista.getMonth(), n = new Date(y, m + 1, 0).getDate();
+  for (let d = 1; d <= n; d++) {
+    const k = iso(y, m, d); if (BD.cal[k] && BD.cal[k].fase) continue;
+    const [fase, perfil] = SEMANA[diaSemana(y, m, d)];
+    BD.cal[k] = Object.assign({ estado: 'Idea' }, BD.cal[k], { fase, perfil, pilar: PILAR_FASE[fase], formato: fase === 'BOFU' ? 'YouTube largo' : 'Reel', cta: CTA_FASE[fase] });
+  }
+  guardar(); pintarCal();
+});
+$('calVaciar').addEventListener('click', () => {
+  if (!confirm(`¿Vaciar todo ${MESES[vista.getMonth()]}? Se borran los días de este mes.`)) return;
+  const pre = iso(vista.getFullYear(), vista.getMonth(), 1).slice(0, 8);
+  Object.keys(BD.cal).forEach(k => { if (k.startsWith(pre)) delete BD.cal[k]; });
+  guardar(); pintarCal();
+});
+
+/* Editor de un día */
+let edK = null;
+const ED = ['Fase', 'Perfil', 'Pilar', 'Formato', 'Mensaje', 'Hook', 'Cta', 'Estado', 'Notas'];
+function pista() {
+  const f = $('edFase').value, p = $('edPerfil').value, fase = DATOS.find(x => x.fase === f);
+  let t = '';
+  if (fase) t += `<b>${f} · ${fase.nombre}.</b> ${fase.obj.replace(/<[^>]+>/g, '')}`;
+  if (p && p !== 'AB') t += `<br><b>Mensaje central ${p}:</b> ${CENTRAL[p]}`;
+  const sug = MENSAJE[`${f}-${p}`];
+  if (sug) t += `<br><b>Mensaje sugerido:</b> ${sug} <button type="button" class="pill" id="usarMsg" style="cursor:pointer">Usar</button>`;
+  $('edPista').innerHTML = t || 'Elige fase y perfil para ver el objetivo y un mensaje sugerido.';
+  $('edPista').hidden = false;
+  const u = $('usarMsg'); if (u) u.onclick = () => { $('edMensaje').value = sug; };
+  // Ideas del mapa y objeciones del perfil, como punto de partida del hook
+  const ideas = [];
+  const ps = p === 'AB' ? ['A', 'B'] : p ? [p] : [];
+  if (fase) ps.forEach(x => fase[x].ideas.forEach(([tt]) => ideas.push(tt)));
+  if (f === 'MOFU' || !f) ps.forEach(x => BD.obj[x].forEach(o => o.q && ideas.push(o.q)));
+  $('edSug').innerHTML = [...new Set(ideas)].slice(0, 12).map(s => `<button type="button">${h(s)}</button>`).join('');
+}
+['edFase', 'edPerfil'].forEach(id => $(id).addEventListener('change', pista));
+$('edSug').addEventListener('click', e => { const b = e.target.closest('button'); if (b) $('edHook').value = b.textContent; });
+$('cal').addEventListener('click', e => {
+  const c = e.target.closest('.dia-c[data-k]'); if (!c) return;
+  edK = c.dataset.k;
+  const [y, m, d] = edK.split('-').map(Number), e0 = BD.cal[edK] || {};
+  const dl = DIAS_L[diaSemana(y, m - 1, d)];
+  $('edTitulo').textContent = `${dl[0].toUpperCase() + dl.slice(1)} ${d} de ${MESES[m - 1]}`;
+  ED.forEach(f => { $('ed' + f).value = e0[f.toLowerCase()] || (f === 'Estado' ? 'Idea' : ''); });
+  pista();
+  $('ed').showModal();
+});
+$('ed').addEventListener('close', () => {
+  if ($('ed').returnValue !== 'ok' || !edK) return;
+  const e = {}; ED.forEach(f => { const v = $('ed' + f).value.trim(); if (v) e[f.toLowerCase()] = v; });
+  if (Object.keys(e).some(k => k !== 'estado')) BD.cal[edK] = e; else delete BD.cal[edK];
+  guardar(); pintarCal();
+});
+$('edBorrar').addEventListener('click', () => { delete BD.cal[edK]; guardar(); pintarCal(); $('ed').close('borrado'); });
+
+/* Copia: exportar / importar */
+$('exportar').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(BD, null, 2)], { type: 'application/json' }));
+  a.download = `contenido-system-academy-${iso(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())}.json`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('importarBtn').addEventListener('click', () => $('importar').click());
+$('importar').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (!j || typeof j.cal !== 'object') throw new Error();
+    if (!confirm('¿Sustituir el calendario, las objeciones y las notas por los de la copia?')) return;
+    BD = { cal: j.cal || {}, obj: j.obj || JSON.parse(JSON.stringify(OBJ_INICIAL)), notas: j.notas || {} };
+    guardar(); pintarObj(); pintarCal();
+    document.querySelectorAll('.pilar .editable').forEach(el => el.textContent = BD.notas[el.dataset.k] || '');
+  } catch (err) { alert('Ese archivo no es una copia válida.'); }
+  e.target.value = '';
+});
+
+pintarObj();
+pintarCal();
 
 /* Arranque: sin API (pruebas locales) o con sesión maestro guardada → directo; si no, pide acceso */
 const s = leer();
