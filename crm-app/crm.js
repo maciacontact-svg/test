@@ -77,6 +77,7 @@ async function entrar() {
   const maestro = S.rol === 'maestro';
   $('me').textContent = maestro ? `${S.caller} · Maestro` : S.caller;
   $('kitLink').hidden = !maestro;
+  $('avatarLink').hidden = !maestro;
   $('agLink').hidden = true;
   $('tabKpis').textContent = maestro ? 'KPIs del equipo' : 'Mis KPIs';
   document.querySelector('#views [data-v="mios"]').hidden = maestro;

@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Cliente ideal · System Academy</title>
+<link rel="icon" href="img/logo/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="marca/poppins.css">
+<style>
+/* System Academy · cliente ideal y mapa de contenido (TOFU / MOFU / BOFU). Solo acceso maestro.
+   Los textos del mapa están en DATOS (abajo, en el script): se cambian ahí. */
+:root {
+  --bg: #f3f3f3;
+  --card: #fff;
+  --ink: #111;
+  --ink-2: #3a3a3a;
+  --muted: #6b6b6b;
+  --line: #e2e2e2;
+  --line-soft: #d4d4d4;
+  --a: #111;          /* Perfil A: negro */
+  --b: #6b6b6b;       /* Perfil B: gris */
+  --sans: "Poppins", system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { color-scheme: light; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; line-height: 1.55; }
+button { font: inherit; border: 0; background: none; cursor: pointer; color: inherit; }
+em { font-style: italic; font-weight: 500; }
+a { color: inherit; }
+
+/* ---------- Acceso (solo maestro) ---------- */
+.puerta { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.puerta[hidden], #todo[hidden] { display: none; }
+.puerta form { width: 100%; max-width: 360px; background: #fff; border-radius: 18px; padding: 28px 24px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 18px 40px -20px rgba(0,0,0,.25); }
+.puerta h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.puerta p { font-size: 13px; color: var(--muted); }
+.puerta input { font: inherit; font-size: 15px; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 10px; background: #fafafa; }
+.puerta input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.puerta button { background: var(--ink); color: #fff; border-radius: 999px; padding: 12px; font-weight: 500; margin-top: 4px; }
+.puerta button:disabled { opacity: .5; }
+.puerta .err { color: #b3261e; font-size: 13px; min-height: 18px; }
+
+/* ---------- Página ---------- */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+.top { display: flex; align-items: center; gap: 14px; padding: 22px 0 6px; }
+.top h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; flex: 1; }
+.top .salir { font-size: 13px; color: var(--muted); text-decoration: underline; white-space: nowrap; }
+.top a.salir { color: var(--ink); }
+.lead { font-size: 15px; color: var(--ink-2); max-width: 760px; padding: 6px 0 4px; }
+.lead b { color: var(--ink); }
+.indice { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 0 4px; }
+.indice a { font-size: 13px; text-decoration: none; background: #fff; border-radius: 999px; padding: 6px 14px; border: 1px solid var(--line-soft); }
+h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 34px 0 12px; scroll-margin-top: 10px; }
+h3 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; }
+.card { background: var(--card); border-radius: 18px; padding: 22px; box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 14px 34px -24px rgba(0,0,0,.25); }
+
+/* Regla de oro */
+.regla { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.regla .card { padding: 18px; }
+.regla .n { font-size: 12px; color: var(--muted); font-weight: 500; }
+.regla p { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+.regla p b { color: var(--ink); }
+
+/* Perfiles */
+.perfiles { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.perfil { position: relative; overflow: hidden; }
+.perfil .tag { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; color: #fff; }
+.perfil.A .tag { background: var(--a); }
+.perfil.B .tag { background: var(--b); }
+.perfil h3 { margin: 12px 0 4px; font-size: 24px; }
+.perfil .sub { font-size: 14px; color: var(--muted); }
+.perfil .frase { margin: 16px 0 6px; padding: 14px 16px; border-radius: 12px; background: var(--bg); font-size: 15px; font-style: italic; font-weight: 500; }
+.perfil dl { display: grid; gap: 12px; margin-top: 14px; }
+.perfil dt { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.perfil dd { font-size: 14px; color: var(--ink-2); }
+.perfil dd ul { padding-left: 18px; }
+.perfil dd li + li { margin-top: 2px; }
+.perfil .msg { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.perfil .msg b { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.perfil .msg p { font-size: 16px; font-weight: 500; line-height: 1.45; }
+.voces { display: flex; flex-wrap: wrap; gap: 6px; }
+.voces span { font-size: 13px; background: var(--bg); border-radius: 8px; padding: 4px 9px; }
+.voces.no span { text-decoration: line-through; color: var(--muted); }
+
+/* Viaje */
+.viaje { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; background: #fff; border-radius: 18px; overflow: hidden; }
+.viaje > div { padding: 18px 20px; border-right: 1px solid var(--line); }
+.viaje > div:last-child { border-right: 0; }
+.viaje .f { font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--muted); }
+.viaje h4 { font-size: 17px; font-weight: 600; margin: 2px 0 6px; }
+.viaje p { font-size: 13.5px; color: var(--ink-2); }
+.viaje .pensa { margin-top: 10px; font-size: 13.5px; font-style: italic; font-weight: 500; color: var(--ink); }
+.barra { height: 6px; background: var(--ink); margin-top: 14px; border-radius: 3px; }
+.viaje > div:nth-child(2) .barra { width: 66%; }
+.viaje > div:nth-child(3) .barra { width: 33%; }
+
+/* Filtros */
+.filtros { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; padding: 0 0 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chips > span { font-size: 12px; color: var(--muted); margin-right: 4px; }
+.chips button { font-size: 13px; padding: 6px 13px; border-radius: 999px; background: #fff; border: 1px solid var(--line-soft); }
+.chips button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* Mapa */
+.fase { margin-bottom: 18px; }
+.fase-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 0 2px 10px; }
+.fase-cab .sig { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+.fase-cab .obj { font-size: 14px; color: var(--ink-2); flex: 1; min-width: 240px; }
+.fase-cab .obj b { color: var(--ink); }
+.celdas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.celdas.uno { grid-template-columns: 1fr; }
+.celda { display: flex; flex-direction: column; gap: 12px; border-top: 5px solid var(--a); }
+.celda.B { border-top-color: var(--b); }
+.celda .quien { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.celda .estado { font-size: 14px; font-style: italic; font-weight: 500; }
+.celda h5 { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.celda ul { padding-left: 0; list-style: none; display: grid; gap: 8px; }
+.ideas li { font-size: 14px; background: var(--bg); border-radius: 10px; padding: 9px 12px; }
+.ideas li b { display: block; font-weight: 600; }
+.ideas li span { font-size: 13px; color: var(--muted); }
+.fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13.5px; color: var(--ink-2); }
+.fila b { color: var(--ink); font-weight: 600; }
+.no-hacer { font-size: 13px; color: var(--muted); border-top: 1px dashed var(--line-soft); padding-top: 10px; }
+.no-hacer b { color: #b3261e; font-weight: 600; }
+.vacio { font-size: 14px; color: var(--muted); padding: 20px; }
+
+/* Mensaje correcto */
+.tabla { width: 100%; border-collapse: collapse; font-size: 14px; background: #fff; border-radius: 18px; overflow: hidden; }
+.tabla th, .tabla td { text-align: left; vertical-align: top; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.tabla thead th { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: #fafafa; }
+.tabla tbody th { font-weight: 600; width: 20%; }
+.tabla td { color: var(--ink-2); width: 40%; }
+.tabla tr:last-child th, .tabla tr:last-child td { border-bottom: 0; }
+
+/* Semana + checklist */
+.dos { display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; }
+.semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+.dia { border-radius: 12px; padding: 10px 8px; background: var(--bg); text-align: center; font-size: 12px; }
+.dia b { display: block; font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+.dia .p { font-weight: 600; font-size: 13px; }
+.dia .q { display: inline-block; margin-top: 6px; font-size: 11px; color: #fff; background: var(--a); border-radius: 999px; padding: 1px 8px; }
+.dia .q.B { background: var(--b); }
+.dia .q.AB { background: linear-gradient(90deg, var(--a) 50%, var(--b) 50%); }
+.reparto { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 16px; }
+.reparto i { display: block; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); margin-top: 8px; }
+.leyenda span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+.nota { font-size: 13px; color: var(--muted); margin-top: 12px; }
+.check { list-style: none; display: grid; gap: 8px; margin-top: 10px; }
+.check label { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.check input { margin-top: 4px; accent-color: #111; width: 16px; height: 16px; flex: none; }
+.check input:checked + span { color: var(--muted); text-decoration: line-through; }
+.listo { margin-top: 12px; font-size: 13px; font-weight: 500; }
+
+/* Embudo → destino */
+.ruta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.ruta .card { padding: 18px; }
+.ruta .f { font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--muted); }
+.ruta p { font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+.ruta code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; background: var(--bg); padding: 1px 6px; border-radius: 6px; }
+
+footer { font-size: 12px; color: var(--muted); padding: 40px 0 50px; }
+
+@media (max-width: 860px) {
+  .perfiles, .celdas, .dos, .regla, .ruta { grid-template-columns: 1fr; }
+  .viaje { grid-template-columns: 1fr; }
+  .viaje > div { border-right: 0; border-bottom: 1px solid var(--line); }
+  .fila { grid-template-columns: 1fr; }
+  .semana { grid-template-columns: repeat(4, 1fr); }
+  .tabla thead { display: none; }
+  .tabla, .tabla tbody, .tabla tr, .tabla th, .tabla td { display: block; width: auto; }
+  .tabla tbody th { padding-bottom: 4px; border-bottom: 0; }
+  .tabla td { padding-top: 4px; border-bottom: 0; }
+  .tabla td::before { content: attr(data-l); display: block; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tabla tr { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+}
+@media print {
+  body { background: #fff; }
+  .top .salir, .filtros, .indice { display: none; }
+  .card { box-shadow: none; border: 1px solid var(--line); }
+  .fase, .perfil, .celda { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- Acceso: solo el maestro (mismo nombre y PIN que en el CRM) -->
+<section class="puerta" id="puerta" hidden>
+  <form id="puertaForm" autocomplete="on">
+    <h1>
+      <svg viewBox="0 0 100 100" width="34" height="34" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#111"/><path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#111" stroke-width="5.5" stroke-linecap="round"/></svg>
+      Cliente <em>ideal</em>
+    </h1>
+    <p>Solo para el acceso maestro. Entra con tu nombre y PIN del CRM.</p>
+    <input id="pNombre" placeholder="Nombre" autocomplete="username" required>
+    <input id="pPin" placeholder="PIN" type="password" inputmode="numeric" autocomplete="current-password" required>
+    <div class="err" id="pErr"></div>
+    <button id="pBtn">Entrar</button>
+  </form>
+</section>
+
+<div id="todo" hidden>
+<div class="wrap">
+  <header class="top">
+    <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#111"/><path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#111" stroke-width="5.5" stroke-linecap="round"/></svg>
+    <h1>Cliente <em>ideal</em> y mapa de contenido</h1>
+    <a class="salir" href="/">← Volver al CRM</a>
+    <button class="salir" id="salir" type="button">Salir</button>
+  </header>
+  <p class="lead">
+    Dos personas distintas compran lo mismo por <em>motivos opuestos</em>. Una quiere <b>salir</b> de su vida actual; la otra ya eligió el modelo y quiere <b>hacerlo bien de una vez</b>.
+    Cada pieza de contenido se escribe para <b>un perfil</b> y <b>una fase</b>. Si sirve para los dos, no le habla a ninguno.
+  </p>
+  <nav class="indice">
+    <a href="#perfiles">Los 2 perfiles</a>
+    <a href="#viaje">Las 3 fases</a>
+    <a href="#mapa">Mapa de contenido</a>
+    <a href="#mensaje">Mensaje correcto</a>
+    <a href="#semana">Semana tipo</a>
+    <a href="#ruta">A dónde lleva cada pieza</a>
+  </nav>
+
+  <h2>La regla de oro</h2>
+  <div class="regla">
+    <div class="card"><div class="n">1 · Para quién</div><p>Antes de grabar, decide <b>A o B</b>. El hook usa <b>sus palabras</b>, las que dice en llamada.</p></div>
+    <div class="card"><div class="n">2 · En qué fase</div><p><b>TOFU</b> despierta, <b>MOFU</b> da confianza, <b>BOFU</b> ayuda a decidir. Una pieza, una fase.</p></div>
+    <div class="card"><div class="n">3 · Qué hace después</div><p>Cada fase tiene <b>su CTA</b>: comentar una palabra, pedir un recurso o agendar. Nunca agendar desde TOFU.</p></div>
+  </div>
+
+  <h2 id="perfiles">Los 2 perfiles ideales</h2>
+  <div class="perfiles">
+    <article class="card perfil A">
+      <span class="tag">Perfil A</span>
+      <h3>El que quiere <em>salir</em></h3>
+      <p class="sub">Frustrado con su trabajo. Quiere más libertad. Aún no conoce el modelo.</p>
+      <p class="frase">«Curro el doble que el de al lado y cobramos lo mismo.»</p>
+      <dl>
+        <div><dt>Su situación</dt><dd>Empleado con techo de cristal o autónomo quemado de clientes. Un solo ingreso, un horario que manda sobre su vida. Lleva tiempo pensando «esto no puede ser todo».</dd></div>
+        <div><dt>Lo que quiere de verdad</dt><dd>Control sobre su tiempo. Un segundo ingreso que dependa de lo que <em>él</em> hace, no de un jefe o un cliente. Poder irse de vacaciones, dar más a su familia.</dd></div>
+        <div><dt>Lo que dice (literal de llamadas)</dt><dd><ul>
+          <li>«Tengo un techo de cristal.»</li>
+          <li>«No llego como quisiera a fin de mes.»</li>
+          <li>«Llevo años intentando darme unas vacaciones y no soy capaz.»</li>
+          <li>«Tengo un horario que no me da ni para ir al súper con tiempo.»</li>
+          <li>«Soy autónomo y quiero dejar de tratar con clientes.»</li>
+          <li>«Mis resultados no dependen completamente de mí.»</li>
+        </ul></dd></div>
+        <div><dt>Sus miedos</dt><dd>«No sé si voy a ser capaz.» No tener tiempo con su trabajo. Perder dinero. Que sea otro «hazte rico» de internet.</dd></div>
+        <div><dt>Qué sabe del modelo</dt><dd>Nada o casi nada. No sabe qué es un canal faceless, RPM o un nicho. Primero hay que enseñarle <em>que existe</em>.</dd></div>
+        <div><dt>Cuándo te ve</dt><dd>Scroll por la noche o el domingo, después de una semana dura. El lunes y el día de la nómina pegan más.</dd></div>
+        <div><dt>Cuidado con</dt><dd>Quien busca dinero fácil o «sin trabajar». No es el perfil: atrae leads que no compran.</dd></div>
+      </dl>
+      <div class="msg"><b>Mensaje central</b><p>«Tu tiempo no tiene por qué depender de un horario. Un canal faceless es un sistema que montas tú, a tu ritmo, donde lo que haces determina lo que sale.»</p></div>
+    </article>
+
+    <article class="card perfil B">
+      <span class="tag">Perfil B</span>
+      <h3>El que va <em>en serio</em></h3>
+      <p class="sub">Ya conoce YouTube faceless. Quiere sacarle el máximo. Quizá lo probó y no salió, o le estafaron.</p>
+      <p class="frase">«Me vendieron un canal montado y a los seis meses sigue muerto.»</p>
+      <dl>
+        <div><dt>Su situación</dt><dd>Tiene o tuvo un canal parado. Compró un curso o un canal «construido» que no funcionó, hizo marca personal y se quemó, o lleva meses solo sin avanzar. Consume contenido del nicho.</dd></div>
+        <div><dt>Lo que quiere de verdad</dt><dd>Un sistema que funcione y alguien que lo haga de verdad. Criterio (nicho, outliers, guion, retención), feedback sobre <em>su</em> canal y plazos honestos.</dd></div>
+        <div><dt>Lo que dice (literal de llamadas)</dt><dd><ul>
+          <li>«Ya me han estafado antes con el mismo sistema.»</li>
+          <li>«Voy a mirar otras academias que ofrecen lo mismo.»</li>
+          <li>«No sé si es rentable ni en cuánto tiempo veré resultados.»</li>
+          <li>«Lo hago por ego: llevo mucho tiempo, es imposible que no lo saque solo.»</li>
+          <li>«La comunidad no me aporta, quiero seguimiento personalizado.»</li>
+          <li>«Ya hice marca personal y no salió bien.»</li>
+        </ul></dd></div>
+        <div><dt>Sus miedos</dt><dd>Volver a pagar y que pase lo mismo. Llegar tarde («¿hay mercado para tanta gente?»). Una comunidad muerta.</dd></div>
+        <div><dt>Qué sabe del modelo</dt><dd>Mucho. Habla de RPM, nichos y retención. Detecta el humo al segundo: con él gana quien enseña <em>más concreto</em>.</dd></div>
+        <div><dt>Cuándo te ve</dt><dd>Buscando activamente: YouTube, comparando academias, leyendo comentarios. Guarda y compara.</dd></div>
+        <div><dt>Cuidado con</dt><dd>Prometerle rápido o grande: le recuerda a quien le estafó. Validar su herida <em>antes</em> de girar.</dd></div>
+      </dl>
+      <div class="msg"><b>Mensaje central</b><p>«No te faltó esfuerzo, te faltó criterio y feedback. Aquí aprendes a operar el canal, no a comprarlo, con alguien que lo hace cada día.»</p></div>
+    </article>
+  </div>
+
+  <h2 id="viaje">Las 3 fases del viaje</h2>
+  <div class="viaje">
+    <div><span class="f">TOFU · DESCUBRIMIENTO</span><h4>Que pare y piense «esto va de mí»</h4><p>Audiencia fría. Mucha gente, poca intención. Ganas atención y curiosidad.</p><p class="pensa">«¿Esto existe? ¿Y yo podría?»</p><div class="barra"></div></div>
+    <div><span class="f">MOFU · CONFIANZA</span><h4>Que las dudas dejen de frenarle</h4><p>Ya conoce el modelo. Duda si funciona, si es complicado, si llega tarde o si necesita experiencia.</p><p class="pensa">«Vale, funciona. Y no es tan difícil como creía.»</p><div class="barra"></div></div>
+    <div><span class="f">BOFU · DECISIÓN</span><h4>Que os elija a vosotros</h4><p>Está considerando aprenderlo. Necesita ver por qué vuestro sistema le lleva del punto A al B.</p><p class="pensa">«Quiero hacerlo, y quiero hacerlo con ellos.»</p><div class="barra"></div></div>
+  </div>
+
+  <h2 id="mapa">Mapa de contenido · perfil × fase</h2>
+  <div class="filtros">
+    <div class="chips" id="fPerfil"><span>Perfil</span><button data-v="AB" aria-pressed="true">Los dos</button><button data-v="A">A · Quiere salir</button><button data-v="B">B · Va en serio</button></div>
+    <div class="chips" id="fFase"><span>Fase</span><button data-v="" aria-pressed="true">Todas</button><button data-v="TOFU">TOFU</button><button data-v="MOFU">MOFU</button><button data-v="BOFU">BOFU</button></div>
+  </div>
+  <div id="mapa-cont"></div>
+
+  <h2 id="mensaje">El mensaje correcto para cada perfil</h2>
+  <table class="tabla">
+    <thead><tr><th></th><th>Perfil A · Quiere salir</th><th>Perfil B · Va en serio</th></tr></thead>
+    <tbody>
+      <tr><th>Promesa</th><td data-l="Perfil A">Recuperar el control de tu tiempo con un sistema que montas a tu ritmo.</td><td data-l="Perfil B">Hacerlo bien esta vez: criterio, método y feedback sobre tu canal.</td></tr>
+      <tr><th>El enemigo</th><td data-l="Perfil A">El horario, el techo de cristal, depender de un solo ingreso.</td><td data-l="Perfil B">Los canales «llave en mano», las promesas rápidas, ir a ciegas sin feedback.</td></tr>
+      <tr><th>Puente a faceless</th><td data-l="Perfil A">«Un canal es un sistema donde lo que haces determina lo que sale.» Sin cara, sin exponerte, compatible con tu trabajo.</td><td data-l="Perfil B">«El problema no es el modelo, es operarlo sin criterio.» Nicho, outliers, guion y métricas.</td></tr>
+      <tr><th>Prueba que necesita</th><td data-l="Perfil A">Ver que gente normal, sin experiencia, lo monta. El paso a paso, enseñado en pantalla.</td><td data-l="Perfil B">Datos y pantallas: canales reales, métricas (CTR, retención), cómo se diagnostica un canal.</td></tr>
+      <tr><th>Tono</th><td data-l="Perfil A">Cercano, en primera persona, su día concreto («no puedes ir al súper sin mirar el reloj»).</td><td data-l="Perfil B">De par a par. Directo, técnico, sin vender. Valida antes de girar.</td></tr>
+      <tr><th>Palabras que sí</th><td data-l="Perfil A"><div class="voces"><span>tu tiempo</span><span>a tu ritmo</span><span>sin enseñar la cara</span><span>el paso a paso real</span><span>segundo ingreso</span><span>que dependa de ti</span></div></td><td data-l="Perfil B"><div class="voces"><span>criterio</span><span>outlier</span><span>retención</span><span>RPM</span><span>diagnóstico</span><span>operar, no comprar</span><span>hay hueco para entrar</span></div></td></tr>
+      <tr><th>Palabras que no</th><td data-l="Perfil A"><div class="voces no"><span>mientras duermes</span><span>sin trabajar</span><span>hazte rico</span><span>en automático</span></div></td><td data-l="Perfil B"><div class="voces no"><span>método secreto</span><span>garantizado</span><span>en 30 días</span><span>canal llave en mano</span></div></td></tr>
+      <tr><th>Recurso que encaja</th><td data-l="Perfil A"><b>NICHOS</b> (clase + listado) y la guía completa (<b>SISTEMA</b>).</td><td data-l="Perfil B"><b>CANAL</b> (analizar tu canal), <b>GUION</b> y <b>NICHO</b>.</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">Solo <b>NICHOS</b> está confirmada en ManyChat. SISTEMA, NICHO, GUION y CANAL son propuestas: confirmadlas antes de publicar.</p>
+
+  <h2 id="semana">Semana tipo y antes de publicar</h2>
+  <div class="dos">
+    <div class="card">
+      <h3>7 piezas a la <em>semana</em></h3>
+      <p class="nota" style="margin-top:4px">Aprox. 60 % TOFU, 25 % MOFU, 15 % BOFU. El Perfil A llena la parte alta; el B entra sobre todo en MOFU.</p>
+      <div class="semana">
+        <div class="dia"><b>Lun</b><div class="p">TOFU</div><span class="q">A</span></div>
+        <div class="dia"><b>Mar</b><div class="p">MOFU</div><span class="q B">B</span></div>
+        <div class="dia"><b>Mié</b><div class="p">TOFU</div><span class="q">A</span></div>
+        <div class="dia"><b>Jue</b><div class="p">TOFU</div><span class="q B">B</span></div>
+        <div class="dia"><b>Vie</b><div class="p">MOFU</div><span class="q">A</span></div>
+        <div class="dia"><b>Sáb</b><div class="p">TOFU</div><span class="q">A</span></div>
+        <div class="dia"><b>Dom</b><div class="p">BOFU</div><span class="q AB">A/B</span></div>
+      </div>
+      <div class="reparto" aria-hidden="true"><i style="width:57%;background:#111"></i><i style="width:29%;background:#6b6b6b"></i><i style="width:14%;background:#bdbdbd"></i></div>
+      <div class="leyenda"><span style="--c:#111">TOFU · 4</span><span style="--c:#6b6b6b">MOFU · 2</span><span style="--c:#bdbdbd">BOFU · 1</span></div>
+      <p class="nota">Las historias de cada día son BOFU suave: detrás de cámaras, preguntas de alumnos (Q&A), «esta semana hemos abierto X plazas» si es verdad.</p>
+    </div>
+    <div class="card">
+      <h3>Antes de <em>publicar</em></h3>
+      <ul class="check" id="check">
+        <li><label><input type="checkbox"><span>Sé si es para el <b>Perfil A o B</b> (no para los dos).</span></label></li>
+        <li><label><input type="checkbox"><span>Sé en qué <b>fase</b> está y el CTA es el de esa fase.</span></label></li>
+        <li><label><input type="checkbox"><span>El hook usa una <b>frase real</b> de llamadas, no una versión pulida.</span></label></li>
+        <li><label><input type="checkbox"><span>Una sola idea. Todo lo que se dice, <b>se enseña</b> en pantalla.</span></label></li>
+        <li><label><input type="checkbox"><span>El recurso resuelve <b>el mismo dolor</b> del que habla la pieza.</span></label></li>
+        <li><label><input type="checkbox"><span>Cada cifra o caso es <b>real</b> y tiene su prueba. Nada inventado.</span></label></li>
+        <li><label><input type="checkbox"><span>Sin «mientras duermes», «garantizado» ni falsa urgencia.</span></label></li>
+        <li><label><input type="checkbox"><span>El enlace lleva su <b>etiqueta de origen</b> (pestaña Enlaces del CRM).</span></label></li>
+      </ul>
+      <p class="listo" id="listo"></p>
+    </div>
+  </div>
+
+  <h2 id="ruta">A dónde lleva cada pieza</h2>
+  <div class="ruta">
+    <div class="card"><span class="f">TOFU →</span><p>Comentario con palabra clave → ManyChat entrega el recurso → empieza la conversación. O la biblioteca gratis: <code>/biblio/ig/&lt;etiqueta&gt;</code>.</p></div>
+    <div class="card"><span class="f">MOFU →</span><p>Recurso de profundidad (guía, prompt de canal) + DM con el setter, que escribe desde @aleix.ytf con su enlace <code>/b/&lt;código&gt;</code> al formulario.</p></div>
+    <div class="card"><span class="f">BOFU →</span><p>Agendar la llamada: <code>/agenda/ig/&lt;etiqueta&gt;</code> en bio o historias, o el enlace del setter <code>/a/&lt;código&gt;</code>. El origen llega solo al CRM.</p></div>
+  </div>
+
+  <footer>System Academy · Página interna (solo maestro). Frases sacadas de llamadas reales. Los casos de alumnos que se citen en BOFU deben ser reales y con su permiso.</footer>
+</div>
+</div>
+
+<script src="config.js"></script>
+<script>
+/* ---------- Acceso: solo maestro. Usa la misma sesión que el CRM (mismo dominio). ---------- */
+const API = ((window.SA_CONFIG || {}).API_URL || '').trim();
+const SESION = 'sa-crm-sesion';
+const leer = () => { try { return JSON.parse(localStorage.getItem(SESION) || 'null'); } catch (e) { return null; } };
+const $ = id => document.getElementById(id);
+
+function abrir() { $('puerta').hidden = true; $('todo').hidden = false; pintar(); }
+function pedirAcceso(msg = '') { $('todo').hidden = true; $('puerta').hidden = false; $('pErr').textContent = msg; }
+
+$('puertaForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const caller = $('pNombre').value.trim(), pin = $('pPin').value.trim();
+  $('pBtn').disabled = true; $('pErr').textContent = '';
+  try {
+    const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'login', caller, pin }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'No se pudo entrar');
+    if (j.rol !== 'maestro') throw new Error('Esta página es solo para el acceso maestro.');
+    try { localStorage.setItem(SESION, JSON.stringify({ caller: j.caller, pin, rol: j.rol })); } catch (e) {}
+    $('pPin').value = '';
+    abrir();
+  } catch (err) { $('pErr').textContent = err.message; }
+  $('pBtn').disabled = false;
+});
+$('salir').addEventListener('click', () => { try { localStorage.removeItem(SESION); } catch (e) {} location.reload(); });
+
+/* ---------- Mapa de contenido: fase → objetivo + celda por perfil ---------- */
+const DATOS = [
+  { fase: 'TOFU', nombre: 'Descubrimiento', obj: '<b>Atraer y despertar curiosidad.</b> No se menciona la formación. Se gana atención con su dolor o con un dato que no había visto.',
+    A: {
+      estado: '«No sabía que esto existía.»',
+      ideas: [
+        ['«Curras el doble que el de al lado y cobráis lo mismo»', 'Dolor techo de cristal → existe otra forma → 3 pasos en pantalla'],
+        ['«No puedes ni ir al súper sin mirar el reloj»', 'Horario que manda → un canal se trabaja a tu ritmo'],
+        ['«Mis resultados no dependen de mí»', 'El puente más limpio: un canal es causa-efecto directo'],
+        ['Autónomo: «quiero dejar de tratar con clientes»', 'Un canal no tiene clientes que te persigan (avatar distinto al empleado: no mezclar)'],
+        ['«Canales sin cara que nadie conoce y facturan»', 'Enseñar un canal real ajeno con sus datos: «esto existe»']
+      ],
+      formato: 'Reel 70–80 s: dolor → 3 pasos en pantalla → doble CTA.',
+      cta: 'Comenta <b>NICHOS</b> o <b>SISTEMA</b>.',
+      kpi: 'Alcance, seguidores nuevos, comentarios con palabra clave.',
+      no: 'Hablar de la academia, de precios o pedir llamada. Hurgar en la culpa («no das a tu familia…»): se nombra, no se hurga.'
+    },
+    B: {
+      estado: '«Esto no lo había visto contar así.»',
+      ideas: [
+        ['«¿Hay mercado para tanta gente?»', 'Se responde con datos: canales pequeños con vídeos que revientan su media (outliers)'],
+        ['Nichos en inglés con RPM alto', 'Dato concreto + prompt en pantalla. Se entiende en 3 segundos'],
+        ['Analizo un canal en 60 segundos', 'Qué le funciona, qué copiaría y qué no. Criterio en directo'],
+        ['El mito que más daño hace en faceless', 'Desmontar una creencia del nicho con una prueba']
+      ],
+      formato: 'Reel de datos o pantalla, carrusel guardable.',
+      cta: 'Comenta <b>NICHO</b> o <b>CANAL</b>.',
+      kpi: 'Guardados y compartidos (B guarda para comparar).',
+      no: 'Explicarle lo básico (qué es faceless): se va. Prometer cifras sin captura.'
+    }
+  },
+  { fase: 'MOFU', nombre: 'Confianza', obj: '<b>Que confíe.</b> Ya conoce el modelo y duda: si funciona, si es complicado, si llega tarde, si necesita experiencia. Objeciones, pruebas, comparativas y mecanismos.',
+    A: {
+      estado: '«Me gusta, pero ¿yo podría?»',
+      ideas: [
+        ['«¿Necesito experiencia?»', 'Proceso repetible, no talento: los primeros 30 vídeos existen para aprender a producir'],
+        ['«No tengo tiempo con mi trabajo»', 'Cuánto lleva de verdad un vídeo con IA, cronometrado en pantalla'],
+        ['«No se me da bien escribir / no quiero poner mi voz»', 'Guion con IA + voz con ElevenLabs, enseñado'],
+        ['Faceless vs marca personal vs dropshipping', 'Comparativa honesta: qué pide cada uno, qué riesgo tiene'],
+        ['«¿Cuánto hace falta para empezar?»', 'Qué hace falta de verdad y qué no. Sin endeudarse'],
+        ['Plazos honestos', 'Qué se mide antes del dinero: CTR, retención, primeros vídeos']
+      ],
+      formato: 'Reel de objeción (apertura B o C), carrusel comparativo, vídeo largo en YouTube.',
+      cta: 'Guía completa (<b>SISTEMA</b>) o biblioteca gratis.',
+      kpi: 'Leads en el formulario, DMs que responden, entradas a la biblioteca.',
+      no: 'Minimizar el miedo al dinero o a la deuda. Vender todavía.'
+    },
+    B: {
+      estado: '«Ya me la jugué una vez. ¿Por qué esta vez sería distinto?»',
+      ideas: [
+        ['«Me estafaron con un canal montado»', 'Validar entero. Enseñar a detectar la estafa: es de lo que mejor funciona'],
+        ['Comprar un canal vs aprender a operarlo', 'Un canal sin criterio es un activo muerto'],
+        ['Por qué tu canal no despega', 'Diagnóstico: CTR 6–10 %, retención 40 %+, qué tocar primero'],
+        ['5 preguntas antes de pagar a cualquier academia', 'Dale criterio para comparar: gana quien enseña a elegir'],
+        ['«Llevo mucho tiempo solo y no sale»', 'El cuello de botella no es esfuerzo: es criterio y feedback'],
+        ['«Ya hice marca personal y no salió»', 'Por qué faceless es otra cosa']
+      ],
+      formato: 'Reel de objeción, análisis de canal en pantalla, vídeo largo de mecanismo.',
+      cta: 'Comenta <b>CANAL</b> (analiza tu canal) o DM con el setter.',
+      kpi: 'DMs abiertos, conversaciones con el setter, formularios que cualifican.',
+      no: 'Atacar a otras academias por nombre. Regañarle por haber caído: le falta un dato, no una lección.'
+    }
+  },
+  { fase: 'BOFU', nombre: 'Decisión', obj: '<b>Convertir el interés en decisión.</b> Ya se plantea aprenderlo: necesita ver por qué vuestra formación, sistema y metodología le llevan del punto A al B.',
+    A: {
+      estado: '«Quiero hacerlo, pero necesito ver que alguien como yo lo ha hecho.»',
+      ideas: [
+        ['Caso de alumno que venía de un trabajo', 'Punto de partida, qué hizo, dónde está hoy. Real y con permiso'],
+        ['Del punto A al B', 'Cómo es el camino dentro: semanas, hitos, qué hace cada semana'],
+        ['Una semana dentro de System Academy', 'Clases, revisiones, comunidad: lo que verá al entrar'],
+        ['Q&A: «¿y si no tengo tiempo / me atasco?»', 'Respuestas cortas a lo que preguntan en llamada'],
+        ['Presentación de la academia', 'Quiénes sois (Mario y Aleix), qué hacéis y para quién NO es']
+      ],
+      formato: 'Vídeo de caso, historias Q&A, vídeo de presentación fijado en el perfil.',
+      cta: 'Agenda tu llamada (<code>/agenda/…</code>) o escribe por DM.',
+      kpi: 'Llamadas agendadas, asistencia, cierres.',
+      no: 'Testimonios o cifras inventadas. Falsa urgencia.'
+    },
+    B: {
+      estado: '«¿Qué tenéis que no tengan los demás?»',
+      ideas: [
+        ['Caso de alumno que venía de otro curso o de una estafa', 'Qué falló antes, qué cambió aquí. Real y con permiso'],
+        ['La metodología por dentro', 'Nicho → outliers → guion → producción → métricas, con pantallas'],
+        ['Cómo corregimos un canal', 'El seguimiento real: una revisión de canal de un alumno (con permiso)'],
+        ['Qué hacemos distinto', 'Comparativa honesta del sistema, sin nombrar a nadie'],
+        ['Q&A: precio, plazos, qué incluye', 'Concreto y claro: B necesita el dossier']
+      ],
+      formato: 'Vídeo largo de metodología, revisión de canal, Q&A, presentación.',
+      cta: 'Agenda tu llamada con el enlace del setter (<code>/a/…</code>).',
+      kpi: 'Llamadas agendadas desde B, cierres, objeciones que ya no salen en llamada.',
+      no: 'Prometer plazos cortos. Esconder qué incluye: con B gana el más concreto.'
+    }
+  }
+];
+
+let fPerfil = 'AB', fFase = '';
+
+function celda(p, d) {
+  return `<article class="card celda ${p}">
+    <div><div class="quien">Perfil ${p} · ${p === 'A' ? 'Quiere salir' : 'Va en serio'}</div><div class="estado">${d.estado}</div></div>
+    <div><h5>Ideas de contenido</h5><ul class="ideas">${d.ideas.map(([t, s]) => `<li><b>${t}</b><span>${s}</span></li>`).join('')}</ul></div>
+    <div class="fila"><div><b>Formato:</b> ${d.formato}</div><div><b>CTA:</b> ${d.cta}</div></div>
+    <div class="fila"><div><b>Se mide con:</b> ${d.kpi}</div></div>
+    <div class="no-hacer"><b>No hacer:</b> ${d.no}</div>
+  </article>`;
+}
+
+function pintar() {
+  const perfiles = fPerfil === 'AB' ? ['A', 'B'] : [fPerfil];
+  const html = DATOS.filter(f => !fFase || f.fase === fFase).map(f => `
+    <section class="fase">
+      <div class="fase-cab"><span class="sig">${f.fase}</span><span class="obj"><em>${f.nombre}.</em> ${f.obj}</span></div>
+      <div class="celdas ${perfiles.length === 1 ? 'uno' : ''}">${perfiles.map(p => celda(p, f[p])).join('')}</div>
+    </section>`).join('');
+  $('mapa-cont').innerHTML = html || '<p class="vacio">Nada que mostrar.</p>';
+}
+
+function chips(id, set) {
+  $(id).addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    set(b.dataset.v); pintar();
+  });
+}
+chips('fPerfil', v => fPerfil = v);
+chips('fFase', v => fFase = v);
+
+$('check').addEventListener('change', () => {
+  const t = $('check').querySelectorAll('input').length, h = $('check').querySelectorAll('input:checked').length;
+  $('listo').textContent = h === t ? '✅ Lista para publicar.' : h ? `${h} de ${t}` : '';
+});
+
+/* Arranque: sin API (pruebas locales) o con sesión maestro guardada → directo; si no, pide acceso */
+const s = leer();
+if (!API || (s && s.rol === 'maestro')) abrir(); else pedirAcceso();
+</script>
+</body>
+</html>
