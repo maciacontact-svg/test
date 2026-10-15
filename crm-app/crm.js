@@ -25,12 +25,18 @@ const pendSet = {}, timersSet = {};                // día → números del sett
 // ---------- API ----------
 async function api(action, extra = {}) {
   if (DEMO) return demoApi(action, extra);
-  const r = await fetch(API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action, caller: S?.caller, pin: S?.pin, ...extra }),
-  });
-  const j = await r.json();
+  let r, j;
+  try {
+    r = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, caller: S?.caller, pin: S?.pin, ...extra }),
+    });
+  } catch (e) {
+    throw new Error(navigator.onLine === false ? 'Sin internet' : 'El Apps Script no responde: revisa en Apps Script › Implementar › Gestionar implementaciones que esté activa y con acceso «Cualquier usuario» (ver crm/ACTIVAR.md)');
+  }
+  try { j = await r.json(); }
+  catch (e) { throw new Error('El Apps Script no devuelve datos (HTTP ' + r.status + '): la implementación está caída, sin autorizar o la URL de config.js ya no vale'); }
   if (!j.ok) throw new Error(j.error || 'Error del servidor');
   return j;
 }
@@ -1476,7 +1482,9 @@ function live(ok, msg) {
   $('live').classList.toggle('off', !ok);
   $('liveText').textContent = ok ? (DEMO ? 'Demo' : 'En directo') : 'Sin conexión';
   $('live').title = ok ? '' : msg || '';
+  $('live').dataset.msg = ok ? '' : msg || '';
 }
+$('live').addEventListener('click', () => { if ($('live').dataset.msg) toast($('live').dataset.msg, true); });
 let tt;
 function toast(msg, err) {
   const t = $('toast');

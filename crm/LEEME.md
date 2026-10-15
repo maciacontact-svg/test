@@ -134,3 +134,8 @@ El dashboard vive en la carpeta `crm-app/` y se publica como **otro proyecto de 
 - **¿Añadir un lead a mano?** Escríbelo en una fila nueva del Sheet; el dashboard le asigna su ID solo.
 - **¿Quitar a un caller?** Borra su fila en Ajustes: deja de poder entrar al momento.
 - **Límites de Google:** de sobra para cientos de leads al día.
+- **El CRM pone «Sin conexión» y no entran leads.** Pulsa la etiqueta «Sin conexión» para ver el motivo. Casi siempre es la implementación del Apps Script:
+  1. Apps Script → **Implementar → Gestionar implementaciones**. Tiene que haber UNA activa de tipo «Aplicación web», **Ejecutar como: Yo**, **Quién tiene acceso: Cualquier usuario**. Si la archivaste o cambiaste el acceso, ponlo bien → ✏️ → *Nueva versión* → Implementar.
+  2. Copia la **URL de la aplicación web** (acaba en `/exec`). Si no es la de `config.js` (pasa si se usó «Nueva implementación» en vez de «Gestionar»), hay que cambiarla en `config.js`, `crm-app/config.js` y en Vercel (`CRM_API_URL`).
+  3. Ejecuta `configurar` una vez: si Google pide permisos, acéptalos (sin eso la web app no responde).
+  4. Abre la URL `/exec` en el navegador: debe salir `{"ok":true,"app":"System Academy CRM"}`.
