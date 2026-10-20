@@ -10,4 +10,4 @@ la tabla de RPM por idioma y las IAs por tarea. La lista completa de recursos se
 ## Lead magnet «Sistema de 3 pasos» (palabra clave «2D»)
 - `Sistema-3-pasos-YouTube-faceless-IA-System-Academy.pdf` (8 páginas): canal referente → guion (prompt) → voz (ElevenLabs / GenAI Pro) → edición (Higgsfield) → checklist de publicación.
 - Fuente editable: `sistema-3-pasos.html` (usa `fonts.css`). Para regenerar el PDF: abrir en Chrome → Imprimir → Guardar como PDF (A4, márgenes «Ninguno», gráficos de fondo activados).
-- Enlace público: biblioteca.systemacademy.es/guia/Sistema-3-pasos-YouTube-faceless-IA-System-Academy.pdf. El botón del final lleva a /biblio/ig/2d (origen ig / 2d en el CRM).
+- Enlace público: biblioteca.systemacademy.es/guia/Sistema-3-pasos-YouTube-faceless-IA-System-Academy.pdf. PDF sin botones ni enlaces (solo texto).
