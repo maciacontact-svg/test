@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Sistema de 3 pasos · YouTube faceless con IA · System Academy</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+/* ============ System Academy · guía en PDF (A4) ============ */
+:root {
+  --bg: #f3f3f3; --card: #f3f3f3; --card-2: #fafafa; --ink: #111111; --ink-2: #3a3a3a;
+  --muted: #707070; --hair: #e3e3e3; --ok: #1f8a4c; --ok-bg: #e7f5ea; --ko: #b3261e; --ko-bg: #fbeceb;
+  --sans: "Poppins", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+@page {
+  size: A4; margin: 22mm 18mm 20mm;
+  @top-left { content: "SYSTEM ACADEMY"; font: 600 7.5pt var(--sans); letter-spacing: .12em; color: #111; vertical-align: bottom; padding-bottom: 5mm; }
+  @top-right { content: "Sistema de 3 pasos"; font: 400 7.5pt var(--sans); color: #8a8a8a; vertical-align: bottom; padding-bottom: 5mm; }
+  @bottom-left { content: "Guía gratuita · System Academy"; font: 400 7.5pt var(--sans); color: #8a8a8a; vertical-align: top; padding-top: 5mm; }
+  @bottom-right { content: counter(page); font: 600 8pt var(--sans); color: #111; vertical-align: top; padding-top: 5mm; }
+}
+@page cover { margin: 0; @top-left { content: none } @top-right { content: none } @bottom-left { content: none } @bottom-right { content: none } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: var(--sans); color: var(--ink); font-size: 9.6pt; line-height: 1.6; }
+a { color: inherit; text-decoration: none; }
+em { font-style: italic; font-weight: 500; }
+b, strong { font-weight: 600; }
+
+/* ---------- Portada y contraportada ---------- */
+.cover { page: cover; width: 210mm; height: 297mm; position: relative; overflow: hidden; background: var(--bg); padding: 22mm 20mm; display: flex; flex-direction: column; break-after: page; }
+.cover .brand { display: flex; align-items: center; gap: 10px; }
+.cover .brand b { font-size: 11pt; letter-spacing: -.01em; }
+.cover .brand small { display: block; font-size: 7.5pt; color: var(--muted); font-weight: 400; }
+.badge { display: inline-block; margin-top: 30mm; padding: 5px 12px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--hair); font-size: 7.5pt; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.cover h1 { font-size: 44pt; line-height: 1.02; letter-spacing: -.035em; font-weight: 600; margin-top: 9mm; }
+.cover h1 em { font-weight: 500; }
+.cover .sub { font-size: 13pt; color: var(--ink-2); margin-top: 6mm; max-width: 145mm; line-height: 1.45; }
+.cover ul { list-style: none; margin-top: 12mm; display: grid; gap: 7px; }
+.cover li { display: flex; gap: 10px; align-items: center; font-size: 10pt; }
+.tick { flex: none; width: 17px; height: 17px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; }
+.stats { margin-top: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stat { background: #fff; border-radius: 16px; padding: 12px 14px; box-shadow: 0 0 0 1px rgba(0,0,0,.04); }
+.stat b { display: block; font-size: 20pt; line-height: 1.1; letter-spacing: -.03em; }
+.stat span { font-size: 7.5pt; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.cover .foot { display: flex; justify-content: space-between; margin-top: 8mm; padding-top: 5mm; border-top: 1px solid #dcdcdc; font-size: 7.5pt; color: var(--muted); }
+.ring { position: absolute; right: -60mm; top: -40mm; width: 170mm; height: 170mm; border-radius: 50%; border: 1px solid #e0e0e0; }
+.ring.r2 { right: -35mm; top: -15mm; width: 120mm; height: 120mm; }
+.ring.r3 { right: -10mm; top: 10mm; width: 70mm; height: 70mm; background: #ebebeb; border: 0; }
+
+.back { background: var(--ink); color: #fff; justify-content: center; break-after: auto; break-before: page; position: relative; top: 0; }
+.back h2 { font-size: 34pt; line-height: 1.05; letter-spacing: -.03em; font-weight: 600; }
+.back p { color: #c9c9c9; font-size: 11pt; max-width: 150mm; margin-top: 6mm; }
+.back .box { margin-top: 10mm; border-radius: 18px; background: #1d1d1d; padding: 16px 20px; }
+.back .box small { font-size: 7.5pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #9a9a9a; }
+.back .box p { margin-top: 6px; color: #eaeaea; font-size: 10pt; }
+.back .cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; background: #fff; color: #111; font-weight: 600; font-size: 10pt; padding: 10px 18px; border-radius: 999px; }
+.back .sign { position: absolute; left: 20mm; bottom: 20mm; right: 20mm; display: flex; gap: 24px; justify-content: space-between; align-items: center; text-align: right; font-size: 7.5pt; color: #8a8a8a; }
+.back .sign .brand b { color: #fff; white-space: nowrap; }
+
+/* ---------- Secciones ---------- */
+section { break-before: page; padding-top: .5px; }
+section.cont { break-before: auto; margin-top: 10mm; }
+.mod { display: flex; gap: 14px; align-items: center; padding-bottom: 5mm; margin-bottom: 6mm; border-bottom: 1px solid var(--hair); position: relative; }
+.mod::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 22mm; height: 2px; background: var(--ink); }
+.num { flex: none; width: 15mm; height: 15mm; border-radius: 4.5mm; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 15pt; font-weight: 600; letter-spacing: -.02em; }
+.mod h2 { font-size: 21pt; line-height: 1.1; letter-spacing: -.025em; font-weight: 600; }
+.mod p { font-size: 9pt; color: var(--muted); margin-top: 2px; }
+h3 { font-size: 11.5pt; font-weight: 600; letter-spacing: -.01em; margin: 7mm 0 2.5mm; break-after: avoid; }
+p + p { margin-top: 2.5mm; }
+.lead { font-size: 10.5pt; color: var(--ink-2); }
+.muted { color: var(--muted); }
+.small { font-size: 8.4pt; }
+
+.banner { background: var(--ink); color: #fff; border-radius: 16px; padding: 14px 18px; margin: 6mm 0; break-inside: avoid; }
+.banner b { font-size: 13pt; letter-spacing: -.015em; display: block; }
+.banner span { font-size: 8.8pt; color: #bdbdbd; }
+.card { background: var(--card); border-radius: 14px; padding: 12px 16px; margin: 5mm 0; break-inside: avoid; }
+.card.line { background: #fff; box-shadow: 0 0 0 1px var(--hair); }
+.label { display: block; font-size: 7pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); margin-bottom: 4px; }
+.label.m { color: var(--muted); }
+.warn { border-left: 3px solid var(--ink); border-radius: 4px 14px 14px 4px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 5mm 0; break-inside: avoid; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 5mm 0; break-inside: avoid; }
+.grid2 .card, .grid3 .card { margin: 0; }
+.big { font-size: 17pt; font-weight: 600; letter-spacing: -.03em; line-height: 1.15; display: block; }
+
+ul.dots { list-style: none; }
+ul.dots li { position: relative; padding-left: 14px; margin: 3px 0; }
+ul.dots li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); }
+ul.yes, ul.no, ul.check { list-style: none; }
+ul.yes li, ul.no li, ul.check li { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0; }
+ul.yes li::before, ul.no li::before, ul.check li::before { flex: none; width: 15px; height: 15px; border-radius: 50%; margin-top: 2px; font-size: 8pt; font-weight: 700; display: grid; place-items: center; line-height: 1; }
+ul.yes li::before { content: "✓"; background: var(--ok-bg); color: var(--ok); }
+ul.no li::before { content: "✕"; background: var(--ko-bg); color: var(--ko); }
+ul.check li::before { content: "✓"; background: var(--ink); color: #fff; border-radius: 4px; }
+.cols2 { columns: 2; column-gap: 10mm; }
+.cols2 li { break-inside: avoid; }
+
+ol.steps { list-style: none; counter-reset: s; margin: 3mm 0; }
+ol.steps > li { counter-increment: s; display: grid; grid-template-columns: 24px 1fr; gap: 10px; margin: 3.2mm 0; break-inside: avoid; }
+ol.steps > li::before { content: counter(s); width: 20px; height: 20px; border-radius: 7px; background: var(--ink); color: #fff; font-size: 8pt; font-weight: 600; display: grid; place-items: center; margin-top: 1px; }
+ol.steps.w > li::before { content: attr(data-n); width: 24px; }
+
+table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 4mm 0; font-size: 8.8pt; break-inside: avoid; }
+th { background: var(--ink); color: #fff; text-align: left; font-weight: 600; font-size: 7.6pt; letter-spacing: .06em; text-transform: uppercase; padding: 8px 10px; }
+th:first-child { border-radius: 10px 0 0 0; } th:last-child { border-radius: 0 10px 0 0; }
+td { padding: 7px 10px; border-bottom: 1px solid #ececec; vertical-align: top; }
+tr:nth-child(even) td { background: #f7f7f7; }
+td b { font-weight: 600; }
+td a { text-decoration: underline; text-underline-offset: 2px; text-decoration-color: #bbb; }
+
+.chain { display: flex; align-items: center; gap: 8px; margin: 5mm 0; break-inside: avoid; }
+.chain .card { flex: 1; margin: 0; text-align: center; }
+.chain .card b { display: block; font-size: 12pt; letter-spacing: -.01em; }
+.chain .card span { font-size: 8pt; color: var(--muted); }
+.chain i { font-style: normal; color: #9a9a9a; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 3mm 0; }
+.chip { background: #fff; box-shadow: 0 0 0 1px var(--hair); border-radius: 999px; padding: 4px 11px; font-size: 8.4pt; font-weight: 500; }
+.chip.d { background: var(--ink); color: #fff; box-shadow: none; }
+
+.timeline { display: grid; grid-template-columns: 1fr 1.2fr 3.4fr 1.2fr; gap: 6px; margin: 4mm 0 2mm; }
+.timeline div { border-radius: 10px; padding: 8px 10px; color: #fff; font-size: 8pt; }
+.timeline b { display: block; font-size: 9pt; letter-spacing: .04em; }
+.timeline div:nth-child(1) { background: #111; } .timeline div:nth-child(2) { background: #3a3a3a; }
+.timeline div:nth-child(3) { background: #5c5c5c; } .timeline div:nth-child(4) { background: #111; }
+
+.pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 5mm 0; break-inside: avoid; }
+.pipe div { background: var(--card); border-radius: 12px; padding: 10px; text-align: center; }
+.pipe .n { width: 22px; height: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--ink); color: #fff; margin: 0 auto 6px; font-size: 8pt; font-weight: 600; }
+.pipe b { display: block; font-size: 9.4pt; }
+.pipe span { font-size: 7.6pt; color: var(--muted); line-height: 1.35; display: block; }
+
+.toc { display: grid; grid-template-columns: 1fr 1fr; column-gap: 10mm; margin-top: 3mm; }
+.toc div { display: grid; grid-template-columns: 11mm 1fr; padding: 6px 0; border-bottom: 1px solid #ececec; break-inside: avoid; }
+.toc b { font-size: 10pt; }
+.toc i { font-style: normal; font-weight: 600; font-size: 10pt; }
+.toc span { display: block; font-size: 8pt; color: var(--muted); }
+
+/* ---------- Prompts ---------- */
+.prompt-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin: 7mm 0 3mm; break-after: avoid; }
+.prompt-head .k { font-size: 7.5pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.prompt-head h3 { margin: 2px 0 0; font-size: 13pt; }
+.prompt-head a { flex: none; font-size: 8pt; font-weight: 600; background: var(--ink); color: #fff; border-radius: 999px; padding: 5px 12px; }
+pre.prompt { background: var(--ink); color: #ededed; border-radius: 14px; padding: 14px 16px; font: 400 7.9pt/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+pre.prompt .h { color: #fff; font-weight: 600; }
+pre.prompt .ph { color: #9fd3a8; }
+.use { font-size: 8.6pt; color: var(--ink-2); margin-bottom: 3mm; }
+</style>
+</head>
+<body>
+<style>
+.cover h1 { font-size: 40pt; }
+.step { display: grid; grid-template-columns: 1fr; }
+.stepnum { font-size: 7.5pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 5mm 0; break-inside: avoid; }
+.vs .card { margin: 0; }
+.vs .card.ko { background: var(--ko-bg); }
+.vs .card.ok { background: var(--ok-bg); }
+.kv { display: grid; grid-template-columns: 30mm 1fr; gap: 0; margin: 3mm 0; break-inside: avoid; }
+.kv div { padding: 6px 0; border-bottom: 1px solid #ececec; }
+.kv div:nth-child(odd) { font-weight: 600; }
+.url { font: 600 8.6pt var(--mono); background: #fff; box-shadow: 0 0 0 1px var(--hair); border-radius: 8px; padding: 2px 7px; }
+.back .url { background: #fff; color: #111; box-shadow: none; }
+</style>
+
+<!-- ======================= PORTADA ======================= -->
+<div class="cover">
+  <div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div>
+  <div class="brand">
+    <svg viewBox="0 0 100 100" width="40" height="40"><defs><mask id="m1"><rect width="100" height="100" fill="#fff"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#000" stroke-width="5.5" stroke-linecap="round"/></mask></defs><rect width="100" height="100" rx="26" fill="#111"/><path d="M37 27 L77 50 L37 73 Z" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round" mask="url(#m1)"/></svg>
+    <div><b>System Academy</b><small>Formación en YouTube faceless y monetización</small></div>
+  </div>
+  <div><span class="badge">Guía gratuita · Sistema de 3 pasos</span></div>
+  <h1>Tu canal <em>faceless</em><br>con IA en<br><em>3 pasos</em></h1>
+  <p class="sub">Cómo replicar un formato que ya funciona en inglés y llevarlo al mercado en español: guion, voz y edición con inteligencia artificial, sin dar la cara.</p>
+  <ul>
+    <li><span class="tick"><svg width="9" height="9" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Cómo encontrar un canal referente reciente y viral</li>
+    <li><span class="tick"><svg width="9" height="9" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Paso 1 · El guion, con el prompt listo para copiar</li>
+    <li><span class="tick"><svg width="9" height="9" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Paso 2 · La locución con voz IA y sus ajustes</li>
+    <li><span class="tick"><svg width="9" height="9" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Paso 3 · La edición animada con Higgsfield</li>
+  </ul>
+  <div class="stats">
+    <div class="stat"><b>3</b><span>Pasos</span></div>
+    <div class="stat"><b>2</b><span>Prompts</span></div>
+    <div class="stat"><b>3</b><span>Herramientas</span></div>
+    <div class="stat"><b>1</b><span>Checklist</span></div>
+  </div>
+  <div class="foot"><span>Guía gratuita · Uso personal</span><span>System Academy</span></div>
+</div>
+
+<!-- ======================= INTRO ======================= -->
+<section style="break-before:auto">
+  <div class="banner"><b>La idea en una frase</b><span>No inventes un canal desde cero: encuentra un formato que ya está funcionando en inglés y crea tu propia versión, mejor, para el público en español.</span></div>
+  <p class="lead">Muchos formatos que se hacen virales en inglés todavía no tienen competencia seria en español. Si llegas antes con un vídeo igual de bueno (o mejor), juegas con ventaja. Y hoy, con IA, un vídeo de este tipo se hace con tres piezas:</p>
+  <div class="chain">
+    <div class="card"><b>1 · Guion</b><span>Tu IA de texto</span></div><i>→</i>
+    <div class="card"><b>2 · Voz</b><span>ElevenLabs · GenAI Pro</span></div><i>→</i>
+    <div class="card"><b>3 · Edición</b><span>Higgsfield</span></div>
+  </div>
+  <p>Antes de los tres pasos hay uno que decide todo lo demás: <b>elegir bien el canal referente</b>. Si copias el formato de un canal que no funciona, harás muy bien un vídeo que nadie quiere ver.</p>
+
+  <h3>Paso previo: encuentra tu canal referente</h3>
+  <p>Busca en YouTube (en inglés) temas de tu interés —finanzas, historia, curiosidades, psicología, salud…— y filtra por vídeos recientes. Lo que buscas es un canal que cumpla estas cuatro condiciones:</p>
+  <ul class="check">
+    <li><div><b>Reciente:</b> el canal o su vídeo más visto tiene semanas o pocos meses, no años. Así sabes que el formato funciona <em>hoy</em>.</div></li>
+    <li><div><b>Viral para su tamaño:</b> vídeos con muchas más visitas que suscriptores tiene el canal. Eso es un <em>outlier</em>: el algoritmo está empujando ese formato.</div></li>
+    <li><div><b>Faceless y replicable:</b> todo está hecho con IA (dibujos, animaciones, imágenes) y una voz en off. Si tú no puedes producirlo, descártalo.</div></li>
+    <li><div><b>Hueco en español:</b> busca el mismo tema en español. Si hay pocos canales o los que hay son flojos, tienes oportunidad.</div></li>
+  </ul>
+  <div class="card warn"><span class="label">Analiza el formato antes de producir</span>Mira 4 o 5 de sus vídeos más vistos y apunta: duración, estilo visual (dibujos, animación, 3D…), ritmo de cambio de imagen, tipo de títulos y cómo empiezan los primeros 30 segundos. Eso es lo que vas a replicar: <b>el formato, no el contenido.</b></div>
+</section>
+
+<!-- ======================= PASO 1 ======================= -->
+<section>
+  <div class="mod"><div class="num">01</div><div><h2>El <em>guion</em></h2><p>De la transcripción del referente a un guion nuevo en español</p></div></div>
+  <p>Todo vídeo empieza por el guion. La forma más rápida de escribir uno que funcione es partir de un vídeo que ya ha demostrado que engancha y entender <em>por qué</em> engancha.</p>
+  <ol class="steps">
+    <li><div><b>Abre el vídeo referente</b> y baja hasta la descripción. Pulsa <b>«Mostrar transcripción»</b>: a la derecha aparece el texto completo del vídeo.</div></li>
+    <li><div><b>Copia la transcripción</b> entera (puedes ocultar las marcas de tiempo desde los tres puntos del panel).</div></li>
+    <li><div><b>Abre tu IA de texto</b> y pega el prompt de la página siguiente con la transcripción al final.</div></li>
+    <li><div><b>Revisa el resultado</b> con el checklist de abajo antes de pasar a la voz.</div></li>
+  </ol>
+
+  <div class="vs">
+    <div class="card ko"><span class="label">Lo que no funciona</span><ul class="no"><li>Traducir el guion tal cual</li><li>Cambiar palabras por sinónimos y dar por hecho que ya es tuyo</li><li>Copiar datos sin comprobarlos</li></ul></div>
+    <div class="card ok"><span class="label">Lo que sí funciona</span><ul class="yes"><li>Usar la transcripción como investigación</li><li>Quedarte con la estructura y los patrones que enganchan</li><li>Escribir un guion nuevo, con tu ángulo, tus ejemplos y datos comprobados</li></ul></div>
+  </div>
+  <div class="card warn"><span class="label">Por qué importa</span>Cambiar sinónimos <b>no</b> convierte un texto en tuyo: el guion sigue siendo obra de otro creador. Además, YouTube no monetiza el contenido que solo reaprovecha el trabajo de otros sin aportar valor propio (política de <em>contenido no auténtico / reutilizado</em>). La regla es simple: <b>copia el formato, nunca el texto.</b></div>
+
+  <h3>Checklist del guion</h3>
+  <ul class="check cols2">
+    <li>Los primeros 5 segundos plantean una pregunta o una promesa clara</li>
+    <li>Frases cortas: una idea por frase</li>
+    <li>Ejemplos y cifras adaptados al público en español (€, países, referencias)</li>
+    <li>Los datos están comprobados (pide a la IA las fuentes y revísalas)</li>
+    <li>Pequeños giros cada 30-60 segundos para que nadie se vaya</li>
+    <li>Leído en voz alta, suena natural: si te trabas, reescríbelo</li>
+  </ul>
+</section>
+
+<section class="cont">
+  <div class="prompt-head"><div><span class="k">Prompt 1</span><h3>Del referente a tu guion original en español</h3></div></div>
+  <p class="use">Cópialo entero, rellena lo que está en verde y pega la transcripción al final.</p>
+<pre class="prompt">Actúa como un guionista experto en YouTube faceless para el público hispanohablante.
+
+Te paso la transcripción de un vídeo en inglés que se ha hecho viral. NO quiero una traducción. Quiero un guion NUEVO y original en español que use lo que hace funcionar a ese vídeo.
+
+<span class="h"># FASE 1 · ANÁLISIS (breve)</span>
+1. Resume en 5 líneas la estructura del vídeo (hook, bloques, giros, cierre).
+2. Enumera los patrones que lo hacen enganchar (curiosidad, tensión, ritmo, promesa).
+3. Indica qué datos o afirmaciones habría que comprobar.
+
+<span class="h"># FASE 2 · GUION ORIGINAL</span>
+Escribe un guion nuevo sobre el mismo tema con estas reglas:
+- Usa la estructura y los patrones, pero con tus propias palabras, tu propio orden de ideas y ejemplos nuevos. Ninguna frase debe ser traducción de una frase del original.
+- Adáptalo al público en español: euros, ejemplos de España y Latinoamérica, referencias cercanas.
+- Aporta algo que el original no tenga: un dato extra, un ejemplo mejor o una explicación más clara.
+- Hook en los primeros 5 segundos: una pregunta o promesa que obligue a seguir viendo.
+- Frases cortas y naturales para voz en off. Un pequeño giro cada 30-60 segundos.
+- Cierre que invite a ver otro vídeo del canal.
+- Duración objetivo: <span class="ph">[X]</span> minutos (unas 150 palabras por minuto).
+- Tono: <span class="ph">[cercano / serio / misterioso…]</span>
+
+<span class="h"># FORMATO DE SALIDA</span>
+- Solo el texto que se va a narrar, sin acotaciones ni títulos de sección.
+- Después del guion: 3 versiones alternativas del hook y 5 títulos posibles.
+
+Transcripción:
+<span class="ph">[PEGA AQUÍ LA TRANSCRIPCIÓN]</span></pre>
+  <div class="card"><span class="label">Para sacarle el máximo</span><ul class="dots">
+    <li>Lee primero el análisis de la Fase 1: ahí está la lección de por qué funciona el vídeo</li>
+    <li>Si un párrafo se parece demasiado al original, pide: «Reescribe este bloque desde cero con otro ejemplo»</li>
+    <li>Guarda el guion final: lo vas a usar en los pasos 2 y 3</li></ul></div>
+</section>
+
+<!-- ======================= PASO 2 ======================= -->
+<section>
+  <div class="mod"><div class="num">02</div><div><h2>La <em>locución</em></h2><p>Una voz IA que suene natural y sea siempre la misma</p></div></div>
+  <p>La voz es lo que hace que el espectador se quede o se vaya. Hay muchas IAs de voz; estas dos son las que recomendamos:</p>
+  <div class="grid2">
+    <div class="card line"><span class="label">ElevenLabs</span><span class="big">La mejor calidad</span>La referencia en voces IA: muy natural, muchas voces en español y control fino de la entonación. Es la opción más cara.</div>
+    <div class="card line"><span class="label">GenAI Pro</span><span class="big">Más barata</span>Da acceso a voces de la misma calidad por bastante menos dinero. Buena opción para empezar si vas a producir mucho.</div>
+  </div>
+  <h3>Cómo crear la locución</h3>
+  <ol class="steps">
+    <li><div><b>Elige una voz</b> de la biblioteca filtrando por idioma español y acento (España o neutro, según tu público). Escucha varias con un párrafo de tu propio guion, no con la demo.</div></li>
+    <li><div><b>Pega el guion</b> por bloques de 2-3 párrafos en lugar de todo de golpe: si un fragmento sale mal, solo regeneras ese trozo.</div></li>
+    <li><div><b>Ajusta y genera.</b> Escucha cada bloque entero antes de seguir.</div></li>
+    <li><div><b>Descarga en la mejor calidad</b> disponible y une los bloques en orden.</div></li>
+  </ol>
+  <h3>Ajustes de partida en ElevenLabs</h3>
+  <div class="kv">
+    <div>Estabilidad</div><div>Empieza en la mitad (≈50 %). Más alta = más constante pero más plana; más baja = más expresiva pero menos predecible.</div>
+    <div>Similitud</div><div>Alta (≈75 %) para que la voz no cambie entre bloques.</div>
+    <div>Estilo</div><div>A 0 o muy bajo. Subirlo exagera la interpretación.</div>
+    <div>Velocidad</div><div>1,0 de base. Para formatos rápidos de curiosidades, prueba 1,05-1,1.</div>
+  </div>
+  <div class="grid2">
+    <div class="card"><span class="label">Usa siempre la misma voz</span>La voz es tu marca. Si cambias de voz en cada vídeo, el canal no se reconoce y el espectador no crea hábito.</div>
+    <div class="card"><span class="label">Pronunciación</span>Escribe los números y las siglas difíciles como se dicen («dos mil veinticinco») y usa puntos y comas para marcar las pausas.</div>
+  </div>
+  <div class="card warn"><span class="label">Antes de publicar</span>Comprueba que tu plan permite <b>uso comercial</b> del audio. En ElevenLabs el plan gratuito no lo incluye: para un canal que quieres monetizar necesitas un plan de pago.</div>
+</section>
+
+<!-- ======================= PASO 3 ======================= -->
+<section>
+  <div class="mod"><div class="num">03</div><div><h2>La <em>edición</em></h2><p>El vídeo animado completo con Higgsfield</p></div></div>
+  <p>Es la parte que antes llevaba más horas. Higgsfield tiene un apartado pensado para canales faceless (<b>Faceless Studio</b>): le das el guion, eliges un estilo visual y te devuelve el vídeo montado con animación, narración, música y subtítulos. A diferencia de muchos canales de referencia, que solo encadenan imágenes fijas, aquí <b>las escenas van animadas</b>.</p>
+  <ol class="steps">
+    <li><div><b>Entra en Higgsfield</b> y abre el apartado de canal faceless.</div></li>
+    <li><div><b>Elige el estilo visual</b> que más se parezca al de tu canal referente (dibujos, cartoon, 3D…). Haz una prueba corta con dos o tres estilos antes de decidir.</div></li>
+    <li><div><b>Pega tu guion</b> del paso 1.</div></li>
+    <li><div><b>Elige la voz:</b> una de las voces de Higgsfield o, si quieres la tuya de ElevenLabs, monta su audio sobre el vídeo en un editor como CapCut (opción con más control).</div></li>
+    <li><div><b>Genera, revisa y descarga.</b> Mira el vídeo entero: si una escena no encaja con lo que se dice, regenérala o cámbiala.</div></li>
+  </ol>
+  <div class="grid3">
+    <div class="card"><span class="label">Mismo estilo siempre</span>El estilo y la voz se guardan por canal: así todos los vídeos se ven iguales y el canal es reconocible.</div>
+    <div class="card"><span class="label">Coste orientativo</span>Funciona con créditos. Como referencia, Higgsfield indica unos <b>246 créditos por minuto</b> de vídeo. Depende del formato y la duración: revisa el precio actual en la app.</div>
+    <div class="card"><span class="label">Duración</span>Este apartado genera episodios cortos (de 1 a 5 minutos). Para vídeos largos, genera por partes y únelas en CapCut.</div>
+  </div>
+  <h3>Opcional: conéctalo con tu IA para automatizar</h3>
+  <p>Higgsfield se puede conectar a tu IA de texto como «conector» (MCP). En los ajustes de conectores de tu IA, añade uno personalizado con la dirección <span class="url">https://mcp.higgsfield.ai/mcp</span> e inicia sesión con tu cuenta de Higgsfield. Desde ese momento puedes pedirle al chat que genere escenas o vídeos con tus créditos sin cambiar de pestaña.</p>
+  <div class="card warn"><span class="label">El toque final que marca la diferencia</span>Antes de subir, abre el vídeo en CapCut y revisa: subtítulos legibles en el móvil, música siempre por debajo de la voz, y ninguna escena quieta más de 3-4 segundos. Y no publiques nada que no hayas visto entero.</div>
+</section>
+
+<!-- ======================= ANTES DE PUBLICAR ======================= -->
+<section>
+  <div class="mod"><div class="num" style="font-size:13pt">✓</div><div><h2>Antes de <em>publicar</em></h2><p>Lo que separa un canal que monetiza de uno que no</p></div></div>
+  <p>YouTube <b>sí</b> monetiza canales hechos con IA. Lo que no monetiza es el contenido producido en masa, repetitivo o que solo reaprovecha el trabajo de otros. La diferencia está en que cada vídeo aporte algo.</p>
+  <div class="vs">
+    <div class="card ok"><span class="label">Canal que crece</span><ul class="yes"><li>Guiones originales, con ángulo propio</li><li>Cada vídeo es distinto del anterior</li><li>Un estilo y una voz reconocibles</li><li>Pocas subidas, pero cuidadas</li></ul></div>
+    <div class="card ko"><span class="label">Canal en riesgo</span><ul class="no"><li>Traducciones de vídeos ajenos</li><li>Plantilla idéntica cambiando solo el tema</li><li>Decenas de vídeos al día sin revisar</li><li>Música o metraje con copyright</li></ul></div>
+  </div>
+
+  <h3>Checklist de publicación</h3>
+  <ul class="check cols2">
+    <li>Título claro con curiosidad (máx. ~60 caracteres)</li>
+    <li>Miniatura legible en el móvil: una idea, poco texto</li>
+    <li>Descripción con las palabras clave del tema</li>
+    <li>Etiqueta de contenido alterado si hay escenas realistas que puedan confundirse con algo real</li>
+    <li>Pantalla final enlazando a otro vídeo tuyo</li>
+    <li>Plan con uso comercial en todas las herramientas</li>
+  </ul>
+
+  <h3>Tu primera semana</h3>
+  <ol class="steps w">
+    <li data-n="D1"><div><b>Busca 3 canales referentes</b> que cumplan las cuatro condiciones y elige uno.</div></li>
+    <li data-n="D2"><div><b>Escribe 3 guiones</b> con el Prompt 1 a partir de sus vídeos más vistos.</div></li>
+    <li data-n="D3"><div><b>Elige tu voz</b> y graba las 3 locuciones seguidas.</div></li>
+    <li data-n="D4"><div><b>Prueba estilos</b> en Higgsfield y produce los 3 vídeos con el mismo.</div></li>
+    <li data-n="D5"><div><b>Miniaturas y títulos</b>: 2 opciones por vídeo y quédate con la más clara.</div></li>
+    <li data-n="D6"><div><b>Publica</b> el primero y programa los otros dos.</div></li>
+    <li data-n="D7"><div><b>Mira los datos</b> (CTR y retención) y apunta qué cambiar en el siguiente lote.</div></li>
+  </ol>
+  <div class="card"><span class="label">Trabaja por lotes</span>Escribe varios guiones seguidos, luego todas las voces, luego todas las ediciones. Cambiar de tarea todo el rato es lo que hace que la mayoría abandone en la tercera semana.</div>
+</section>
+
+<!-- ======================= CONTRAPORTADA ======================= -->
+<div class="cover back">
+  <h2>Ya tienes<br>el <em>sistema.</em></h2>
+  <p>Referente, guion, voz y edición. Con esto puedes tener tu primer vídeo hecho esta misma semana. El primero no será perfecto; el décimo será mucho mejor. Lo importante es empezar.</p>
+  <div class="box"><small>Tu próximo paso, hoy</small>
+    <p>1. Encuentra tu canal referente · 2. Escribe tu primer guion con el Prompt 1 · 3. Crea la voz · 4. Monta el vídeo en Higgsfield · 5. Publica.</p></div>
+  <div class="box"><small>¿Quieres ir más lejos?</small>
+    <p style="font-size:13pt;color:#fff;font-weight:600;line-height:1.3">Entra gratis en nuestra <em>Biblioteca de Recursos</em></p>
+    <p>La guía completa de YouTube faceless desde 0, los prompts para buscar nichos y analizar canales, la calculadora de RPM y las herramientas que usamos en System Academy.</p>
+    <a class="cta" href="https://biblioteca.systemacademy.es/biblio/ig/2d">biblioteca.systemacademy.es →</a></div>
+  <div class="sign">
+    <div class="brand" style="display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 100 100" width="30" height="30"><defs><mask id="m2"><rect width="100" height="100" fill="#fff"/><path d="M27 41 C 40 37, 45 50, 52 51 S 65 61, 79 57" fill="none" stroke="#000" stroke-width="5.5" stroke-linecap="round"/></mask></defs><rect width="100" height="100" rx="26" fill="#fff"/><path d="M37 27 L77 50 L37 73 Z" fill="#111" stroke="#111" stroke-width="9" stroke-linejoin="round" mask="url(#m2)"/></svg>
+      <b style="font-size:10pt">System Academy</b></div>
+    <span>Sistema de 3 pasos · YouTube faceless con IA · Guía gratuita.</span>
+  </div>
+</div>
+
+</body>
+</html>
