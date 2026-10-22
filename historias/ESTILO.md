@@ -16,6 +16,6 @@ Reglas sacadas de la secuencia «Academia» ya publicada (hook y CTA), para que 
 |---|---|---|---|
 | 1 · Nicho | IMG_5840 (portátil con NexLev en pantalla) | PASO 1: Vas a crear tu canal HOY. / ¿Qué nicho eliges? | A) Uno que me apasione ❤️ · B) Uno que ya funcione 📈 |
 | 2 · Idioma | IMG_5880 (mirando el móvil) | reveal nichos validados + PASO 2: ¿En qué idioma haces los vídeos? | A) Español 🇪🇸 · B) Inglés 🇺🇸 |
-| 3 · Producción | PHOTO-2026-07-26-17-07-58 (escribiendo en el portátil) | reveal inglés paga más + PASO 3: ¿Cómo produces los vídeos? | A) Lo hago todo yo solo 🫠 · B) Con IA + un sistema 🤖 |
+| 3 · Producción | IMG_5925 (selfie, polo blanco; la versión con el portátil está en `original/`) | reveal inglés paga más + PASO 3: ¿Cómo produces los vídeos? | A) Lo hago todo yo solo 🫠 · B) Con IA + un sistema 🤖 |
 
 Subir `historia-N-*.jpg` (limpia) y poner la encuesta donde marca `historia-N-*-guia.jpg`.
