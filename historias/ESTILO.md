@@ -18,4 +18,7 @@ Reglas sacadas de la secuencia «Academia» ya publicada (hook y CTA), para que 
 | 2 · Idioma | IMG_5880 (mirando el móvil) | reveal nichos validados + PASO 2: ¿En qué idioma haces los vídeos? | A) Español 🇪🇸 · B) Inglés 🇺🇸 |
 | 3 · Producción | IMG_5925 (selfie, polo blanco; la versión con el portátil está en `original/`) | reveal inglés paga más + PASO 3: ¿Cómo produces los vídeos? | A) Lo hago todo yo solo 🫠 · B) Con IA + un sistema 🤖 |
 
+| 4 · CTA (cierre) | IMG_5860 (habitación del hotel, trabajando; misma sesión que 2 y 3; techo y mesa algo oscurecidos) | «Oye, ya has hecho parte de tu canal aquí.» + «¿Por qué no dedicarle 1-2h hoy?» + KIT DE ARRANQUE y sus 3 puntos (viñetas «–», sin emojis) + Alberto + Responde a esta historia “KIT” | sin sticker: se responde a la historia |
+
 Subir `historia-N-*.jpg` (limpia) y poner la encuesta donde marca `historia-N-*-guia.jpg`.
+El CTA es la excepción a «uno o dos bloques»: arriba gancho y oferta, abajo prueba y acción (la acción grande y terminando antes de y≈1670). Comillas “ ” como las del teclado del iPhone.
