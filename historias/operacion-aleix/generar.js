@@ -1,8 +1,8 @@
-// Secuencia «Operación Aleix» (5 historias, 1080×1920).
+// Secuencia «Operación Aleix» (6 historias, 1080×1920).
 // Uso: node historias/operacion-aleix/generar.js
-// Fotos en fotos/1.jpg … fotos/5.jpg (si falta alguna, sale un hueco gris con lo que va ahí).
-// Salida: png/1-hook.png … png/5-pregunta-3.png (para subir; el sticker «Cuestionario» se pone en Instagram)
-// y png/vista-previa.png (las 5 juntas, con el sticker simulado para ver cómo queda).
+// Fotos en fotos/1.jpg … fotos/6.jpg (si falta alguna, sale un hueco gris con lo que va ahí).
+// Salida: png/1-hook.png … png/6-cierre.png (para subir; los stickers «Cuestionario» y «Preguntas» se ponen en Instagram)
+// y png/vista-previa.png (todas juntas, con los stickers simulados para ver cómo queda).
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
@@ -19,19 +19,19 @@ const HISTORIAS = [
     ],
   },
   {
-    archivo: '2-contexto', foto: 'Aleix recuperándose (casa o camilla, con el móvil o el portátil)', top: 1180,
+    archivo: '2-contexto', foto: 'Aleix (selfie)', top: 1180,
     textos: [
       { t: 'Esta semana estoy un poco de baja, por así decirlo.' },
       { t: 'Así que me paso un rato por aquí a ver si os puedo echar un cable con algo.' },
     ],
   },
   {
-    archivo: '3-pregunta-1', foto: 'Aleix (otra foto de la recuperación)', pos: '0% 50%', derecha: true, quizTop: 980,
+    archivo: '3-pregunta-1', foto: 'Aleix (cena)', quizTop: 980,
     textos: [{ t: 'Adivina la respuesta (1/3)' }],
     quiz: { q: '¿Hace falta salir en cámara para monetizar un canal de YouTube?', ops: ['Sí', 'No'] },
   },
   {
-    archivo: '4-pregunta-2', foto: 'Aleix (otra foto de la recuperación)', pos: '0% 50%', quizTop: 960,
+    archivo: '4-pregunta-2', foto: 'Aleix (portátil)', pos: '0% 50%', quizTop: 960,
     textos: [
       { t: 'La anterior: NO. Hay canales enormes en los que nunca sale nadie.', p: true },
       { t: 'Adivina la respuesta (2/3)' },
@@ -39,12 +39,20 @@ const HISTORIAS = [
     quiz: { q: '¿Qué necesitas para empezar a cobrar por anuncios en YouTube?', ops: ['100 suscriptores y 1.000 horas', '1.000 suscriptores y 4.000 horas', '10.000 suscriptores'] },
   },
   {
-    archivo: '5-pregunta-3', foto: 'Aleix (otra foto de la recuperación)', quizTop: 1010,
+    archivo: '5-pregunta-3', foto: 'Aleix (espejo)', top: 760, quizTop: 1080,
     textos: [
       { t: 'La anterior: 1.000 subs + 4.000 horas de visualización en 12 meses (o 10M de visitas en Shorts en 90 días).', p: true },
       { t: 'Adivina la respuesta (3/3)' },
     ],
     quiz: { q: '¿Qué es el RPM?', ops: ['Reproducciones por minuto', 'Lo que ganas tú por cada 1.000 visitas', 'Lo que paga el anunciante por cada 1.000 anuncios'] },
+  },
+  {
+    archivo: '6-cierre', foto: 'Aleix (selfie en casa)', top: 240, quizTop: 1380,
+    textos: [
+      { t: 'La anterior: lo que ganas tú por cada 1.000 visitas. Lo que paga el anunciante es el CPM, que no es lo mismo.', p: true },
+      { t: '¿Dudas con YouTube? Preguntadme por aquí y os respondo.' },
+    ],
+    preguntas: 'Pregúntame lo que quieras de YouTube',
   },
 ];
 
@@ -70,6 +78,10 @@ body { width: 1080px; height: 1920px; font-family: "Poppins", system-ui, sans-se
 .quiz .q { background: #111; color: #fff; font-weight: 600; font-size: 42px; line-height: 1.28; padding: 44px 50px; text-align: center; }
 .quiz .ops { padding: 30px 32px 36px; display: flex; flex-direction: column; gap: 18px; }
 .quiz .op { display: flex; align-items: center; gap: 22px; border: 3px solid #e4e4e4; border-radius: 999px; padding: 18px 28px; font-size: 34px; font-weight: 500; color: #111; line-height: 1.25; }
+.preg { position: absolute; left: 50%; transform: translateX(-50%); width: 760px; background: #fff; border-radius: 44px; padding: 44px 40px 40px;
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,.6); text-align: center; }
+.preg .q { font-weight: 600; font-size: 42px; line-height: 1.28; color: #111; margin-bottom: 30px; }
+.preg .campo { background: #efefef; border-radius: 22px; padding: 26px; font-size: 32px; color: #9a9a9a; }
 .quiz .op i { flex: none; width: 54px; height: 54px; border-radius: 50%; border: 3px solid #cfcfcf; display: flex; align-items: center; justify-content: center;
   font-style: normal; font-size: 26px; font-weight: 600; color: #8a8a8a; }
 `;
@@ -90,7 +102,9 @@ function html(h, i, conSticker) {
   const textos = h.textos.map(x => `<p class="caja${x.g ? ' g' : ''}${x.p ? ' p' : ''}"><span>${esc(x.t)}</span></p>`).join('');
   const quiz = h.quiz && conSticker
     ? `<div class="quiz" style="top:${h.quizTop || 880}px"><div class="q">${esc(h.quiz.q)}</div><div class="ops">${h.quiz.ops.map((o, k) => `<div class="op"><i>${'ABCD'[k]}</i>${esc(o)}</div>`).join('')}</div></div>`
-    : '';
+    : h.preguntas && conSticker
+      ? `<div class="preg" style="top:${h.quizTop || 880}px"><div class="q">${esc(h.preguntas)}</div><div class="campo">Escribe algo...</div></div>`
+      : '';
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><style>${FUENTE}${CSS}</style></head>
 <body><div class="h">${fondo}<div class="textos${h.derecha ? ' der' : ''}" style="top:${h.top || 300}px">${textos}</div>${quiz}</div></body></html>`;
 }
@@ -108,8 +122,8 @@ function html(h, i, conSticker) {
     await pag.evaluate(() => document.fonts.ready);
     previas.push((await pag.screenshot({ type: 'jpeg', quality: 88 })).toString('base64'));
   }
-  // Vista previa: las 5 en fila
-  await pag.setViewportSize({ width: 1920, height: 760 });
+  // Vista previa: todas en fila
+  await pag.setViewportSize({ width: 96 + HISTORIAS.length * 342 + (HISTORIAS.length - 1) * 24, height: 760 });
   await pag.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>${FUENTE}
     body { margin: 0; background: #f3f3f3; font-family: Poppins, sans-serif; display: flex; gap: 24px; padding: 40px 48px; }
     figure { margin: 0; display: flex; flex-direction: column; gap: 14px; align-items: center; }
