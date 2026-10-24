@@ -1,7 +1,10 @@
 # Secuencia «Operación Aleix» (5 historias)
 
 Estilo de las últimas secuencias: foto real de Aleix, texto en cajas blancas con letra negra, a la izquierda, sin emojis.
-PNG listos en `png/` (1080×1920). `png/vista-previa.png` = las 5 juntas, con el sticker simulado.
+PNG en `png/` (1080×1920) y `png/vista-previa.png` (las 5 juntas, con el sticker simulado). Fotos y PNG no se suben al repo (son fotos personales): se generan en local.
+
+Fotos usadas: 1 = la de la camilla (la pasó Mario); 2 = IMG_5879, 3 = IMG_4392, 4 = IMG_5853, 5 = IMG_5889
+(Drive › ALEIX MARCA PERSONAL › FOTOS Y VÍDEOS DE STOCK › FOTOS › «Hotel haciendo rutina» y «GRABANDO ESTUDIO»).
 
 | # | Foto | Texto | Sticker «Cuestionario» (ponerlo en Instagram, en el hueco del centro) |
 |---|---|---|---|

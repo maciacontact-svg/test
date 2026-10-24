@@ -12,26 +12,26 @@ const FUENTE = fs.readFileSync(path.join(DIR, '../../crm-app/marca/poppins.css')
 
 const HISTORIAS = [
   {
-    archivo: '1-hook', foto: 'Aleix en la camilla',
+    archivo: '1-hook', foto: 'Aleix en la camilla', top: 1180,
     textos: [
       { t: 'Chavales, tened mucho cuidado con cómo entrenáis en el gym', g: true },
       { t: '(me acaban de operar de una hernia por entrenar mal)', p: true },
     ],
   },
   {
-    archivo: '2-contexto', foto: 'Aleix recuperándose (casa o camilla, con el móvil o el portátil)',
+    archivo: '2-contexto', foto: 'Aleix recuperándose (casa o camilla, con el móvil o el portátil)', top: 1180,
     textos: [
       { t: 'Esta semana estoy un poco de baja, por así decirlo.' },
       { t: 'Así que me paso un rato por aquí a ver si os puedo echar un cable con algo.' },
     ],
   },
   {
-    archivo: '3-pregunta-1', foto: 'Aleix (otra foto de la recuperación)',
+    archivo: '3-pregunta-1', foto: 'Aleix (otra foto de la recuperación)', pos: '0% 50%', derecha: true, quizTop: 980,
     textos: [{ t: 'Adivina la respuesta (1/3)' }],
     quiz: { q: '¿Hace falta salir en cámara para monetizar un canal de YouTube?', ops: ['Sí', 'No'] },
   },
   {
-    archivo: '4-pregunta-2', foto: 'Aleix (otra foto de la recuperación)',
+    archivo: '4-pregunta-2', foto: 'Aleix (otra foto de la recuperación)', pos: '0% 50%', quizTop: 960,
     textos: [
       { t: 'La anterior: NO. Hay canales enormes en los que nunca sale nadie.', p: true },
       { t: 'Adivina la respuesta (2/3)' },
@@ -39,7 +39,7 @@ const HISTORIAS = [
     quiz: { q: '¿Qué necesitas para empezar a cobrar por anuncios en YouTube?', ops: ['100 suscriptores y 1.000 horas', '1.000 suscriptores y 4.000 horas', '10.000 suscriptores'] },
   },
   {
-    archivo: '5-pregunta-3', foto: 'Aleix (otra foto de la recuperación)',
+    archivo: '5-pregunta-3', foto: 'Aleix (otra foto de la recuperación)', quizTop: 1010,
     textos: [
       { t: 'La anterior: 1.000 subs + 4.000 horas de visualización en 12 meses (o 10M de visitas en Shorts en 90 días).', p: true },
       { t: 'Adivina la respuesta (3/3)' },
@@ -59,8 +59,9 @@ body { width: 1080px; height: 1920px; font-family: "Poppins", system-ui, sans-se
   color: rgba(255,255,255,.7); font-size: 34px; line-height: 1.35; }
 /* Texto como el de Instagram: cajas blancas por línea, letra negra, a la izquierda */
 .textos { position: absolute; left: 56px; right: 56px; top: 300px; display: flex; flex-direction: column; gap: 46px; }
+.textos.der { align-items: flex-end; text-align: right; }
 .caja { text-wrap: balance; font-size: 44px; line-height: 1.5; font-weight: 600; color: #111; letter-spacing: -0.005em; }
-.caja span { background: #fff; padding: 8px 22px; border-radius: 16px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.caja span { background: #fff; padding: 8px 22px; border-radius: 16px; box-shadow: 0 6px 22px rgba(0,0,0,.16); -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .caja.g { font-size: 54px; }
 .caja.p { font-size: 36px; font-weight: 500; }
 /* Sticker «Cuestionario» simulado (solo en la vista previa) */
@@ -85,13 +86,13 @@ function fotoDe(i) {
 
 function html(h, i, conSticker) {
   const foto = fotoDe(i);
-  const fondo = foto ? `<img class="foto" src="${foto}">` : `<div class="hueco"><span>FOTO: ${esc(h.foto)}</span></div>`;
+  const fondo = foto ? `<img class="foto" src="${foto}" style="object-position:${h.pos || '50% 50%'}">` : `<div class="hueco"><span>FOTO: ${esc(h.foto)}</span></div>`;
   const textos = h.textos.map(x => `<p class="caja${x.g ? ' g' : ''}${x.p ? ' p' : ''}"><span>${esc(x.t)}</span></p>`).join('');
   const quiz = h.quiz && conSticker
-    ? `<div class="quiz"><div class="q">${esc(h.quiz.q)}</div><div class="ops">${h.quiz.ops.map((o, k) => `<div class="op"><i>${'ABCD'[k]}</i>${esc(o)}</div>`).join('')}</div></div>`
+    ? `<div class="quiz" style="top:${h.quizTop || 880}px"><div class="q">${esc(h.quiz.q)}</div><div class="ops">${h.quiz.ops.map((o, k) => `<div class="op"><i>${'ABCD'[k]}</i>${esc(o)}</div>`).join('')}</div></div>`
     : '';
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><style>${FUENTE}${CSS}</style></head>
-<body><div class="h">${fondo}<div class="textos">${textos}</div>${quiz}</div></body></html>`;
+<body><div class="h">${fondo}<div class="textos${h.derecha ? ' der' : ''}" style="top:${h.top || 300}px">${textos}</div>${quiz}</div></body></html>`;
 }
 
 (async () => {
