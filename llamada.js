@@ -1,6 +1,18 @@
 // ===== Configuración (editar aquí) =====
 // Tu evento de Calendly (sin ?month=… ni &date=…)
+// Si la app no responde se usa este. Normalmente el Calendly lo elige la app (reparto con los % de Evergreen).
 const CALENDLY_URL = 'https://calendly.com/maciacontact/proceso-de-admision-system-academy';
+const REPARTO_API = 'https://script.google.com/macros/s/AKfycbx1pkpZQ4Fl1QqNsA_wki1ygWaerdmcdOm8PA6-y4mDubOWoG_fWxS1Kmi2PdST0y5H/exec';
+async function calendlyDestino() {
+  try {
+    const r = await Promise.race([
+      fetch(REPARTO_API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'calendlyDestino', e: 'evergreen', r: /^c-/i.test(CALLER) ? CALLER : '', utm_source: new URLSearchParams(ORIGEN).get('utm_source') || '' }) }).then(x => x.json()),
+      new Promise(ok => setTimeout(() => ok(null), 6000)),
+    ]);
+    return r && r.ok && r.data && r.data.calendly ? r.data : null;
+  } catch (e) { return null; }
+}
 // Después de reservar: página con el vídeo y los pasos para confirmar la llamada
 const CONFIRM_PAGE = 'confirmar.html';
 
@@ -45,7 +57,7 @@ if (CALLER && $('cal')) {
 
 // Calendario de Calendly dentro de la página, con nombre y email ya rellenos
 let abierto = false;
-function abrirCalendario(scroll = true) {
+async function abrirCalendario(scroll = true) {
   $('cal').hidden = false;
   if (scroll) $('cal').scrollIntoView({ behavior: 'smooth', block: 'start' });
   if (abierto) return;
@@ -64,7 +76,9 @@ function abrirCalendario(scroll = true) {
   const o = new URLSearchParams(ORIGEN);
   if (o.get('utm_source')) p.set('utm_source', o.get('utm_source'));
   if (o.get('utm_content')) p.set('utm_campaign', o.get('utm_content'));
-  $('calBody').innerHTML = `<iframe src="${CALENDLY_URL}?${p}" title="Agendar llamada" loading="lazy"></iframe>`;
+  const d = await calendlyDestino();
+  p.set('utm_term', (d && d.funnel) || 'evergreen');
+  $('calBody').innerHTML = `<iframe src="${(d && d.calendly) || CALENDLY_URL}?${p}" title="Agendar llamada" loading="lazy"></iframe>`;
 }
 if ($('open')) $('open').addEventListener('click', () => abrirCalendario());
 if (document.body.dataset.calAbierto !== undefined) abrirCalendario(false);
